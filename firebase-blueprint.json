@@ -1,0 +1,254 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User's profile and preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "favoriteCuisines": { "type": "array", "items": { "type": "string" } },
+        "skillLevel": { "type": "string", "enum": ["Beginner", "Intermediate", "Advanced"] },
+        "maxCookingTime": { "type": "number" },
+        "likedTags": { "type": "object", "additionalProperties": { "type": "number" } },
+        "dislikedTags": { "type": "object", "additionalProperties": { "type": "number" } }
+      },
+      "required": ["uid", "email"]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "An item in the user's pantry or fridge",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "quantity": { "type": "number" },
+        "expiresAt": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "quantity", "uid"]
+    },
+    "ShoppingItem": {
+      "title": "ShoppingItem",
+      "description": "An item in the user's shopping list",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "quantity": { "type": "number" },
+        "checked": { "type": "boolean" },
+        "amount": { "type": "string" },
+        "isStaple": { "type": "boolean" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "quantity", "checked", "uid"]
+    },
+    "PersonProfile": {
+      "title": "PersonProfile",
+      "description": "A member of the household",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "dietary": { "type": "array", "items": { "type": "string" } },
+        "dislikedIngredients": { "type": "array", "items": { "type": "string" } },
+        "favoriteCuisines": { "type": "array", "items": { "type": "string" } },
+        "goals": { "type": "array", "items": { "type": "string" } },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "uid"]
+    },
+    "Group": {
+      "title": "Group",
+      "description": "A group of household members",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "uid"]
+    },
+    "PlannedMeal": {
+      "title": "PlannedMeal",
+      "description": "A meal planned for a specific date",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "mealType": { "type": "string", "enum": ["Breakfast", "Lunch", "Dinner", "Snack"] },
+        "recipeId": { "type": "string" },
+        "recipeName": { "type": "string" },
+        "ingredients": { "type": "array", "items": { "type": "object" } },
+        "groupId": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "date", "mealType", "recipeName", "uid"]
+    },
+    "FavoriteMeal": {
+      "title": "FavoriteMeal",
+      "description": "A favorite meal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "image": { "type": "string" },
+        "time": { "type": "string" },
+        "timeMinutes": { "type": "number" },
+        "difficulty": { "type": "string" },
+        "cuisine": { "type": "string" },
+        "reason": { "type": "string" },
+        "details": { "type": "string" },
+        "ingredients": { "type": "array", "items": { "type": "object" } },
+        "steps": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "uid"]
+    },
+    "BehaviorLog": {
+      "title": "BehaviorLog",
+      "description": "A log of user behavior",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "action": { "type": "string" },
+        "recipeId": { "type": "string" },
+        "recipeName": { "type": "string" },
+        "groupId": { "type": "string" },
+        "groupName": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "additionalData": { "type": "object" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["uid", "action"]
+    },
+    "BehavioralProfile": {
+      "title": "BehavioralProfile",
+      "description": "Aggregated user behavioral profile, including preferred cooking times",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "cookingByHourOfDay": { "type": "object", "additionalProperties": { "type": "number" } }
+      },
+      "required": ["uid"]
+    },
+    "PantryLog": {
+      "title": "PantryLog",
+      "description": "A log of pantry additions and subtractions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "itemName": { "type": "string" },
+        "action": { "type": "string", "enum": ["add", "subtract", "consume", "expire"] },
+        "quantityChange": { "type": "number" },
+        "timestamp": { "type": "string" },
+        "reason": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "itemName", "action", "quantityChange", "timestamp", "uid"]
+    },
+    "Recipe": {
+      "title": "Recipe",
+      "description": "A globally accessible recipe generated by AI",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "image": { "type": "string" },
+        "time": { "type": "string" },
+        "timeMinutes": { "type": "number" },
+        "difficulty": { "type": "string", "enum": ["Beginner", "Intermediate", "Advanced"] },
+        "cuisine": { "type": "string" },
+        "reason": { "type": "string" },
+        "details": { "type": "string" },
+        "ingredients": { "type": "array", "items": { "type": "object" } },
+        "steps": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "uid"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "A notification for a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "read": { "type": "boolean" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["system", "expiring", "shopping", "meal"] }
+      },
+      "required": ["id", "title", "message", "createdAt", "read", "userId"]
+    },
+    "FCMToken": {
+      "title": "FCMToken",
+      "description": "User's FCM token registration for push notifications",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "token": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "token", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/recipes/{recipeId}": {
+      "schema": { "$ref": "#/entities/Recipe" },
+      "description": "Global recipes generated by users"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profiles"
+    },
+    "/users/{userId}/fcmTokens/{token}": {
+      "schema": { "$ref": "#/entities/FCMToken" },
+      "description": "User's registered FCM tokens"
+    },
+    "/users/{userId}/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "User notifications"
+    },
+    "/users/{userId}/inventory/{itemId}": {
+      "schema": { "$ref": "#/entities/InventoryItem" },
+      "description": "User's inventory items"
+    },
+    "/users/{userId}/shoppingList/{itemId}": {
+      "schema": { "$ref": "#/entities/ShoppingItem" },
+      "description": "User's shopping list items"
+    },
+    "/users/{userId}/household/{personId}": {
+      "schema": { "$ref": "#/entities/PersonProfile" },
+      "description": "User's household members"
+    },
+    "/users/{userId}/groups/{groupId}": {
+      "schema": { "$ref": "#/entities/Group" },
+      "description": "User's household groups"
+    },
+    "/users/{userId}/plannedMeals/{mealId}": {
+      "schema": { "$ref": "#/entities/PlannedMeal" },
+      "description": "User's planned meals"
+    },
+    "/users/{userId}/favorites/{mealId}": {
+      "schema": { "$ref": "#/entities/FavoriteMeal" },
+      "description": "User's favorite meals"
+    },
+    "/users/{userId}/behaviorLogs/{logId}": {
+      "schema": { "$ref": "#/entities/BehaviorLog" },
+      "description": "User's behavior logs"
+    },
+    "/users/{userId}/behavioralProfile/{profileId}": {
+      "schema": { "$ref": "#/entities/BehavioralProfile" },
+      "description": "User's behavioral profile"
+    },
+    "/users/{userId}/pantryLogs/{logId}": {
+      "schema": { "$ref": "#/entities/PantryLog" },
+      "description": "User's pantry logs"
+    }
+  }
+}

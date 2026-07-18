@@ -1,0 +1,402 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // This security rules file assumes the following data structures:
+    //
+    // All data is strictly scoped to the authenticated user under the path:
+    // /users/{userId}
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required) - The user's ID
+    //   - email: string (required) - The user's email address
+    //   - favoriteCuisines: list (optional) - List of favorite cuisines
+    //   - skillLevel: string (optional) - 'Beginner', 'Intermediate', 'Advanced'
+    //   - maxCookingTime: number (optional) - Maximum cooking time in minutes
+    //   - likedTags: map (optional) - Map of liked tags and their frequencies
+    //   - dislikedTags: map (optional) - Map of disliked tags and their frequencies
+    //
+    // Collection: users/{userId}/inventory
+    // Document ID: {itemId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - quantity: number (required)
+    //   - expiresAt: string (optional)
+    //   - uid: string (required) - Must match the user's ID
+    //
+    // Collection: users/{userId}/shoppingList
+    // Document ID: {itemId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - quantity: number (required)
+    //   - checked: boolean (required)
+    //   - amount: string (optional)
+    //   - uid: string (required) - Must match the user's ID
+    //
+    // Collection: users/{userId}/household
+    // Document ID: {personId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - dietary: list (optional)
+    //   - dislikedIngredients: list (optional)
+    //   - favoriteCuisines: list (optional)
+    //   - uid: string (required) - Must match the user's ID
+    //
+    // Collection: users/{userId}/groups
+    // Document ID: {groupId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - memberIds: list (optional)
+    //   - uid: string (required) - Must match the user's ID
+    //
+    // Collection: users/{userId}/plannedMeals
+    // Document ID: {mealId}
+    // Fields:
+    //   - id: string (required)
+    //   - date: string (required)
+    //   - mealType: string (required) - 'Breakfast', 'Lunch', 'Dinner', 'Snack'
+    //   - recipeName: string (required)
+    //   - recipeId: string (optional)
+    //   - groupId: string (optional)
+    //   - ingredients: list (optional)
+    //   - uid: string (required) - Must match the user's ID
+    //
+    // Collection: users/{userId}/favorites
+    // Document ID: {mealId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - image: string (optional)
+    //   - time: string (optional)
+    //   - timeMinutes: number (optional)
+    //   - difficulty: string (optional)
+    //   - cuisine: string (optional)
+    //   - reason: string (optional)
+    //   - details: string (optional)
+    //   - ingredients: list (optional)
+    //   - steps: list (optional)
+    //   - tags: list (optional)
+    //   - uid: string (required) - Must match the user's ID
+    //
+    // Collection: users/{userId}/behaviorLogs
+    // Document ID: {logId}
+    // Fields:
+    //   - uid: string (required) - Must match the user's ID
+    //   - action: string (required) - e.g., 'viewed_recommendation_set', 'favorited_recipe'
+    //   - recipeId: string (optional)
+    //   - recipeName: string (optional)
+    //   - groupId: string (optional)
+    //   - groupName: string (optional)
+    //   - tags: list (optional)
+    //   - additionalData: map (optional)
+    //
+    // Collection: users/{userId}/pantryLogs
+    // Document ID: {logId}
+    // Fields:
+    //   - id: string (required)
+    //   - itemName: string (required)
+    //   - action: string (required) - 'add', 'subtract', 'consume', 'expire'
+    //   - quantityChange: number (required)
+    //   - timestamp: string (required)
+    //   - reason: string (optional)
+    //   - uid: string (required) - Must match the user's ID
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.auth.token.email == "sudip.khan@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUserProfile() {
+      return hasRequiredFields(['uid', 'email']) &&
+             request.resource.data.uid is string &&
+             request.resource.data.email is string &&
+             (!('favoriteCuisines' in request.resource.data) || (request.resource.data.favoriteCuisines is list && request.resource.data.favoriteCuisines.size() <= 50)) &&
+             (!('skillLevel' in request.resource.data) || request.resource.data.skillLevel in ['Beginner', 'Intermediate', 'Advanced']) &&
+             (!('maxCookingTime' in request.resource.data) || request.resource.data.maxCookingTime is number) &&
+             (!('likedTags' in request.resource.data) || request.resource.data.likedTags is map) &&
+             (!('dislikedTags' in request.resource.data) || request.resource.data.dislikedTags is map) &&
+             (!('hasCompletedOnboarding' in request.resource.data) || request.resource.data.hasCompletedOnboarding is bool) &&
+             (!('selectedGroupId' in request.resource.data) || request.resource.data.selectedGroupId is string) &&
+             (!('notifications' in request.resource.data) || request.resource.data.notifications is map);
+    }
+
+    function isValidInventoryItem() {
+      return hasRequiredFields(['id', 'name', 'quantity', 'uid']) &&
+             request.resource.data.id is string &&
+             request.resource.data.name is string && request.resource.data.name.size() <= 200 &&
+             request.resource.data.quantity is number && request.resource.data.quantity >= 0 &&
+             (!('expiresAt' in request.resource.data) || (request.resource.data.expiresAt is string && request.resource.data.expiresAt.size() <= 50)) &&
+             request.resource.data.uid == request.auth.uid;
+    }
+
+    function isValidShoppingItem() {
+      return hasRequiredFields(['id', 'name', 'quantity', 'checked', 'uid']) &&
+             request.resource.data.id is string &&
+             request.resource.data.name is string && request.resource.data.name.size() <= 200 &&
+             request.resource.data.quantity is number && request.resource.data.quantity >= 0 &&
+             request.resource.data.checked is bool &&
+             (!('amount' in request.resource.data) || (request.resource.data.amount is string && request.resource.data.amount.size() <= 100)) &&
+             (!('isStaple' in request.resource.data) || request.resource.data.isStaple is bool) &&
+             request.resource.data.uid == request.auth.uid;
+    }
+
+    function isValidPersonProfile() {
+      return hasRequiredFields(['id', 'name', 'uid']) &&
+             request.resource.data.id is string &&
+             request.resource.data.name is string && request.resource.data.name.size() <= 200 &&
+             (!('dietary' in request.resource.data) || (request.resource.data.dietary is list && request.resource.data.dietary.size() <= 50)) &&
+             (!('dislikedIngredients' in request.resource.data) || (request.resource.data.dislikedIngredients is list && request.resource.data.dislikedIngredients.size() <= 100)) &&
+             (!('favoriteCuisines' in request.resource.data) || (request.resource.data.favoriteCuisines is list && request.resource.data.favoriteCuisines.size() <= 100)) &&
+             (!('goals' in request.resource.data) || (request.resource.data.goals is list && request.resource.data.goals.size() <= 50)) &&
+             request.resource.data.uid == request.auth.uid;
+    }
+
+    function isValidGroup() {
+      return hasRequiredFields(['id', 'name', 'uid']) &&
+             request.resource.data.id is string &&
+             request.resource.data.name is string && request.resource.data.name.size() <= 200 &&
+             (!('memberIds' in request.resource.data) || (request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 100)) &&
+             request.resource.data.uid == request.auth.uid;
+    }
+
+    function isValidPlannedMeal() {
+      return hasRequiredFields(['id', 'date', 'mealType', 'recipeName', 'uid']) &&
+             request.resource.data.id is string &&
+             request.resource.data.date is string && request.resource.data.date.size() <= 50 &&
+             request.resource.data.mealType in ['Breakfast', 'Lunch', 'Dinner', 'Snack'] &&
+             request.resource.data.recipeName is string && request.resource.data.recipeName.size() <= 500 &&
+             (!('recipeId' in request.resource.data) || (request.resource.data.recipeId is string && request.resource.data.recipeId.size() <= 100)) &&
+             (!('groupId' in request.resource.data) || (request.resource.data.groupId is string && request.resource.data.groupId.size() <= 100)) &&
+             (!('ingredients' in request.resource.data) || (request.resource.data.ingredients is list && request.resource.data.ingredients.size() <= 200)) &&
+             request.resource.data.uid == request.auth.uid;
+    }
+
+    function isValidFavoriteMeal() {
+      return hasRequiredFields(['id', 'name', 'uid']) &&
+             request.resource.data.id is string &&
+             request.resource.data.name is string && request.resource.data.name.size() <= 500 &&
+             (!('image' in request.resource.data) || (request.resource.data.image is string && request.resource.data.image.size() <= 3000)) &&
+             (!('time' in request.resource.data) || (request.resource.data.time is string && request.resource.data.time.size() <= 100)) &&
+             (!('timeMinutes' in request.resource.data) || request.resource.data.timeMinutes is number) &&
+             (!('difficulty' in request.resource.data) || request.resource.data.difficulty in ['Beginner', 'Intermediate', 'Advanced']) &&
+             (!('cuisine' in request.resource.data) || (request.resource.data.cuisine is string && request.resource.data.cuisine.size() <= 200)) &&
+             (!('reason' in request.resource.data) || (request.resource.data.reason is string && request.resource.data.reason.size() <= 2000)) &&
+             (!('details' in request.resource.data) || (request.resource.data.details is string && request.resource.data.details.size() <= 5000)) &&
+             (!('ingredients' in request.resource.data) || (request.resource.data.ingredients is list && request.resource.data.ingredients.size() <= 200)) &&
+             (!('steps' in request.resource.data) || (request.resource.data.steps is list && request.resource.data.steps.size() <= 200)) &&
+             (!('tags' in request.resource.data) || (request.resource.data.tags is list && request.resource.data.tags.size() <= 100)) &&
+             request.resource.data.uid == request.auth.uid;
+    }
+
+    function isValidBehaviorLog() {
+      return hasRequiredFields(['uid', 'action']) &&
+             request.resource.data.uid == request.auth.uid &&
+             request.resource.data.action in ['viewed_recommendation_set', 'favorited_recipe', 'rejected_recipe', 'replaced_recipe', 'selected_recipe', 'planned_recipe', 'removed_favorite'] &&
+             (!('recipeId' in request.resource.data) || (request.resource.data.recipeId is string && request.resource.data.recipeId.size() <= 100)) &&
+             (!('recipeName' in request.resource.data) || (request.resource.data.recipeName is string && request.resource.data.recipeName.size() <= 500)) &&
+             (!('groupId' in request.resource.data) || (request.resource.data.groupId is string && request.resource.data.groupId.size() <= 100)) &&
+             (!('groupName' in request.resource.data) || (request.resource.data.groupName is string && request.resource.data.groupName.size() <= 200)) &&
+             (!('tags' in request.resource.data) || (request.resource.data.tags is list && request.resource.data.tags.size() <= 100)) &&
+             (!('additionalData' in request.resource.data) || request.resource.data.additionalData is map);
+    }
+
+    function isValidBehavioralProfile() {
+      return hasRequiredFields(['uid']) &&
+             request.resource.data.uid == request.auth.uid &&
+             (!('cookingByHourOfDay' in request.resource.data) || request.resource.data.cookingByHourOfDay is map);
+    }
+
+    function isValidPantryLog() {
+      return hasRequiredFields(['id', 'itemName', 'action', 'quantityChange', 'timestamp', 'uid']) &&
+             request.resource.data.id is string &&
+             request.resource.data.itemName is string && request.resource.data.itemName.size() <= 200 &&
+             request.resource.data.action in ['add', 'subtract', 'consume', 'expire'] &&
+             request.resource.data.quantityChange is number &&
+             request.resource.data.timestamp is string && request.resource.data.timestamp.size() <= 100 &&
+             (!('reason' in request.resource.data) || (request.resource.data.reason is string && request.resource.data.reason.size() <= 500)) &&
+             request.resource.data.uid == request.auth.uid;
+    }
+
+    function isValidAppNotification() {
+      return hasRequiredFields(['id', 'title', 'message', 'createdAt', 'read', 'userId']) &&
+             request.resource.data.id is string &&
+             request.resource.data.title is string && request.resource.data.title.size() <= 200 &&
+             request.resource.data.message is string && request.resource.data.message.size() <= 1000 &&
+             request.resource.data.createdAt is string && request.resource.data.createdAt.size() <= 100 &&
+             request.resource.data.read is bool &&
+             (!('type' in request.resource.data) || request.resource.data.type in ['system', 'expiring', 'shopping', 'meal']) &&
+             request.resource.data.userId == request.auth.uid;
+    }
+
+    function isValidFCMToken() {
+      return hasRequiredFields(['uid', 'token', 'createdAt']) &&
+             request.resource.data.uid == request.auth.uid &&
+             request.resource.data.token is string && request.resource.data.token.size() <= 1000 &&
+             request.resource.data.createdAt is string && request.resource.data.createdAt.size() <= 100;
+    }
+
+    function isValidRecipe() {
+      return hasRequiredFields(['id', 'name', 'uid']) &&
+             request.resource.data.id is string &&
+             request.resource.data.name is string && request.resource.data.name.size() <= 500 &&
+             (!('image' in request.resource.data) || (request.resource.data.image is string && request.resource.data.image.size() <= 3000)) &&
+             (!('time' in request.resource.data) || (request.resource.data.time is string && request.resource.data.time.size() <= 100)) &&
+             (!('timeMinutes' in request.resource.data) || request.resource.data.timeMinutes is number) &&
+             (!('difficulty' in request.resource.data) || (request.resource.data.difficulty is string && request.resource.data.difficulty.size() <= 100)) &&
+             (!('cuisine' in request.resource.data) || (request.resource.data.cuisine is string && request.resource.data.cuisine.size() <= 200)) &&
+             (!('reason' in request.resource.data) || (request.resource.data.reason is string && request.resource.data.reason.size() <= 2000)) &&
+             (!('details' in request.resource.data) || (request.resource.data.details is string && request.resource.data.details.size() <= 5000)) &&
+             (!('ingredients' in request.resource.data) || (request.resource.data.ingredients is list && request.resource.data.ingredients.size() <= 200)) &&
+             (!('steps' in request.resource.data) || (request.resource.data.steps is list && request.resource.data.steps.size() <= 200)) &&
+             (!('tags' in request.resource.data) || (request.resource.data.tags is list && request.resource.data.tags.size() <= 100)) &&
+             request.resource.data.uid == request.auth.uid;
+    }
+
+    function isValidIngredientRule() {
+      return hasRequiredFields(['location', 'category']) &&
+             request.resource.data.location in ['fridge', 'pantry'] &&
+             request.resource.data.category is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /recipes/{recipeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidRecipe();
+      // Allow updates only to add the image field if it was missing or a URL update
+      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['image']);
+      allow delete: if false;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile() && uidUnchanged();
+      allow update: if isOwner(userId) && isValidUserProfile() && uidNotModified();
+      allow delete: if isOwner(userId);
+
+      match /inventory/{itemId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidInventoryItem() && uidUnchanged();
+        allow update: if isOwner(userId) && isValidInventoryItem() && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+
+      match /shoppingList/{itemId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidShoppingItem() && uidUnchanged();
+        allow update: if isOwner(userId) && isValidShoppingItem() && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+
+      match /ingredientRules/{ruleId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidIngredientRule();
+        allow update: if isOwner(userId) && isValidIngredientRule();
+        allow delete: if isOwner(userId);
+      }
+
+      match /household/{personId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidPersonProfile() && uidUnchanged();
+        allow update: if isOwner(userId) && isValidPersonProfile() && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+
+      match /groups/{groupId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidGroup() && uidUnchanged();
+        allow update: if isOwner(userId) && isValidGroup() && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+
+      match /plannedMeals/{mealId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidPlannedMeal() && uidUnchanged();
+        allow update: if isOwner(userId) && isValidPlannedMeal() && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+
+      match /favorites/{mealId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidFavoriteMeal() && uidUnchanged();
+        allow update: if isOwner(userId) && isValidFavoriteMeal() && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+
+      match /behaviorLogs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidBehaviorLog() && uidUnchanged();
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      match /behavioralProfile/{profileId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidBehavioralProfile();
+        allow delete: if isOwner(userId);
+      }
+
+      match /pantryLogs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidPantryLog() && uidUnchanged();
+        allow update: if false;
+        allow delete: if isOwner(userId);
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidAppNotification();
+        allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow delete: if isOwner(userId);
+      }
+
+      match /fcmTokens/{token} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidFCMToken() && uidUnchanged();
+        allow update: if isOwner(userId) && isValidFCMToken() && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Forkcast",
+  "description": "A food decision assistant that helps users quickly decide what to eat.",
+  "requestFramePermissions": ["microphone", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
