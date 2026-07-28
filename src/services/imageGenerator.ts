@@ -41,10 +41,12 @@ export const getOrGenerateRecipeImage = async (recipeId: string, recipeName: str
     }
 
     // Fallback if generation fails to yield an image part
-    return `https://pollinations.ai/p/${encodeURIComponent(recipeName + " food photography fallback")}`;
+    const fallbackPrompt = `Professional food photography of ${recipeName}. ${cuisine ? cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
+    return `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?width=800&height=800&nologo=true`;
   } catch (error) {
     console.error("Failed to generate recipe image:", error);
     // Return a reliable fallback
-    return `https://picsum.photos/seed/${encodeURIComponent(recipeId)}/800/800`;
+    const fallbackPrompt = `Professional food photography of ${recipeName}. ${cuisine ? cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
+    return `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?width=800&height=800&nologo=true`;
   }
 };

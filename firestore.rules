@@ -22,6 +22,22 @@ service cloud.firestore {
     //   - maxCookingTime: number (optional) - Maximum cooking time in minutes
     //   - likedTags: map (optional) - Map of liked tags and their frequencies
     //   - dislikedTags: map (optional) - Map of disliked tags and their frequencies
+    //   - raceType: string (optional)
+    //   - raceDate: string (optional)
+    //   - weeklyTrainingDays: number (optional) - 0-7
+    //   - currentTrainingDayType: string (optional)
+    //   - age: number (optional) - 10-100
+    //   - heightCm: number (optional) - 100-250
+    //   - weightKg: number (optional) - 30-200
+    //   - biologicalSex: string (optional) - 'male' or 'female'
+    //   - raceType: string (optional)
+    //   - raceDate: string (optional)
+    //   - weeklyTrainingDays: number (optional) - 0-7
+    //   - currentTrainingDayType: string (optional)
+    //   - age: number (optional) - 10-100
+    //   - heightCm: number (optional) - 100-250
+    //   - weightKg: number (optional) - 30-200
+    //   - biologicalSex: string (optional) - 'male' or 'female'
     //
     // Collection: users/{userId}/inventory
     // Document ID: {itemId}
@@ -151,13 +167,12 @@ service cloud.firestore {
              request.resource.data.uid is string &&
              request.resource.data.email is string &&
              (!('favoriteCuisines' in request.resource.data) || (request.resource.data.favoriteCuisines is list && request.resource.data.favoriteCuisines.size() <= 50)) &&
-             (!('skillLevel' in request.resource.data) || request.resource.data.skillLevel in ['Beginner', 'Intermediate', 'Advanced']) &&
-             (!('maxCookingTime' in request.resource.data) || request.resource.data.maxCookingTime is number) &&
              (!('likedTags' in request.resource.data) || request.resource.data.likedTags is map) &&
              (!('dislikedTags' in request.resource.data) || request.resource.data.dislikedTags is map) &&
              (!('hasCompletedOnboarding' in request.resource.data) || request.resource.data.hasCompletedOnboarding is bool) &&
              (!('selectedGroupId' in request.resource.data) || request.resource.data.selectedGroupId is string) &&
-             (!('notifications' in request.resource.data) || request.resource.data.notifications is map);
+             (!('notifications' in request.resource.data) || request.resource.data.notifications is map) &&
+             (!('currentTrainingDayType' in request.resource.data) || request.resource.data.currentTrainingDayType in ['Rest', 'Easy', 'Long', 'Speed/Interval', 'Brick', 'Race Day']);
     }
 
     function isValidInventoryItem() {
@@ -188,6 +203,15 @@ service cloud.firestore {
              (!('dislikedIngredients' in request.resource.data) || (request.resource.data.dislikedIngredients is list && request.resource.data.dislikedIngredients.size() <= 100)) &&
              (!('favoriteCuisines' in request.resource.data) || (request.resource.data.favoriteCuisines is list && request.resource.data.favoriteCuisines.size() <= 100)) &&
              (!('goals' in request.resource.data) || (request.resource.data.goals is list && request.resource.data.goals.size() <= 50)) &&
+                          (!('skillLevel' in request.resource.data) || request.resource.data.skillLevel in ['Beginner', 'Intermediate', 'Advanced']) &&
+             (!('maxCookingTime' in request.resource.data) || request.resource.data.maxCookingTime is number) &&
+             (!('raceType' in request.resource.data) || request.resource.data.raceType is string) &&
+             (!('raceDate' in request.resource.data) || request.resource.data.raceDate is string) &&
+             (!('weeklyTrainingDays' in request.resource.data) || (request.resource.data.weeklyTrainingDays is number && request.resource.data.weeklyTrainingDays >= 0 && request.resource.data.weeklyTrainingDays <= 7)) &&
+             (!('age' in request.resource.data) || (request.resource.data.age is number && request.resource.data.age >= 10 && request.resource.data.age <= 100)) &&
+             (!('heightCm' in request.resource.data) || (request.resource.data.heightCm is number && request.resource.data.heightCm >= 100 && request.resource.data.heightCm <= 250)) &&
+             (!('weightKg' in request.resource.data) || (request.resource.data.weightKg is number && request.resource.data.weightKg >= 30 && request.resource.data.weightKg <= 200)) &&
+             (!('biologicalSex' in request.resource.data) || request.resource.data.biologicalSex in ['male', 'female']) &&
              request.resource.data.uid == request.auth.uid;
     }
 
@@ -333,6 +357,13 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId) && isValidIngredientRule();
         allow update: if isOwner(userId) && isValidIngredientRule();
+        allow delete: if isOwner(userId);
+      }
+      
+      match /trainingLog/{logId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) &&
+             (!('dayType' in request.resource.data) || request.resource.data.dayType == null || request.resource.data.dayType is string);
         allow delete: if isOwner(userId);
       }
 

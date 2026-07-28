@@ -1,15 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } from 'motion/react';
-import { Clock, Heart, RefreshCw, ChevronLeft, Check, ShoppingCart, Package, Plus, Minus, Trash2, Brain, User, X, Camera, Receipt, Scan, Sparkles, Compass, Home, Utensils, Archive, ClipboardList, ChefHat, Carrot, Refrigerator, ListTodo, Users, Leaf, Ban, Flame, UsersRound, Calendar, CalendarDays, PlusCircle, Store, Share, Copy, Link, Mail, LogIn, BookOpen, Target } from 'lucide-react';
+import { TrendingUp, Clock, Heart, RefreshCw, ChevronLeft, Check, ShoppingCart, Package, Plus, Minus, Trash2, Brain, User, X, Camera, Receipt, Scan, Sparkles, Compass, Home, Utensils, Archive, ClipboardList, ChefHat, Carrot, Refrigerator, ListTodo, Users, Leaf, Ban, Flame, UsersRound, Calendar, CalendarDays, PlusCircle, Store, Share, Copy, Link, Mail, LogIn, BookOpen, Target } from 'lucide-react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { collection, doc, onSnapshot, setDoc, deleteDoc, getDoc, getDocs, getDocFromServer } from 'firebase/firestore';
+import { collection, doc, onSnapshot, setDoc, deleteDoc, getDoc, getDocs, getDocFromServer, arrayUnion } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from './firebaseUtils';
 import { RecipeIngredient, Meal, ALL_MEALS } from './data/recipes';
 import { generateRecipes } from './services/recipeGenerator';
 import { getTopMeals, generateDynamicReason, generateGroupReason, hasIngredient, getSmartSubstitutions, getExpiringIngredients, getActiveConstraints, Substitution } from './services/recommendationEngine';
 import { getOrGenerateRecipeImage } from './services/imageGenerator';
-import { getNextDays, getAdjustedIngredients, calculateConfidence } from './utils/mealUtils';
+import { getNextDays, getAdjustedIngredients, calculateConfidence, getPrimaryPerson } from './utils/mealUtils';
 import { MealCard } from './components/MealCard';
 import { TasteLearningScreen } from './components/TasteLearningScreen';
 import { useShoppingList } from './hooks/useShoppingList';
@@ -21,6 +21,7 @@ import { HomeView } from './views/HomeView';
 import { AuthView } from './views/AuthView';
 import { OnboardingView } from './views/OnboardingView';
 import { FavoritesView } from './views/FavoritesView';
+import { ProgressView } from './views/ProgressView';
 import { MealDetailsView } from './views/MealDetailsView';
 import { OrderModal } from './components/OrderModal';
 import { ShareModal } from './components/ShareModal';
@@ -30,7 +31,7 @@ import { InventoryItem, ShoppingItem, PersonProfile, Group, PlannedMeal, UserPro
 import { useAppContext, AppProvider } from './context/AppContext';
 import { VoiceAssistantUI } from './components/VoiceAssistantUI';
 import { Type } from '@google/genai';
-import { DIETARY_OPTIONS, CUISINE_OPTIONS, GOAL_OPTIONS, SKILL_OPTIONS } from './constants';
+import { DIETARY_OPTIONS, CUISINE_OPTIONS, SKILL_OPTIONS } from './constants';
 import { estimateExpirationDate } from './utils/expiration';
 import { checkNotifications } from './services/notificationService';
 
@@ -70,7 +71,7 @@ function MainApp() {
   } = useAppContext();
 
   const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState<'home' | 'inventory' | 'shopping' | 'learning' | 'profile' | 'plan' | 'favorites'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'inventory' | 'shopping' | 'learning' | 'profile' | 'plan' | 'favorites' | 'progress' | 'refine'>('home');
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -191,15 +192,15 @@ function MainApp() {
           setSuggestions(docSnap.data().queuedSuggestions);
           setHasLoadedSuggestions(true);
         } else if (!hasLoadedSuggestions) {
-          // Initialize from defaults
-          setSuggestions(ALL_MEALS.slice(0, 50).map(m => ({ ...m, dynamicReason: m.reason, groupReason: 'Perfect for just you' })));
+          // Initialize empty so the dynamic recommendation engine loads matching recipes instantly
+          setSuggestions([]);
           setHasLoadedSuggestions(true);
         }
       });
       return unsub;
     } else if (!userId && isAuthReady) {
       if (!hasLoadedSuggestions) {
-        setSuggestions(ALL_MEALS.slice(0, 50).map(m => ({ ...m, dynamicReason: m.reason, groupReason: 'Perfect for just you' })));
+        setSuggestions([]);
         setHasLoadedSuggestions(true);
       }
     }
@@ -257,11 +258,31 @@ function MainApp() {
   const [isGeneratingMeals, setIsGeneratingMeals] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
-  const handleSelectMeal = (meal: Meal | null) => {
+  const handleSelectMeal = async (meal: Meal | null) => {
     if (meal) {
       const group = groups.find(g => g.id === selectedGroupId) || groups[0];
       const groupName = group ? group.name : 'Just Me';
       trackBehavior(TrackingAction.SELECTED_RECIPE, meal.id, meal.name, undefined, meal.tags, selectedGroupId, groupName);
+
+      if (userId) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        try {
+          const docRef = doc(db, 'users', userId, 'trainingLog', todayStr);
+          await setDoc(docRef, {
+            acceptedMeals: arrayUnion({
+              recipeId: meal.id,
+              name: meal.name,
+              calories: meal.calories || 0,
+              carbsGrams: meal.carbsGrams || 0,
+              proteinGrams: meal.proteinGrams || 0,
+              fatGrams: meal.fatGrams || 0,
+              loggedAt: new Date().toISOString()
+            })
+          }, { merge: true });
+        } catch (error) {
+          console.error("Error logging selected recipe:", error);
+        }
+      }
     }
     setSelectedMeal(meal);
   };
@@ -507,11 +528,14 @@ function MainApp() {
     const memberIds = group ? group.memberIds : [];
     const groupName = group ? group.name : 'Just Me';
     
-    setSuggestions(prev => prev.map(s => ({
-      ...s,
-      dynamicReason: generateDynamicReason(s, profile, likedTags, household, memberIds, inventory),
-      groupReason: generateGroupReason(s, groupName)
-    })));
+    setSuggestions(prev => {
+      const mapped = prev.map(s => ({
+        ...s,
+        dynamicReason: generateDynamicReason(s, profile, likedTags, household, memberIds, inventory),
+        groupReason: generateGroupReason(s, groupName)
+      }));
+      return JSON.stringify(prev) === JSON.stringify(mapped) ? prev : mapped;
+    });
   }, [inventory, profile, likedTags, household, selectedGroupId, groups]);
 
   // Refresh suggestions when constraints or selected group changes (do not trigger on likedTags/dislikedTags to avoid clearing suggestions during swipe)
@@ -527,7 +551,7 @@ function MainApp() {
     if (missingCount <= 0 && suggestions.length > 0) return;
     
     // We only want to fill what's missing, mostly this effect runs when starting or changing groups
-    const topMeals = getTopMeals(50 - suggestions.length, [...suggestions.map(s => s.id), ...seenMealIds], memberIds, globalRecipes, household, dislikedTags, likedTags, profile, inventory, favorites);
+    const topMeals = getTopMeals(50 - suggestions.length, [...suggestions.map(s => s.id), ...seenMealIds, ...dislikedMealIds], memberIds, globalRecipes, household, dislikedTags, likedTags, profile, inventory, favorites);
     setSuggestions(prev => {
       // Don't overwrite if we already have the items, just append the missing ones
       const newItems = topMeals.map(s => ({
@@ -550,40 +574,94 @@ function MainApp() {
     if (!hasLoadedSuggestions) return; // Only process when fully loaded
     
     const shortfall = 50 - suggestions.length;
-    if (shortfall > 0 && !window.isGeneratingBg) {
-      window.isGeneratingBg = true;
-
+    if (shortfall > 0) {
       const group = groups.find(g => g.id === selectedGroupId) || groups[0];
       const memberIds = group ? group.memberIds : [];
-      const liked = Object.entries(likedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
-      const disliked = Object.entries(dislikedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
-      const { dietary, dislikedIngredients, favoriteCuisines, goals, healthConditions } = getActiveConstraints(memberIds, household);
-      const seenNames = [...ALL_MEALS, ...globalRecipes, ...suggestions].map(m => m.name);
-      const inventoryNames = inventory.map(i => i.name);
+      const groupName = group ? group.name : 'Just Me';
 
-      generateRecipes(shortfall, liked, disliked, dietary, dislikedIngredients, favoriteCuisines, goals, seenNames, favorites, inventoryNames, healthConditions)
-        .then(newMeals => {
-          if (newMeals.length > 0) {
-            setSuggestions(prev => {
-              const updated = [...prev];
-              newMeals.forEach((generatedMeal, idx) => {
-                updated.push({
-                  ...generatedMeal,
-                  id: `ai-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
-                  dynamicReason: 'Freshly generated from your recent swipes!',
-                  groupReason: 'AI Recommended'
-                });
-              });
-              return updated.slice(0, 50);
-            });
-          }
-        })
-        .catch(console.error)
-        .finally(() => {
-          window.isGeneratingBg = false;
+      // First, try to pull compatible existing recipes from the master database (globalRecipes + ALL_MEALS)
+      const compatibleExisting = getTopMeals(
+        shortfall,
+        [...suggestions.map(s => s.id), ...seenMealIds, ...dislikedMealIds],
+        memberIds,
+        globalRecipes,
+        household,
+        dislikedTags,
+        likedTags,
+        profile,
+        inventory,
+        favorites
+      );
+
+      if (compatibleExisting.length > 0) {
+        setSuggestions(prev => {
+          const newItems = compatibleExisting.map(s => ({
+            ...s,
+            dynamicReason: generateDynamicReason(s, profile, likedTags, household, memberIds, inventory),
+            groupReason: generateGroupReason(s, groupName)
+          }));
+          return [...prev, ...newItems].slice(0, 50);
         });
+        return; // We added items, let the effect re-evaluate
+      }
+
+      // If we still have a shortfall and we've run out of existing matching recipes in the database,
+      // and suggestions is low (e.g. fewer than 20 suggestions available), we generate new ones using Gemini.
+      if (suggestions.length < 20 && !window.isGeneratingBg) {
+        window.isGeneratingBg = true;
+
+        const liked = Object.entries(likedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
+        const disliked = Object.entries(dislikedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
+        const { dietary, dislikedIngredients, favoriteCuisines, healthConditions } = getActiveConstraints(memberIds, household);
+        
+        const goals: string[] = [];
+        
+        const seenNames = [...ALL_MEALS, ...globalRecipes, ...suggestions].map(m => m.name);
+        const inventoryNames = inventory.map(i => i.name);
+        
+        // Fetch training day type for background generation
+        const fetchAndGenerate = async () => {
+          let trainingDayType: string | undefined = undefined;
+          if (auth.currentUser) {
+            const today = new Date().toISOString().split('T')[0];
+            try {
+              const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+              const docSnap = await getDoc(logRef);
+              if (docSnap.exists()) {
+                trainingDayType = docSnap.data().dayType || undefined;
+              }
+            } catch (e) {
+              console.error("Error fetching training day type:", e);
+            }
+          }
+
+          try {
+            const primaryPerson = getPrimaryPerson(household);
+            const newMeals = await generateRecipes(12, liked, disliked, dietary, dislikedIngredients, favoriteCuisines, goals, seenNames, favorites, inventoryNames, healthConditions, undefined, trainingDayType, primaryPerson?.weightKg);
+            if (newMeals.length > 0) {
+              setSuggestions(prev => {
+                const updated = [...prev];
+                newMeals.forEach((generatedMeal, idx) => {
+                  updated.push({
+                    ...generatedMeal,
+                    id: generatedMeal.id || `ai-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+                    dynamicReason: 'Freshly generated from your recent swipes!',
+                    groupReason: 'AI Recommended'
+                  });
+                });
+                return updated.slice(0, 50);
+              });
+            }
+          } catch (err) {
+            console.error(err);
+          } finally {
+            window.isGeneratingBg = false;
+          }
+        };
+        fetchAndGenerate();
+      }
     }
-  }, [suggestions.length, hasLoadedSuggestions, selectedGroupId, likedTags, dislikedTags, household, groups, inventory, favorites, globalRecipes]);
+  }, [suggestions.length, hasLoadedSuggestions, selectedGroupId, likedTags, dislikedTags, household, groups, inventory, favorites, globalRecipes, seenMealIds, dislikedMealIds]);
 
   /**
    * Replaces a meal suggestion with a new one in the UI.
@@ -642,7 +720,7 @@ function MainApp() {
       if (filtered.length < 4) {
         const memberIds = group ? group.memberIds : [];
         const currentIds = filtered.map(p => p.id);
-        const topMeals = getTopMeals(4 - filtered.length, currentIds, memberIds, globalRecipes, household, newDislikedTags, newLikedTags, profile, inventory, favorites);
+        const topMeals = getTopMeals(4 - filtered.length, [...currentIds, ...seenMealIds, ...dislikedMealIds], memberIds, globalRecipes, household, newDislikedTags, newLikedTags, profile, inventory, favorites);
         
         const additions = topMeals.map(randomNext => ({
           ...randomNext,
@@ -1025,7 +1103,7 @@ function MainApp() {
   ];
 
   if (!isAuthReady) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-[#17181C]">Loading...</div>;
   }
 
   if (!userId) {
@@ -1033,14 +1111,14 @@ function MainApp() {
   }
 
   return (
-    <div className="max-w-md mx-auto h-[100dvh] flex flex-col bg-[#FAFAFA] overflow-hidden relative font-sans">
+    <div className="max-w-md mx-auto h-[100dvh] flex flex-col bg-[#17181C] overflow-hidden relative font-sans">
       <AnimatePresence>
         {showSplash && (
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-emerald-600 text-white"
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#FC5200] text-white"
           >
             <ChefHat className="w-20 h-20 mb-4 animate-pulse" />
             <h1 className="text-4xl font-display font-bold tracking-tight">Forkcast</h1>
@@ -1100,6 +1178,8 @@ function MainApp() {
               seenMealIds={seenMealIds}
               globalRecipes={globalRecipes}
               setSuggestions={setSuggestions}
+              profile={profile}
+              setProfile={setProfile}
             />
           )}
         </AnimatePresence>
@@ -1126,9 +1206,9 @@ function MainApp() {
         )}
       </AnimatePresence>
 
-      {/* Taste Learning Tab */}
+            {/* Refine Tab */}
       <AnimatePresence>
-        {activeTab === 'learning' && (
+        {activeTab === 'refine' && (
           <TasteLearningScreen 
             onClose={() => setActiveTab('home')}
             onOpenFavorites={() => setActiveTab('favorites')}
@@ -1177,7 +1257,6 @@ function MainApp() {
             dietary={getActiveConstraints(groups.find(g => g.id === selectedGroupId)?.memberIds || [], household).dietary}
             dislikedIngredients={getActiveConstraints(groups.find(g => g.id === selectedGroupId)?.memberIds || [], household).dislikedIngredients}
             favoriteCuisines={getActiveConstraints(groups.find(g => g.id === selectedGroupId)?.memberIds || [], household).favoriteCuisines}
-            goals={getActiveConstraints(groups.find(g => g.id === selectedGroupId)?.memberIds || [], household).goals}
             healthConditions={getActiveConstraints(groups.find(g => g.id === selectedGroupId)?.memberIds || [], household).healthConditions}
             seenMealIds={seenMealIds}
             setSeenMealIds={setSeenMealIds}
@@ -1192,6 +1271,8 @@ function MainApp() {
           />
         )}
       </AnimatePresence>
+
+
 
       {/* Details View */}
       <AnimatePresence>
@@ -1219,6 +1300,14 @@ function MainApp() {
             />
           );
         })()}
+      </AnimatePresence>
+
+
+      {/* Progress Tab */}
+      <AnimatePresence>
+        {activeTab === 'progress' && (
+          <ProgressView setActiveTab={setActiveTab} />
+        )}
       </AnimatePresence>
 
       {/* Favorites Tab */}
@@ -1332,54 +1421,55 @@ function MainApp() {
       />
 
       {/* Bottom Navigation */}
-      <nav className="bg-white border-t border-stone-200/60 shrink-0 z-10 pb-safe">
+      <nav className="bg-[#17181C] border-t border-stone-800 shrink-0 z-10 pb-safe">
         <div className="flex items-center justify-around p-2">
           <button 
             onClick={() => setActiveTab('home')}
-            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'home' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-900'}`}
+            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'home' ? 'text-[#FC5200]' : 'text-stone-400 hover:text-white'}`}
           >
             <Utensils className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Menu</span>
           </button>
           <button 
             onClick={() => setActiveTab('plan')}
-            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'plan' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-900'}`}
+            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'plan' ? 'text-[#FC5200]' : 'text-stone-400 hover:text-white'}`}
           >
             <CalendarDays className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Plan</span>
           </button>
           <button 
             onClick={() => setActiveTab('shopping')}
-            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] relative ${activeTab === 'shopping' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-900'}`}
+            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] relative ${activeTab === 'shopping' ? 'text-[#FC5200]' : 'text-stone-400 hover:text-white'}`}
           >
             <ShoppingCart className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">My Cart</span>
             {combinedShoppingList.length > 0 && (
-              <span className="absolute top-1 right-2 w-4 h-4 bg-emerald-600 rounded-full border-2 border-white text-[9px] font-bold text-white flex items-center justify-center">
+              <span className="absolute top-1 right-2 w-4 h-4 bg-[#FC5200] rounded-full border-2 border-white text-[9px] font-bold text-white flex items-center justify-center">
                 {combinedShoppingList.length}
               </span>
             )}
           </button>
           <button 
             onClick={() => setActiveTab('inventory')}
-            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'inventory' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-900'}`}
+            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'inventory' ? 'text-[#FC5200]' : 'text-stone-400 hover:text-white'}`}
           >
             <Refrigerator className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Pantry</span>
           </button>
           <button 
-            onClick={() => setActiveTab('learning')}
-            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'learning' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-900'}`}
+            onClick={() => setActiveTab('progress')}
+            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'progress' ? 'text-[#FC5200]' : 'text-stone-400 hover:text-white'}`}
+          >
+            <TrendingUp className="w-6 h-6 mb-1" />
+            <span className="text-[10px] font-medium">Progress</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('refine')}
+            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'refine' ? 'text-[#FC5200]' : 'text-stone-400 hover:text-white'}`}
           >
             <Compass className="w-6 h-6 mb-1" />
-            <span className="text-[10px] font-medium">Discover</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center justify-center p-2 min-w-[56px] transition-all active:scale-[0.98] ${activeTab === 'profile' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-900'}`}
-          >
-            <User className="w-6 h-6 mb-1" />
-            <span className="text-[10px] font-medium">Chef</span>
+            <span className="text-[10px] font-medium">Refine</span>
           </button>
         </div>
       </nav>

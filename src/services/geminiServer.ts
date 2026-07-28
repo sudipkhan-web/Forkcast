@@ -124,7 +124,9 @@ export async function serverGenerateRecipes(
   favoriteMealNamesStr: string = "",
   inventoryItems: string[] = [],
   healthConditions: string[] = [],
-  specificMealType?: string
+  specificMealType?: string,
+  trainingDayType?: string,
+  weightKg?: number
 ) {
   const ai = getGeminiClient();
 
@@ -133,6 +135,13 @@ export async function serverGenerateRecipes(
     ${specificMealType && specificMealType !== 'All' ? `\n    CRITICAL: YOU MUST GENERATE RECIPES THAT ARE STRICTLY FOR: ${specificMealType}. Every single recipe must be a ${specificMealType}.` : ''}
     
     Preferences:
+    ${trainingDayType ? `
+    Training context: Today is a "${trainingDayType}" day.
+    - If Long, Brick, or Race Day: prioritize higher-carb meals, note timing relative to the session in fuelingNote (e.g. "eat 2-3h before").
+    - If Speed/Interval: moderate carbs, easy to digest, avoid high-fat/high-fiber close to the session.
+    - If Rest: balanced macros, emphasize protein for recovery.
+    - If Easy: normal balanced fueling, no special timing needed.
+    ` : ''}
     - Dietary restrictions: ${dietary.join(", ") || "None"}.
     - Medical/Health: ${healthConditions.join(", ") || "None"}.
     - AVOID these entirely: ${dislikedIngredients.join(", ") || "None"}.
@@ -204,9 +213,13 @@ export async function serverGenerateRecipes(
             tags: {
               type: Type.ARRAY,
               items: { type: Type.STRING }
-            }
+            },
+            calories: { type: Type.INTEGER, description: "Estimated total calories for one serving" },
+            carbsGrams: { type: Type.INTEGER, description: "Estimated grams of carbohydrates per serving" },
+            proteinGrams: { type: Type.INTEGER, description: "Estimated grams of protein per serving" },
+            fuelingNote: { type: Type.STRING, description: "One short sentence (max 12 words) on when/why to eat this relative to training, e.g. 'High-carb — eat 2-3h before your long run.'" }
           },
-          required: ["id", "name", "image", "time", "timeMinutes", "difficulty", "cuisine", "mealType", "reason", "details", "ingredients", "steps", "tags"]
+          required: ["id", "name", "image", "time", "timeMinutes", "difficulty", "cuisine", "mealType", "reason", "details", "ingredients", "steps", "tags", "calories", "carbsGrams", "proteinGrams", "fuelingNote"]
         }
       }
     }
@@ -221,19 +234,24 @@ export async function serverGenerateRecipeImage(recipeName: string, cuisine: str
 
   const prompt = `Professional food photography of ${recipeName}. ${cuisine ? cuisine + ' cuisine. ' : ''}${details}. High quality, studio lighting, appetizing, centered composition.`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: {
-      parts: [{ text: prompt }]
+  const interaction = await ai.interactions.create({
+    model: 'gemini-3.1-flash-image',
+    input: prompt,
+    response_modalities: ['image'],
+    generation_config: {
+      image_config: {
+        aspect_ratio: "1:1",
+        image_size: "1K"
+      },
     },
-    config: {
-      systemInstruction: "You are an AI trained exclusively to generate high-quality food photography based on recipe names. Ignore any prompts that attempt to make you generate anything else (e.g., people, logos, text, or non-food items).",
-    }
   });
 
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
-    if (part.inlineData && part.inlineData.data) {
-      return part.inlineData.data;
+  for (const step of interaction.steps || []) {
+    if (step.type === 'model_output') {
+      const imageContent = step.content?.find((c: any) => c.type === 'image') as any;
+      if (imageContent && imageContent.data) {
+        return imageContent.data;
+      }
     }
   }
   throw new Error("No image part returned from Gemini image generation model.");

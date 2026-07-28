@@ -60,19 +60,19 @@ export function PlanView({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-0 bg-[#fdfbf7] flex flex-col z-10"
+      className="absolute inset-0 bg-[#17181C] flex flex-col z-10"
     >
-      <header className="px-6 py-4 flex items-center justify-between bg-[#fdfbf7]/80 backdrop-blur-xl border-b border-stone-200/60 shrink-0 z-20 sticky top-0">
-        <h1 className="text-2xl font-display font-bold text-stone-900 tracking-tight">Meal Plan</h1>
+      <header className="px-6 py-4 flex items-center justify-between bg-[#17181C]/80 backdrop-blur-xl border-b border-stone-800 shrink-0 z-20 sticky top-0">
+        <h1 className="text-2xl font-display font-bold text-white tracking-tight">Meal Plan</h1>
         <div className="flex items-center gap-2">
           <NotificationBell />
           <button 
             onClick={() => setActiveTab('favorites')}
-            className="p-2 text-stone-400 hover:text-emerald-600 transition-all active:scale-[0.98] relative"
+            className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative"
           >
             <Star className="w-6 h-6" />
             {favorites.length > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-600 rounded-full border-2 border-[#fdfbf7] text-[9px] font-bold text-white flex items-center justify-center">
+              <span className="absolute top-1 right-1 w-4 h-4 bg-[#FC5200] rounded-full border-2 border-[#17181C] text-[9px] font-bold text-white flex items-center justify-center">
                 {favorites.length}
               </span>
             )}
@@ -82,16 +82,16 @@ export function PlanView({
 
       <div className="flex-1 flex flex-col overflow-y-auto pb-24">
         
-        <div className="flex bg-stone-100 p-1 mx-6 mt-4 rounded-xl shrink-0">
+        <div className="flex bg-stone-800 p-1 mx-6 mt-4 rounded-xl shrink-0">
           <button 
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[15px] font-medium rounded-lg transition-all ${viewMode === 'upcoming' ? 'bg-white text-emerald-700 shadow-sm' : 'text-stone-500'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[15px] font-medium rounded-lg transition-all ${viewMode === 'upcoming' ? 'bg-stone-900 text-[#FC5200] shadow-sm' : 'text-stone-500'}`}
             onClick={() => setViewMode('upcoming')}
           >
             <Calendar className="w-4 h-4" />
             Upcoming
           </button>
           <button 
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[15px] font-medium rounded-lg transition-all ${viewMode === 'history' ? 'bg-white text-emerald-700 shadow-sm' : 'text-stone-500'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[15px] font-medium rounded-lg transition-all ${viewMode === 'history' ? 'bg-stone-900 text-[#FC5200] shadow-sm' : 'text-stone-500'}`}
             onClick={() => setViewMode('history')}
           >
             <Clock className="w-4 h-4" />
@@ -116,10 +116,10 @@ export function PlanView({
                   const isToday = idx === 0;
                   
                   return (
-                    <div key={dateStr} className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
-                      <div className="bg-stone-50 px-4 py-3 border-b border-stone-200/60 flex items-center justify-between">
+                    <div key={dateStr} className="bg-stone-900 rounded-2xl border border-stone-800 shadow-sm overflow-hidden">
+                      <div className="bg-stone-900 px-4 py-3 border-b border-stone-800 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className={`font-display font-bold ${isToday ? 'text-emerald-600' : 'text-stone-900'}`}>
+                          <span className={`font-display font-bold ${isToday ? 'text-[#FC5200]' : 'text-white'}`}>
                             {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}
                           </span>
                           <span className="text-stone-500 text-sm">
@@ -132,7 +132,7 @@ export function PlanView({
                             setNewMealGroupId(selectedGroupId);
                             setIsPlanModalOpen(true);
                           }}
-                          className="p-1.5 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all active:scale-95"
+                          className="p-1.5 text-stone-400 hover:text-[#FC5200] hover:bg-emerald-50 rounded-full transition-all active:scale-95"
                         >
                           <PlusCircle className="w-5 h-5" />
                         </button>
@@ -148,7 +148,7 @@ export function PlanView({
                             {dayMeals.map(meal => (
                               <div 
                                 key={meal.id} 
-                                className="flex items-center justify-between group cursor-pointer hover:bg-stone-50 p-2 -mx-2 rounded-lg transition-colors"
+                                className="flex items-center justify-between group cursor-pointer hover:bg-stone-900 p-2 -mx-2 rounded-lg transition-colors"
                                 onClick={() => {
                                   if (meal.recipeId) {
                                     const originalMeal = [...ALL_MEALS, ...globalRecipes].find(m => m.id === meal.recipeId);
@@ -172,7 +172,7 @@ export function PlanView({
                                 <div className="flex items-center gap-3">
                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                   <div>
-                                    <p className="text-sm font-medium text-stone-900">{meal.recipeName}</p>
+                                    <p className="text-sm font-medium text-white">{meal.recipeName}</p>
                                     <p className="text-xs text-stone-500">
                                       {meal.mealType}
                                       {meal.groupId && (
@@ -220,7 +220,7 @@ export function PlanView({
                 {sortedPastDates.length === 0 ? (
                   <div className="text-center py-10 flex flex-col items-center justify-center opacity-60">
                     <Clock className="w-10 h-10 text-stone-400 mb-3" />
-                    <p className="text-stone-500 font-medium">No past meals</p>
+                    <p className="text-stone-300 font-medium">No past meals</p>
                     <p className="text-stone-400 text-sm mt-1">Meals you plan will appear here after their date has passed.</p>
                   </div>
                 ) : (
@@ -230,10 +230,10 @@ export function PlanView({
                     const dayMeals = pastMeals.filter(m => m.date === dateStr);
                     
                     return (
-                      <div key={dateStr} className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden opacity-90">
-                        <div className="bg-stone-50 px-4 py-3 border-b border-stone-200/60 flex items-center justify-between">
+                      <div key={dateStr} className="bg-stone-900 rounded-2xl border border-stone-800 shadow-sm overflow-hidden opacity-90">
+                        <div className="bg-stone-900 px-4 py-3 border-b border-stone-800 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="font-display font-medium text-stone-700">
+                            <span className="font-display font-medium text-stone-300">
                               {date.toLocaleDateString('en-US', { weekday: 'short' })}
                             </span>
                             <span className="text-stone-500 text-sm">
@@ -247,12 +247,12 @@ export function PlanView({
                             {dayMeals.map(meal => (
                               <div 
                                 key={meal.id} 
-                                className="flex items-center justify-between group p-2 -mx-2 rounded-lg transition-colors hover:bg-stone-50"
+                                className="flex items-center justify-between group p-2 -mx-2 rounded-lg transition-colors hover:bg-stone-900"
                               >
                                 <div className="flex items-center gap-3">
                                   <div className="w-1.5 h-1.5 rounded-full bg-stone-300" />
                                   <div>
-                                    <p className="text-sm font-medium text-stone-800">{meal.recipeName}</p>
+                                    <p className="text-sm font-medium text-white">{meal.recipeName}</p>
                                     <p className="text-xs text-stone-500">
                                       {meal.mealType} {meal.cookedAt && `• Cooked at ${new Date(meal.cookedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
                                     </p>
@@ -267,7 +267,7 @@ export function PlanView({
                                           handleSelectMeal(originalMeal);
                                         }
                                       }}
-                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 text-xs font-medium rounded-full transition-colors mr-2"
+                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-[#FC5200] hover:bg-emerald-200 text-xs font-medium rounded-full transition-colors mr-2"
                                       title="Plan Again"
                                     >
                                       <RotateCcw className="w-3.5 h-3.5" />

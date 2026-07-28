@@ -26,9 +26,17 @@ export type PersonProfile = {
   dietary: string[];
   dislikedIngredients: string[];
   favoriteCuisines: string[];
-  goals: string[];
   healthConditions?: string[];
   uid?: string;
+  skillLevel?: 'Beginner' | 'Intermediate' | 'Advanced';
+  maxCookingTime?: number;
+  raceType?: string;
+  raceDate?: string;
+  weeklyTrainingDays?: number;
+  age?: number;
+  heightCm?: number;
+  weightKg?: number;
+  biologicalSex?: 'male' | 'female';
 };
 
 export type Group = {
@@ -54,8 +62,6 @@ export type UserProfile = {
   email?: string;
   favoriteCuisines: string[];
   healthConditions?: string[];
-  skillLevel: 'Beginner' | 'Intermediate' | 'Advanced';
-  maxCookingTime: number;
   hasCompletedOnboarding?: boolean;
   selectedGroupId?: string;
   notifications?: {

@@ -71,16 +71,16 @@ export function PlanModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+            className="bg-stone-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-stone-200/60 flex items-center justify-between bg-stone-50">
-              <h2 className="text-xl font-display font-bold text-stone-900">
+            <div className="p-6 border-b border-stone-800 flex items-center justify-between bg-stone-900">
+              <h2 className="text-xl font-display font-bold text-white">
                 Plan Meal
               </h2>
               <button 
                 onClick={onClose}
-                className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-200/50 rounded-full transition-all active:scale-95"
+                className="p-2 text-stone-400 hover:text-stone-400 hover:bg-stone-700/50 rounded-full transition-all active:scale-95"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -92,7 +92,7 @@ export function PlanModal({
                 <select
                   value={planningDate}
                   onChange={(e) => setPlanningDate(e.target.value)}
-                  className="w-full bg-stone-50 border border-stone-200/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900"
+                  className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-white"
                 >
                   {getNextDays(7).map((date, idx) => {
                     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -116,7 +116,7 @@ export function PlanModal({
                       className={`py-2 px-4 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
                         newMealType === type 
                           ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' 
-                          : 'bg-white border-stone-200/60 text-stone-600 hover:border-emerald-500 hover:text-emerald-600'
+                          : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
                       }`}
                     >
                       {type}
@@ -149,7 +149,7 @@ export function PlanModal({
                         setNewMealIngredients(swappedIngredients);
                       }
                     }}
-                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
+                    className="text-xs font-bold text-[#FC5200] hover:text-[#FC5200] flex items-center gap-1 transition-colors"
                   >
                     <Sparkles className="w-3 h-3" />
                     Suggest for Group
@@ -160,7 +160,7 @@ export function PlanModal({
                   value={newMealName}
                   onChange={(e) => setNewMealName(e.target.value)}
                   placeholder="e.g. Avocado Toast"
-                  className="w-full bg-stone-50 border border-stone-200/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900 placeholder:text-stone-400"
+                  className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-white placeholder:text-stone-400"
                   autoFocus
                 />
               </div>
@@ -174,7 +174,7 @@ export function PlanModal({
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
                       !newMealGroupId
                         ? 'bg-stone-800 border-stone-800 text-white shadow-sm'
-                        : 'bg-white border-stone-200/60 text-stone-600 hover:border-stone-800 hover:text-stone-800'
+                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-800 hover:bg-stone-800 hover:text-white'
                     }`}
                   >
                     Just Me
@@ -187,7 +187,7 @@ export function PlanModal({
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
                         newMealGroupId === group.id
                           ? 'bg-stone-800 border-stone-800 text-white shadow-sm'
-                          : 'bg-white border-stone-200/60 text-stone-600 hover:border-stone-800 hover:text-stone-800'
+                          : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-800 hover:bg-stone-800 hover:text-white'
                       }`}
                     >
                       {group.name}
@@ -200,7 +200,7 @@ export function PlanModal({
                 <button
                   type="submit"
                   disabled={!newMealName.trim()}
-                  className="w-full py-3.5 bg-emerald-600 text-white rounded-2xl font-semibold text-lg hover:bg-emerald-700 transition-all active:scale-[0.98] shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:active:scale-100"
+                  className="w-full py-3.5 bg-[#FC5200] text-white rounded-2xl font-semibold text-lg hover:bg-[#FC5200] transition-all active:scale-[0.98] shadow-lg shadow-[#FC5200]/20 disabled:opacity-50 disabled:active:scale-100"
                 >
                   Add to Plan
                 </button>

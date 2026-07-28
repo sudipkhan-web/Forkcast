@@ -40,7 +40,7 @@ export function VoiceAssistantUI({ tools, systemInstruction }: VoiceAssistantUIP
                  className="relative"
                >
                  <Volume2 className="w-6 h-6 animate-pulse" />
-                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-ping" />
+                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-stone-900 rounded-full animate-ping" />
                </motion.div>
              ) : (
                <motion.div

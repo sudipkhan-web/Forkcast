@@ -207,13 +207,14 @@ export const getActiveConstraints = (memberIds: string[], household: PersonProfi
   const dietary = Array.from(new Set(selectedMembers.flatMap(m => m.dietary || [])));
   const dislikedIngredients = Array.from(new Set(selectedMembers.flatMap(m => m.dislikedIngredients || [])));
   const favoriteCuisines = Array.from(new Set(selectedMembers.flatMap(m => m.favoriteCuisines || [])));
-  const goals = Array.from(new Set(selectedMembers.flatMap(m => m.goals || [])));
   const healthConditions = Array.from(new Set(selectedMembers.flatMap(m => m.healthConditions || [])));
 
-  return { dietary, dislikedIngredients, favoriteCuisines, goals, healthConditions };
+  return { dietary, dislikedIngredients, favoriteCuisines, healthConditions };
 };
 
 export const generateDynamicReason = (meal: Meal, currentProfile: UserProfile, currentLikedTags: Record<string, number>, household: PersonProfile[], memberIds: string[], inventory: InventoryItem[]) => {
+  // Removed training and nutrition goals usage as they are no longer in profile
+
   const expiringIngredients = getExpiringIngredients(inventory);
   const expiringInMeal = expiringIngredients.filter(item => 
     meal.ingredients?.some(i => i.name.toLowerCase() === item.name.toLowerCase())
@@ -452,7 +453,11 @@ export const getTopMeals = (
   
   let availableMeals = allAvailableMeals.filter(m => !excludeIds.includes(m.id));
   
-  const { dietary, dislikedIngredients, favoriteCuisines, goals } = getActiveConstraints(memberIds, household);
+  const { dietary, dislikedIngredients, favoriteCuisines } = getActiveConstraints(memberIds, household);
+  const activeMembers = household.filter(p => memberIds.includes(p.id));
+  const maxCookingTime = activeMembers.length > 0 ? Math.max(...activeMembers.map(m => m.maxCookingTime || 60)) : 60;
+  const skillLevel = activeMembers.some(m => m.skillLevel === 'Beginner') ? 'Beginner' : 
+                     activeMembers.some(m => m.skillLevel === 'Intermediate') ? 'Intermediate' : 'Advanced';
 
   // Identity heavily disliked tags
   const heavilyDislikedTags = Object.keys(dislikedTags).map(t => t.toLowerCase());
@@ -465,9 +470,9 @@ export const getTopMeals = (
   // Apply Profile Hard Filters
   availableMeals = availableMeals.filter(m => {
     // Hard filter max cooking time
-    if (m.timeMinutes > profile.maxCookingTime + 30) return false;
+    if (m.timeMinutes > maxCookingTime + 30) return false;
     // Hard filter skill level
-    if (profile.skillLevel === 'Beginner' && m.difficulty === 'Advanced') return false;
+    if (skillLevel === 'Beginner' && m.difficulty === 'Advanced') return false;
 
     const mTags = m.tags?.map(t => t.toLowerCase()) || [];
     const mIngredients = m.ingredients?.map(i => i.name.toLowerCase()) || [];
@@ -542,16 +547,6 @@ export const getTopMeals = (
       // Preferences
       if ((member.favoriteCuisines || []).includes(m.cuisine)) memberScore += 10;
       
-      // Goal scoring
-      const memberGoals = member.goals || [];
-      if (memberGoals.includes('Lose weight') && m.tags?.includes('low-calorie')) memberScore += 5;
-      if (memberGoals.includes('Gain muscle') && m.tags?.includes('high-protein')) memberScore += 5;
-      if (memberGoals.includes('Eat less processed food') && m.tags?.includes('whole-foods')) memberScore += 5;
-      if (memberGoals.includes('Eat more vegetables') && m.tags?.includes('vegetable-heavy')) memberScore += 5;
-      if (memberGoals.includes('High protein') && m.tags?.includes('high-protein')) memberScore += 5;
-      if (memberGoals.includes('Low carb') && m.tags?.includes('low-carb')) memberScore += 5;
-      if (memberGoals.includes('Heart healthy') && m.tags?.includes('heart-healthy')) memberScore += 5;
-      
       score += memberScore;
     });
     
@@ -606,17 +601,23 @@ export const getTopMeals = (
       if (dislikedTags[ingTag]) score -= dislikedTags[ingTag] * 5;
     });
     
-    if (m.difficulty === profile.skillLevel) score += 2;
+    if (m.difficulty === skillLevel) score += 2;
     
     // Preparation time suitability
-    if (m.timeMinutes <= profile.maxCookingTime) {
+    if (m.timeMinutes <= maxCookingTime) {
       score += 5; // Bonus for fitting within time
       // Extra bonus for being quick if they have a short max time
-      if (profile.maxCookingTime <= 30 && m.timeMinutes <= 20) {
+      if (maxCookingTime <= 30 && m.timeMinutes <= 20) {
         score += 5;
       }
     } else {
       score -= 10; // Penalty for taking too long
+    }
+
+    // Boost right-swiped/favorited recipes so they come back up as recommendations to cook!
+    const isFav = favorites.some(f => f.id === m.id);
+    if (isFav) {
+      score += 150; // Heavy boost for right-swiped/liked recipes
     }
 
     return { meal: m, score };
@@ -625,9 +626,8 @@ export const getTopMeals = (
   // Sort by score descending
   scoredMeals.sort((a, b) => b.score - a.score);
 
-  // Return top N, but limit favorites and ensure variety
+  // Return top N, allowing favorites and ensuring variety
   const finalSelection: Meal[] = [];
-  let favoriteCount = 0;
   
   // Categorize for diversity
   const getType = (m: Meal) => {
@@ -663,15 +663,9 @@ export const getTopMeals = (
       }
       
       // Penalize if we have too many of this type proportionally
-      // e.g. if we have 5 dinners and 0 snacks, penalize dinner.
       const proportion = typeCounts[type] / (finalSelection.length || 1);
       if (proportion > 0.4) { // if more than 40% are this type
         adjScore -= 20; 
-      }
-
-      const isFavorite = favorites.some(f => f.id === c.meal.id);
-      if (isFavorite && favoriteCount >= 1) {
-        adjScore -= 1000; // soft exclude
       }
 
       if (adjScore > bestAdjustedScore) {
@@ -682,14 +676,6 @@ export const getTopMeals = (
     
     const selected = candidates[bestIdx];
     candidates.splice(bestIdx, 1); // remove from candidates
-    
-    const isFavorite = favorites.some(f => f.id === selected.meal.id);
-    if (isFavorite && favoriteCount >= 1) {
-      continue; // Skip because we hit the max favorite threshold and we hard skip it now
-    }
-    if (isFavorite) {
-      favoriteCount++;
-    }
     
     const selectedType = getType(selected.meal);
     typeCounts[selectedType]++;
@@ -720,6 +706,10 @@ export const getExplorationMeals = (
   // NEVER suggest favorites in Discovery (Exploration), only use them for underlying tag matching learning
   let availableMeals = allAvailableMeals.filter(m => !excludeIds.includes(m.id) && !favorites.find(f => f.id === m.id));
   const { dietary } = getActiveConstraints(memberIds, household);
+  const activeMembers = household.filter(p => memberIds.includes(p.id));
+  const maxCookingTime = activeMembers.length > 0 ? Math.max(...activeMembers.map(m => m.maxCookingTime || 60)) : 60;
+  const skillLevel = activeMembers.some(m => m.skillLevel === 'Beginner') ? 'Beginner' : 
+                     activeMembers.some(m => m.skillLevel === 'Intermediate') ? 'Intermediate' : 'Advanced';
   const heavilyDislikedTags = Object.keys(dislikedTags).map(t => t.toLowerCase());
   const allDislikedIngredients = household
     .filter(member => memberIds.includes(member.id))
@@ -786,21 +776,10 @@ export const getExplorationMeals = (
     });
 
     // Profile preferences
-    if (m.difficulty === profile.skillLevel) score += 2;
-    if (m.timeMinutes <= profile.maxCookingTime) {
+    if (m.difficulty === skillLevel) score += 2;
+    if (m.timeMinutes <= maxCookingTime) {
       score += 5;
     }
-    
-    // Check household goals
-    const selectedMembers = household.filter(member => memberIds.includes(member.id));
-    selectedMembers.forEach(member => {
-      const memberGoals = member.goals || [];
-      if (memberGoals.includes('Weight loss') && m.tags?.includes('low-calorie')) score += 5;
-      if (memberGoals.includes('Eat more vegetables') && m.tags?.includes('vegetable-heavy')) score += 5;
-      if (memberGoals.includes('High protein') && m.tags?.includes('high-protein')) score += 5;
-      if (memberGoals.includes('Low carb') && m.tags?.includes('low-carb')) score += 5;
-      if (memberGoals.includes('Heart healthy') && m.tags?.includes('heart-healthy')) score += 5;
-    });
 
     // Add randomness for exploration (allowing unexpected things to show up)
     score += Math.random() * 30;

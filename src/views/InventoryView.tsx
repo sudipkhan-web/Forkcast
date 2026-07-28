@@ -267,19 +267,19 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-0 bg-[#fdfbf7] flex flex-col z-10"
+      className="absolute inset-0 bg-[#17181C] flex flex-col z-10"
     >
-      <header className="px-6 py-4 flex items-center justify-between bg-[#fdfbf7]/80 backdrop-blur-xl border-b border-stone-200/60 shrink-0 z-20">
-        <h1 className="text-2xl font-display font-bold text-stone-900 tracking-tight">Pantry & Fridge</h1>
+      <header className="px-6 py-4 flex items-center justify-between bg-[#17181C]/80 backdrop-blur-xl border-b border-stone-800 shrink-0 z-20">
+        <h1 className="text-2xl font-display font-bold text-white tracking-tight">Pantry & Fridge</h1>
         <div className="flex items-center gap-2">
           <NotificationBell />
           <button 
             onClick={() => setActiveTab('favorites')}
-            className="p-2 text-stone-400 hover:text-emerald-600 transition-all active:scale-[0.98] relative"
+            className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative"
           >
             <Star className="w-6 h-6" />
             {favorites.length > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-600 rounded-full border-2 border-[#fdfbf7] text-[9px] font-bold text-white flex items-center justify-center">
+              <span className="absolute top-1 right-1 w-4 h-4 bg-[#FC5200] rounded-full border-2 border-[#17181C] text-[9px] font-bold text-white flex items-center justify-center">
                 {favorites.length}
               </span>
             )}
@@ -288,17 +288,17 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
       </header>
 
       <div className="flex-1 overflow-y-auto pb-32">
-        <div className="p-6 bg-white border-b border-stone-200/60 space-y-5">
+        <div className="p-6 bg-stone-900 border-b border-stone-800 space-y-5">
           <div>
-            <div className="bg-stone-50 border border-stone-200/60 rounded-xl p-1 flex relative">
+            <div className="bg-stone-900 border border-stone-800 rounded-xl p-1 flex relative">
               {scanningState && (
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl border border-emerald-500/20">
+                <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl border border-emerald-500/20">
                   <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                     className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full mr-2"
                   />
-                  <span className="text-xs font-medium text-emerald-700">
+                  <span className="text-xs font-medium text-[#FC5200]">
                     Scanning...
                   </span>
                 </div>
@@ -306,7 +306,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!!scanningState}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-white text-stone-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 transition-all font-semibold active:scale-[0.98] shadow-sm"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-stone-900 text-stone-300 rounded-lg hover:bg-emerald-50 hover:text-[#FC5200] transition-all font-semibold active:scale-[0.98] shadow-sm"
               >
                 <Camera className="w-5 h-5" />
                 Smart Scan
@@ -322,13 +322,13 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
             </div>
           </div>
 
-          <div className="bg-white border border-stone-200/60 rounded-xl overflow-hidden mt-2">
+          <div className="bg-stone-900 border border-stone-800 rounded-xl overflow-hidden mt-2">
             <button 
               onClick={() => setIsAddSectionExpanded(!isAddSectionExpanded)}
-              className="flex items-center justify-between w-full p-4 text-stone-900 active:bg-stone-50 transition-colors"
+              className="flex items-center justify-between w-full p-4 text-white active:bg-stone-900 transition-colors"
             >
               <h2 className="text-xs font-display font-bold uppercase tracking-widest flex items-center gap-2 text-stone-500">
-                <Plus className="w-4 h-4 text-emerald-600" />
+                <Plus className="w-4 h-4 text-[#FC5200]" />
                 Add Items Manually
               </h2>
               <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${isAddSectionExpanded ? 'rotate-180' : ''}`} />
@@ -341,7 +341,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="p-4 border-t border-stone-200/60 space-y-5 bg-stone-50/50">
+                  <div className="p-4 border-t border-stone-800 space-y-5 bg-stone-900/50">
                     <div>
                       <button 
                         onClick={() => setIsQuickAddExpanded(!isQuickAddExpanded)}
@@ -368,8 +368,8 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                     disabled={isSelected}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 border ${
                                       isSelected 
-                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700 opacity-50 cursor-not-allowed' 
-                                        : 'bg-white border-stone-200/60 text-stone-600 hover:border-stone-300 hover:bg-stone-50'
+                                        ? 'bg-emerald-50 border-emerald-200 text-[#FC5200] opacity-50 cursor-not-allowed' 
+                                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-300 hover:bg-stone-900'
                                     }`}
                                   >
                                     {item}
@@ -384,10 +384,10 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
 
                     <div className="relative pt-1">
                       <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                        <div className="w-full border-t border-stone-200/60" />
+                        <div className="w-full border-t border-stone-800" />
                       </div>
                       <div className="relative flex justify-center">
-                        <span className="bg-stone-50/50 px-3 text-xs font-display font-medium text-stone-400 uppercase tracking-wider">Or type item</span>
+                        <span className="bg-stone-900/50 px-3 text-xs font-display font-medium text-stone-400 uppercase tracking-wider">Or type item</span>
                       </div>
                     </div>
 
@@ -398,12 +398,12 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                           value={newIngredientName}
                           onChange={e => setNewIngredientName(e.target.value)}
                           placeholder="Add ingredient (e.g. Tomatoes)"
-                          className="flex-1 bg-white border border-stone-200/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-stone-900 placeholder:text-stone-400"
+                          className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-white placeholder:text-stone-400"
                         />
                         <button 
                           type="submit"
                           disabled={!newIngredientName.trim()}
-                          className="bg-emerald-600 text-white p-3 rounded-xl disabled:opacity-50 hover:bg-emerald-700 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center"
+                          className="bg-[#FC5200] text-white p-3 rounded-xl disabled:opacity-50 hover:bg-[#FC5200] transition-all active:scale-[0.98] shadow-sm flex items-center justify-center"
                         >
                           <Plus className="w-5 h-5" />
                         </button>
@@ -415,7 +415,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                           type="date"
                           value={newIngredientExpiresAt}
                           onChange={e => setNewIngredientExpiresAt(e.target.value)}
-                          className="bg-white border border-stone-200/60 rounded-lg px-3 py-1.5 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                          className="bg-stone-900 border border-stone-800 rounded-lg px-3 py-1.5 text-sm text-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                         />
                       </div>
                     </form>
@@ -426,16 +426,16 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
           </div>
         </div>
 
-        <div className="px-6 py-3 bg-[#fdfbf7]/90 backdrop-blur-md border-b border-stone-200/60 flex gap-4 sticky top-0 z-10 shadow-sm">
+        <div className="px-6 py-3 bg-[#17181C]/90 backdrop-blur-md border-b border-stone-800 flex gap-4 sticky top-0 z-10 shadow-sm">
           <button
             onClick={() => setActiveSubTab('inventory')}
-            className={`pb-2 text-sm font-medium transition-colors border-b-2 ${activeSubTab === 'inventory' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-stone-500 hover:text-stone-700'}`}
+            className={`pb-2 text-sm font-medium transition-colors border-b-2 ${activeSubTab === 'inventory' ? 'border-[#FC5200] text-[#FC5200]' : 'border-transparent text-stone-400 hover:text-white'}`}
           >
             Inventory
           </button>
           <button
             onClick={() => setActiveSubTab('log')}
-            className={`pb-2 text-sm font-medium transition-colors border-b-2 ${activeSubTab === 'log' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-stone-500 hover:text-stone-700'}`}
+            className={`pb-2 text-sm font-medium transition-colors border-b-2 ${activeSubTab === 'log' ? 'border-[#FC5200] text-[#FC5200]' : 'border-transparent text-stone-400 hover:text-white'}`}
           >
             Activity Log
           </button>
@@ -444,16 +444,16 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
         <div className="p-6">
         {activeSubTab === 'inventory' ? (
           <>
-            <div className="flex gap-2 mb-6 bg-stone-100 p-1 rounded-xl">
+            <div className="flex gap-2 mb-6 bg-stone-800 p-1 rounded-xl">
               <button
                 onClick={() => setActiveLocationTab('fridge')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${activeLocationTab === 'fridge' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${activeLocationTab === 'fridge' ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-500 hover:text-stone-300'}`}
               >
                 Fridge
               </button>
               <button
                 onClick={() => setActiveLocationTab('pantry')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${activeLocationTab === 'pantry' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${activeLocationTab === 'pantry' ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-500 hover:text-stone-300'}`}
               >
                 Pantry
               </button>
@@ -485,7 +485,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
 
                   return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([category, items]) => (
                     <div key={category} className="space-y-4">
-                      <h3 className="text-sm font-display font-medium text-stone-500 uppercase tracking-wider">{category}</h3>
+                      <h3 className="text-sm font-display font-medium text-stone-400 uppercase tracking-wider">{category}</h3>
                       <ul className="space-y-3">
                         {items.sort((a, b) => {
                           if (!a.expiresAt && !b.expiresAt) return 0;
@@ -513,10 +513,10 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                           })();
 
                           return (
-                            <li key={item.id} className="bg-white border border-stone-200/60 rounded-xl p-4 flex flex-col gap-2 shadow-sm">
+                            <li key={item.id} className="bg-stone-900 border border-stone-800 rounded-xl p-4 flex flex-col gap-2 shadow-sm">
                               <div className="flex items-center justify-between">
                                 <div className="flex flex-col">
-                                  <span className="font-medium text-stone-800 text-sm">{item.name}</span>
+                                  <span className="font-medium text-white text-sm">{item.name}</span>
                                   {item.expiresAt && (
                                     <span className={`text-[11px] mt-0.5 ${isExpired ? 'text-red-600 font-bold' : isExpiringSoon ? 'text-emerald-500 font-medium' : 'text-stone-400'}`}>
                                       {isExpired ? 'Expired: ' : 'Expires: '} {(() => {
@@ -527,17 +527,17 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                   )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <div className="flex items-center bg-stone-50 rounded-lg border border-stone-200/60 p-0.5">
+                                  <div className="flex items-center bg-stone-900 rounded-lg border border-stone-800 p-0.5">
                                     <button 
                                       onClick={() => updateInventoryQuantity(item.id, -1)}
-                                      className="p-1 text-stone-400 hover:text-stone-900 transition-all active:scale-[0.98]"
+                                      className="p-1 text-stone-400 hover:text-white transition-all active:scale-[0.98]"
                                     >
                                       <Minus className="w-3.5 h-3.5" />
                                     </button>
-                                    <span className="w-6 text-center text-xs font-semibold text-stone-700">{item.quantity}</span>
+                                    <span className="w-6 text-center text-xs font-semibold text-stone-300">{item.quantity}</span>
                                     <button 
                                       onClick={() => updateInventoryQuantity(item.id, 1)}
-                                      className="p-1 text-stone-400 hover:text-stone-900 transition-all active:scale-[0.98]"
+                                      className="p-1 text-stone-400 hover:text-white transition-all active:scale-[0.98]"
                                     >
                                       <Plus className="w-3.5 h-3.5" />
                                     </button>
@@ -560,7 +560,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                     updateCustomIngredientRule(item.name, { location: newLoc, category: item.category || 'Other' });
                                     syncInventoryItem(updatedItem);
                                   }}
-                                  className="text-[10px] uppercase font-bold tracking-wider bg-stone-50 border border-stone-200/60 rounded-md py-1 px-1.5 text-stone-500 focus:outline-none focus:border-emerald-500"
+                                  className="text-[10px] uppercase font-bold tracking-wider bg-stone-900 border border-stone-800 rounded-md py-1 px-1.5 text-stone-500 focus:outline-none focus:border-emerald-500"
                                 >
                                   <option value="pantry">Pantry</option>
                                   <option value="fridge">Fridge</option>
@@ -574,7 +574,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                     updateCustomIngredientRule(item.name, { location: item.location || 'pantry', category: newCat });
                                     syncInventoryItem(updatedItem);
                                   }}
-                                  className="text-[10px] uppercase font-bold tracking-wider bg-stone-50 border border-stone-200/60 rounded-md py-1 px-1.5 text-stone-500 focus:outline-none focus:border-emerald-500"
+                                  className="text-[10px] uppercase font-bold tracking-wider bg-stone-900 border border-stone-800 rounded-md py-1 px-1.5 text-stone-500 focus:outline-none focus:border-emerald-500"
                                 >
                                   {['Produce', 'Dairy & Eggs', 'Meat & Seafood', 'Pantry Staples', 'Snacks', 'Beverages', 'Frozen', 'Spices & Seasonings', 'Other'].map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>
@@ -600,11 +600,11 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
           ) : (
             <ul className="space-y-4">
               {pantryLogs.map(log => (
-                <li key={log.id} className="bg-white border border-stone-200/60 rounded-2xl p-5 flex items-start gap-4 shadow-sm">
+                <li key={log.id} className="bg-stone-900 border border-stone-800 rounded-2xl p-5 flex items-start gap-4 shadow-sm">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    log.action === 'add' ? 'bg-emerald-100 text-emerald-600' :
+                    log.action === 'add' ? 'bg-emerald-100 text-[#FC5200]' :
                     log.action === 'consume' ? 'bg-orange-100 text-orange-600' :
-                    log.action === 'subtract' ? 'bg-stone-100 text-stone-600' :
+                    log.action === 'subtract' ? 'bg-stone-800 text-stone-400' :
                     'bg-red-100 text-red-600'
                   }`}>
                     {log.action === 'add' ? <Plus className="w-5 h-5" /> :
@@ -614,7 +614,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                   </div>
                   <div className="flex flex-col flex-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-stone-800">
+                      <span className="font-medium text-white">
                         {log.action === 'add' ? 'Added' : log.action === 'consume' ? 'Cooked' : log.action === 'subtract' ? 'Removed' : 'Expired'} {Math.abs(log.quantityChange)} {log.itemName}
                       </span>
                       <span className="text-xs text-stone-400">

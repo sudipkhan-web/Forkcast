@@ -10,7 +10,7 @@ import {
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
+  const PORT = 3000;
 
   app.use(express.json({ limit: "50mb" })); // Support large base64 image loads
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -59,7 +59,9 @@ async function startServer() {
         favoriteMealNamesStr,
         inventoryItems,
         healthConditions,
-        specificMealType
+        specificMealType,
+        trainingDayType,
+        weightKg
       } = req.body;
 
       const result = await serverGenerateRecipes(
@@ -74,7 +76,9 @@ async function startServer() {
         favoriteMealNamesStr || "",
         inventoryItems || [],
         healthConditions || [],
-        specificMealType
+        specificMealType,
+        trainingDayType,
+        weightKg
       );
       res.json(result);
     } catch (error: any) {
@@ -93,7 +97,8 @@ async function startServer() {
       res.json({ base64: base64Data });
     } catch (error: any) {
       console.warn("[SERVER] Recipe image generation failed or quota exceeded. Returning a beautiful fallback URL instead of throwing a 500. Error details:", error.message || error);
-      const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(req.body.recipeName || 'recipe')}/800/800`;
+      const fallbackPrompt = `Professional food photography of ${req.body.recipeName}. ${req.body.cuisine ? req.body.cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?width=800&height=800&nologo=true`;
       res.json({ base64: null, fallbackUrl });
     }
   });

@@ -45,6 +45,8 @@ interface AppContextType {
   setAppNotifications: React.Dispatch<React.SetStateAction<AppNotification[]>>;
   markNotificationAsRead: (notificationId: string) => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
+  trainingLogs: any[];
+  setTrainingLogs: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -55,8 +57,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   
   const [profile, setProfile] = useState<UserProfile>({
     favoriteCuisines: [],
-    skillLevel: 'Intermediate',
-    maxCookingTime: 60,
     hasCompletedOnboarding: false,
   });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('g1');
@@ -74,6 +74,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [likedMealIds, setLikedMealIds] = useState<string[]>([]);
   const [dislikedMealIds, setDislikedMealIds] = useState<string[]>([]);
   const [appNotifications, setAppNotifications] = useState<AppNotification[]>([]);
+  const [trainingLogs, setTrainingLogs] = useState<any[]>([]);
   const triggersRunRef = useRef(false);
 
   useEffect(() => {
@@ -96,8 +97,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       // Reset state on logout
       setProfile({
         favoriteCuisines: [],
-        skillLevel: 'Intermediate',
-        maxCookingTime: 60,
         hasCompletedOnboarding: false,
       });
       setGroups([]);
@@ -124,8 +123,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             email: data.email || auth.currentUser?.email || undefined,
             favoriteCuisines: data.favoriteCuisines || [],
             healthConditions: data.healthConditions || [],
-            skillLevel: data.skillLevel || 'Intermediate',
-            maxCookingTime: data.maxCookingTime || 60,
             hasCompletedOnboarding: data.hasCompletedOnboarding || false,
             selectedGroupId: data.selectedGroupId,
             notifications: data.notifications,
@@ -150,8 +147,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           email: auth.currentUser?.email || '',
           favoriteCuisines: [],
           healthConditions: [],
-          skillLevel: 'Intermediate',
-          maxCookingTime: 60,
           hasCompletedOnboarding: false,
           likedTags: {},
           dislikedTags: {},
@@ -205,6 +200,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setAppNotifications(snapshot.docs.map(d => d.data() as AppNotification).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     }, (e) => handleFirestoreError(e, OperationType.LIST, `users/${userId}/notifications`));
 
+    const unsubTrainingLogs = onSnapshot(collection(db, `users/${userId}/trainingLog`), (snapshot) => {
+      setTrainingLogs(snapshot.docs.map(d => ({ date: d.id, ...d.data() })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }, (e) => handleFirestoreError(e, OperationType.LIST, `users/${userId}/trainingLog`));
+
     return () => {
       unsubProfile();
       unsubInventory();
@@ -217,6 +216,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       unsubFavorites();
       unsubGlobalRecipes();
       unsubNotifications();
+      unsubTrainingLogs();
     };
   }, [userId, isAuthReady]);
 
@@ -320,7 +320,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       appNotifications,
       setAppNotifications,
       markNotificationAsRead,
-      markAllNotificationsAsRead
+      markAllNotificationsAsRead,
+      trainingLogs,
+      setTrainingLogs
     }}>
       {children}
     </AppContext.Provider>

@@ -2,6 +2,8 @@ import { RecipeIngredient, Meal } from '../data/recipes';
 import { InventoryItem, PersonProfile } from '../types';
 import { getActiveConstraints, getExpiringIngredients, Substitution } from '../services/recommendationEngine';
 
+export const getPrimaryPerson = (household: PersonProfile[]) => household[0];
+
 /**
  * Generates an array of Date objects for the next `numDays` days.
  * @param {number} numDays - The number of days to generate.

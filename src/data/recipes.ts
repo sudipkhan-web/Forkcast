@@ -17,6 +17,11 @@ export type Meal = {
   ingredients: RecipeIngredient[];
   steps: string[];
   tags: string[];
+  calories?: number;
+  carbsGrams?: number;
+  proteinGrams?: number;
+  fatGrams?: number;
+  fuelingNote?: string;
   isVariation?: boolean;
   baseId?: string;
   dynamicReason?: string;

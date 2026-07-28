@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check } from 'lucide-react';
+import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { PersonProfile, Group, UserProfile, AppNotification } from '../types';
 import { Meal } from '../data/recipes';
-import { DIETARY_OPTIONS, CUISINE_OPTIONS, GOAL_OPTIONS, HEALTH_CONDITIONS, SKILL_OPTIONS, TIME_OPTIONS, COMMON_DISLIKED_INGREDIENTS } from '../constants';
+import { DIETARY_OPTIONS, CUISINE_OPTIONS, HEALTH_CONDITIONS, SKILL_OPTIONS, TIME_OPTIONS, COMMON_DISLIKED_INGREDIENTS, BIOLOGICAL_SEX_OPTIONS, RACE_TYPE_OPTIONS } from '../constants';
 import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -49,8 +49,8 @@ export function ProfileView({
   const [newDietary, setNewDietary] = useState('');
   const [newHealthCondition, setNewHealthCondition] = useState('');
   const [newFavoriteCuisine, setNewFavoriteCuisine] = useState('');
-  const [newHealthGoal, setNewHealthGoal] = useState('');
   const [isConfirmingSignOut, setIsConfirmingSignOut] = useState(false);
+  const [isBiometricsOpen, setIsBiometricsOpen] = useState(false);
   const signOutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [permission, setPermission] = useState<string>(() => {
@@ -105,354 +105,31 @@ export function ProfileView({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-0 bg-[#fdfbf7] flex flex-col z-10"
+      className="absolute inset-0 bg-[#17181C] flex flex-col z-10"
     >
-      <header className="px-6 py-4 flex items-center justify-between bg-[#fdfbf7]/80 backdrop-blur-xl border-b border-stone-200/60 shrink-0 z-20 sticky top-0">
-        <h1 className="text-2xl font-display font-bold text-stone-900 tracking-tight">Chef's Profile</h1>
+      <header className="px-6 py-4 flex items-center justify-between bg-[#17181C]/80 backdrop-blur-xl border-b border-stone-800 shrink-0 z-20 sticky top-0">
+        <h1 className="text-2xl font-display font-bold text-white tracking-tight">Chef's Profile</h1>
         <div className="flex items-center gap-2">
           <NotificationBell />
           <button 
             onClick={() => setIsShareModalOpen(true)}
-            className="p-2 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all active:scale-95"
+            className="p-2 text-stone-400 hover:text-[#FC5200] hover:bg-emerald-50 rounded-full transition-all active:scale-95"
           >
             <Share className="w-5 h-5" />
           </button>
         </div>
       </header>
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        
-        {editingPersonId ? (
+        {editingGroupId ? (
           <div className="space-y-8">
-            <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
+            <div className="flex items-center justify-between bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                  <User className="w-5 h-5" />
-                </div>
-                <h2 className="text-base font-bold text-stone-900">Edit Member</h2>
-              </div>
-              <button onClick={() => setEditingPersonId(null)} className="text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all active:scale-[0.98]">Done</button>
-            </div>
-            
-            {(() => {
-              const person = household.find(p => p.id === editingPersonId);
-              if (!person) return null;
-              return (
-                <>
-                  <div className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-                    <label className="block text-sm font-bold text-stone-700 mb-2">Name</label>
-                    <input 
-                      type="text" 
-                      value={person.name}
-                      onChange={e => updateHouseholdMember({ ...person, name: e.target.value })}
-                      className="w-full bg-stone-50 border border-stone-200/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 transition-all"
-                    />
-                  </div>
-
-                  <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Leaf className="w-4 h-4 text-emerald-600" />
-                      <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Dietary Preferences</h2>
-                    </div>
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (!newDietary.trim()) return;
-                        if (!person.dietary.includes(newDietary.trim())) {
-                          updateHouseholdMember({
-                            ...person,
-                            dietary: [...person.dietary, newDietary.trim()]
-                          });
-                        }
-                        setNewDietary('');
-                      }}
-                      className="flex gap-2 mb-3"
-                    >
-                      <input 
-                        type="text" 
-                        value={newDietary}
-                        onChange={e => setNewDietary(e.target.value)}
-                        placeholder="Add other preference..."
-                        className="flex-1 bg-white border border-stone-200/60 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder:text-stone-400"
-                      />
-                      <button type="submit" className="bg-white border border-stone-200/60 text-stone-700 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm">Add</button>
-                    </form>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(new Set([...DIETARY_OPTIONS, ...person.dietary])).map(diet => (
-                        <button
-                          key={diet}
-                          onClick={() => {
-                            updateHouseholdMember({
-                              ...person,
-                              dietary: person.dietary.includes(diet) 
-                                ? person.dietary.filter(d => d !== diet)
-                                : [...person.dietary, diet]
-                            });
-                          }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
-                            person.dietary.includes(diet)
-                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                              : 'bg-white border-stone-200/60 text-stone-600 hover:border-emerald-500 hover:text-emerald-600'
-                          }`}
-                        >
-                          {diet}
-                          {person.dietary.includes(diet) && !DIETARY_OPTIONS.includes(diet) && (
-                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Ban className="w-4 h-4 text-red-500" />
-                      <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Disliked Ingredients</h2>
-                    </div>
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (!newDislikedIngredient.trim()) return;
-                        if (!person.dislikedIngredients.includes(newDislikedIngredient.trim())) {
-                          updateHouseholdMember({
-                            ...person,
-                            dislikedIngredients: [...person.dislikedIngredients, newDislikedIngredient.trim()]
-                          });
-                        }
-                        setNewDislikedIngredient('');
-                      }}
-                      className="flex gap-2 mb-3"
-                    >
-                      <input 
-                        type="text" 
-                        value={newDislikedIngredient}
-                        onChange={e => setNewDislikedIngredient(e.target.value)}
-                        placeholder="Add other ingredient..."
-                        className="flex-1 bg-white border border-stone-200/60 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder:text-stone-400"
-                      />
-                      <button type="submit" className="bg-white border border-stone-200/60 text-stone-700 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm">Add</button>
-                    </form>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...person.dislikedIngredients])).map(ing => (
-                        <button
-                          key={ing}
-                          onClick={() => {
-                            updateHouseholdMember({
-                              ...person,
-                              dislikedIngredients: person.dislikedIngredients.includes(ing) 
-                                ? person.dislikedIngredients.filter(i => i !== ing)
-                                : [...person.dislikedIngredients, ing]
-                            });
-                          }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
-                            person.dislikedIngredients.includes(ing)
-                              ? 'bg-red-500 border-red-500 text-white shadow-sm'
-                              : 'bg-white border-stone-200/60 text-stone-600 hover:border-red-500 hover:text-red-600'
-                          }`}
-                        >
-                          {ing}
-                          {person.dislikedIngredients.includes(ing) && !COMMON_DISLIKED_INGREDIENTS.includes(ing) && (
-                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                  <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Heart className="w-4 h-4 text-rose-500" />
-                      <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Favorite Cuisines</h2>
-                    </div>
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (!newFavoriteCuisine.trim()) return;
-                        if (!person.favoriteCuisines.includes(newFavoriteCuisine.trim())) {
-                          updateHouseholdMember({
-                            ...person,
-                            favoriteCuisines: [...person.favoriteCuisines, newFavoriteCuisine.trim()]
-                          });
-                        }
-                        setNewFavoriteCuisine('');
-                      }}
-                      className="flex gap-2 mb-3"
-                    >
-                      <input 
-                        type="text" 
-                        value={newFavoriteCuisine}
-                        onChange={e => setNewFavoriteCuisine(e.target.value)}
-                        placeholder="Add other cuisine..."
-                        className="flex-1 bg-white border border-stone-200/60 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder:text-stone-400"
-                      />
-                      <button type="submit" className="bg-white border border-stone-200/60 text-stone-700 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm">Add</button>
-                    </form>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(new Set([...CUISINE_OPTIONS, ...person.favoriteCuisines])).map(cuisine => (
-                        <button
-                          key={cuisine}
-                          onClick={() => {
-                            updateHouseholdMember({
-                              ...person,
-                              favoriteCuisines: person.favoriteCuisines.includes(cuisine) 
-                                ? person.favoriteCuisines.filter(c => c !== cuisine)
-                                : [...person.favoriteCuisines, cuisine]
-                            });
-                          }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
-                            person.favoriteCuisines.includes(cuisine)
-                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                              : 'bg-white border-stone-200/60 text-stone-600 hover:border-emerald-500 hover:text-emerald-600'
-                          }`}
-                        >
-                          {cuisine}
-                          {person.favoriteCuisines.includes(cuisine) && !CUISINE_OPTIONS.includes(cuisine) && (
-                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Target className="w-4 h-4 text-emerald-600" />
-                      <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Health Goals</h2>
-                    </div>
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (!newHealthGoal.trim()) return;
-                        if (!(person.goals || []).includes(newHealthGoal.trim())) {
-                          updateHouseholdMember({
-                            ...person,
-                            goals: [...(person.goals || []), newHealthGoal.trim()]
-                          });
-                        }
-                        setNewHealthGoal('');
-                      }}
-                      className="flex gap-2 mb-3"
-                    >
-                      <input 
-                        type="text" 
-                        value={newHealthGoal}
-                        onChange={e => setNewHealthGoal(e.target.value)}
-                        placeholder="Add other goal..."
-                        className="flex-1 bg-white border border-stone-200/60 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 placeholder:text-stone-400"
-                      />
-                      <button type="submit" className="bg-white border border-stone-200/60 text-stone-700 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm">Add</button>
-                    </form>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(new Set([...GOAL_OPTIONS, ...(person.goals || [])])).map(goal => (
-                        <button
-                          key={goal}
-                          onClick={() => {
-                            updateHouseholdMember({
-                              ...person,
-                              goals: (person.goals || []).includes(goal) 
-                                ? (person.goals || []).filter(g => g !== goal)
-                                : [...(person.goals || []), goal]
-                            });
-                          }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
-                            (person.goals || []).includes(goal)
-                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                              : 'bg-white border-stone-200/60 text-stone-600 hover:border-emerald-500 hover:text-emerald-600'
-                          }`}
-                        >
-                          {goal}
-                          {(person.goals || []).includes(goal) && !GOAL_OPTIONS.includes(goal) && (
-                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                    <div className="flex items-center gap-2 mb-4 pl-2">
-                      <Activity className="w-4 h-4 text-blue-500" />
-                      <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Medical & Health Conditions</h2>
-                    </div>
-                    <p className="text-xs text-stone-500 mb-4 pl-2">Tap to select any conditions you have. We'll strict-filter recipes to accommodate your needs.</p>
-                    <div className="pl-2">
-                      <form 
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          if (!newHealthCondition.trim()) return;
-                          if (!(person.healthConditions || []).includes(newHealthCondition.trim())) {
-                            updateHouseholdMember({
-                              ...person,
-                              healthConditions: [...(person.healthConditions || []), newHealthCondition.trim()]
-                            });
-                          }
-                          setNewHealthCondition('');
-                        }}
-                        className="flex gap-2 mb-3"
-                      >
-                        <input 
-                          type="text" 
-                          value={newHealthCondition}
-                          onChange={e => setNewHealthCondition(e.target.value)}
-                          placeholder="Add other condition..."
-                          className="flex-1 bg-white border border-stone-200/60 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-stone-900 placeholder:text-stone-400"
-                        />
-                        <button type="submit" className="bg-white border border-stone-200/60 text-stone-700 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm">Add</button>
-                      </form>
-                      <div className="flex flex-wrap gap-2">
-                        {Array.from(new Set([...HEALTH_CONDITIONS, ...(person.healthConditions || [])])).map(condition => (
-                          <button
-                            key={condition}
-                            onClick={() => {
-                              updateHouseholdMember({
-                                ...person,
-                                healthConditions: (person.healthConditions || []).includes(condition) 
-                                  ? (person.healthConditions || []).filter(c => c !== condition)
-                                  : [...(person.healthConditions || []), condition]
-                              });
-                            }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
-                              (person.healthConditions || []).includes(condition)
-                                ? 'bg-blue-500 border-blue-500 text-white shadow-sm'
-                                : 'bg-stone-50 border-stone-200/60 text-stone-600 hover:border-blue-500 hover:text-blue-600'
-                            }`}
-                          >
-                            {condition}
-                            {(person.healthConditions || []).includes(condition) && !HEALTH_CONDITIONS.includes(condition) && (
-                              <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-
-                  {household.length > 1 && (
-                    <div className="pt-4">
-                      <button
-                        onClick={() => {
-                          deleteHouseholdMember(person.id);
-                          setEditingPersonId(null);
-                        }}
-                        className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-100 transition-all active:scale-[0.98] border border-red-200"
-                      >
-                        Delete Member
-                      </button>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        ) : editingGroupId ? (
-          <div className="space-y-8">
-            <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-[#FC5200]">
                   <Users className="w-5 h-5" />
                 </div>
-                <h2 className="text-base font-bold text-stone-900">Edit Group</h2>
+                <h2 className="text-base font-bold text-white">Edit Group</h2>
               </div>
-              <button onClick={() => setEditingGroupId(null)} className="text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all active:scale-[0.98]">Done</button>
+              <button onClick={() => setEditingGroupId(null)} className="text-sm font-medium bg-emerald-50 text-[#FC5200] hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all active:scale-[0.98]">Done</button>
             </div>
             
             {(() => {
@@ -460,24 +137,24 @@ export function ProfileView({
               if (!group) return null;
               return (
                 <>
-                  <div className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-                    <label className="block text-sm font-bold text-stone-700 mb-2">Group Name</label>
+                  <div className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                    <label className="block text-sm font-bold text-stone-300 mb-2">Group Name</label>
                     <input 
                       type="text" 
                       value={group.name}
                       onChange={e => updateGroup({ ...group, name: e.target.value })}
-                      className="w-full bg-stone-50 border border-stone-200/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900 transition-all"
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white transition-all"
                     />
                   </div>
 
-                  <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
+                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
-                      <Users className="w-4 h-4 text-emerald-600" />
-                      <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Group Members</h2>
+                      <Users className="w-4 h-4 text-[#FC5200]" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Group Members</h2>
                     </div>
                     <div className="space-y-2">
                       {household.map(person => (
-                        <label key={person.id} className="flex items-center gap-3 p-3 rounded-xl border border-stone-200/60 hover:bg-stone-50 cursor-pointer transition-colors">
+                        <label key={person.id} className="flex items-center gap-3 p-3 rounded-xl border border-stone-800 hover:bg-stone-900 cursor-pointer transition-colors">
                           <input
                             type="checkbox"
                             checked={group.memberIds.includes(person.id)}
@@ -487,9 +164,9 @@ export function ProfileView({
                                 : group.memberIds.filter(id => id !== person.id);
                               updateGroup({ ...group, memberIds: newMemberIds });
                             }}
-                            className="w-5 h-5 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                            className="w-5 h-5 rounded border-stone-300 text-[#FC5200] focus:ring-emerald-500"
                           />
-                          <span className="text-sm font-medium text-stone-900">{person.name}</span>
+                          <span className="text-sm font-medium text-white">{person.name}</span>
                         </label>
                       ))}
                     </div>
@@ -515,101 +192,43 @@ export function ProfileView({
             })()}
           </div>
         ) : (
-          <>
-            {/* Household Members */}
-            <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-emerald-600" />
-                  <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Household Members</h2>
-                </div>
-                <button 
-                  onClick={() => {
-                    const newId = Date.now().toString();
-                    const newMember: PersonProfile = { id: newId, name: 'New Member', dietary: [], dislikedIngredients: [], favoriteCuisines: [], goals: [] };
-                    updateHouseholdMember(newMember);
-                    setEditingPersonId(newId);
+          <div className="space-y-6">
+            
+            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm flex flex-col gap-4">
+              <div className="flex items-center gap-2 mb-2">
+                <User className="w-5 h-5 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Account & Authentication</h2>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-stone-500 mb-1 block">Account Email</label>
+                <input 
+                  type="email" 
+                  placeholder="Enter email address"
+                  value={profile.email || auth.currentUser?.email || ''}
+                  onChange={(e) => {
+                    const email = e.target.value;
+                    setProfile(prev => ({ ...prev, email }));
+                    if (auth.currentUser) {
+                      setDoc(doc(db, 'users', auth.currentUser.uid), { email }, { merge: true });
+                    }
                   }}
-                  className="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
-                >
-                  <Plus className="w-4 h-4" /> Add
-                </button>
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white transition-all"
+                />
               </div>
-              <p className="text-sm text-stone-500 mb-4">
-                Meal suggestions will adapt based on the combined preferences, dietary restrictions, and favorite cuisines of everyone in your household.
-              </p>
-              <div className="space-y-4">
-                {household.map(person => (
-                  <div key={person.id} className="bg-white border border-stone-200/60 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-                    <div>
-                      <h3 className="font-display font-bold text-stone-900">{person.name}</h3>
-                      <p className="text-xs text-stone-500 mt-1">
-                        {person.dietary.length > 0 ? person.dietary.join(', ') : 'No dietary restrictions'}
-                        {person.dislikedIngredients.length > 0 ? ` • Dislikes: ${person.dislikedIngredients.join(', ')}` : ''}
-                        {person.favoriteCuisines.length > 0 ? ` • Loves: ${person.favoriteCuisines.join(', ')}` : ''}
-                        {(person.goals || []).length > 0 ? ` • Goals: ${(person.goals || []).join(', ')}` : ''}
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => setEditingPersonId(person.id)}
-                      className="text-sm font-medium text-stone-600 hover:text-stone-900 px-4 py-2 bg-stone-100 hover:bg-stone-200 rounded-xl transition-all active:scale-[0.98]"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <button
+                onClick={handleSignOut}
+                className="w-full py-3.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] bg-stone-800 text-stone-400 hover:bg-stone-700 hover:text-white flex items-center justify-center gap-2 mt-2"
+              >
+                <LogOut className="w-4 h-4" />
+                {isConfirmingSignOut ? 'Tap again to confirm' : 'Sign out'}
+              </button>
             </section>
 
-            {/* Groups */}
-            <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-emerald-600" />
-                  <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Groups</h2>
-                </div>
-                <button 
-                  onClick={() => {
-                    const newId = `g${Date.now()}`;
-                    const newGroup: Group = { id: newId, name: 'New Group', memberIds: [] };
-                    updateGroup(newGroup);
-                    setEditingGroupId(newId);
-                  }}
-                  className="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
-                >
-                  <Plus className="w-4 h-4" /> Add
-                </button>
-              </div>
-              <p className="text-sm text-stone-500 mb-4">
-                Create groups like "Family" or "Friends" to quickly select who you are cooking for.
-              </p>
-              <div className="space-y-4">
-                {groups.map(group => (
-                  <div key={group.id} className="bg-white border border-stone-200/60 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-                    <div>
-                      <h3 className="font-display font-bold text-stone-900">{group.name}</h3>
-                      <p className="text-xs text-stone-500 mt-1">
-                        {group.memberIds.length} member{group.memberIds.length !== 1 ? 's' : ''}
-                        {group.memberIds.length > 0 && ` • ${group.memberIds.map(id => household.find(h => h.id === id)?.name).filter(Boolean).join(', ')}`}
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => setEditingGroupId(group.id)}
-                      className="text-sm font-medium text-stone-600 hover:text-stone-900 px-4 py-2 bg-stone-100 hover:bg-stone-200 rounded-xl transition-all active:scale-[0.98]"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Notifications */}
-            <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
+            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Bell className="w-5 h-5 text-indigo-500" />
-                  <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Notifications</h2>
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Notifications</h2>
                 </div>
                 <label className="flex items-center relative w-max cursor-pointer select-none">
                   <input 
@@ -643,7 +262,7 @@ export function ProfileView({
                       if (auth.currentUser) setDoc(doc(db, 'users', auth.currentUser.uid), { notifications: newNotifications }, { merge: true });
                     }}
                   />
-                  <span className="w-5 h-5 right-6 absolute rounded-full transform transition-transform bg-white border border-stone-200 shadow-sm checked:border-indigo-500 pointer-events-none checked:translate-x-5" style={{ transform: profile.notifications?.enabled ? 'translateX(20px)' : 'translateX(2px)' }} />
+                  <span className="w-5 h-5 right-6 absolute rounded-full transform transition-transform bg-stone-900 border border-stone-800 shadow-sm checked:border-indigo-500 pointer-events-none checked:translate-x-5" style={{ transform: profile.notifications?.enabled ? 'translateX(20px)' : 'translateX(2px)' }} />
                 </label>
               </div>
 
@@ -651,10 +270,10 @@ export function ProfileView({
                 <div className="space-y-4 pt-2 border-t border-stone-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500">
+                      <div className="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center text-stone-500">
                         <Calendar className="w-4 h-4" />
                       </div>
-                      <div className="text-sm text-stone-700 font-medium">Meal Planning Reminder</div>
+                      <div className="text-sm text-stone-300 font-medium">Meal Planning Reminder</div>
                     </div>
                     <input 
                       type="time" 
@@ -664,16 +283,16 @@ export function ProfileView({
                         setProfile(prev => ({ ...prev, notifications: newNotifications }));
                         if (auth.currentUser) setDoc(doc(db, 'users', auth.currentUser.uid), { notifications: newNotifications }, { merge: true });
                       }}
-                      className="bg-stone-50 border border-stone-200 text-stone-700 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2"
+                      className="bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2"
                     />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500">
+                      <div className="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center text-stone-500">
                         <ShoppingCart className="w-4 h-4" />
                       </div>
-                      <div className="text-sm text-stone-700 font-medium">Shopping Reminder</div>
+                      <div className="text-sm text-stone-300 font-medium">Shopping Reminder</div>
                     </div>
                     <label className="flex items-center relative w-max cursor-pointer select-none">
                       <input 
@@ -686,16 +305,16 @@ export function ProfileView({
                           if (auth.currentUser) setDoc(doc(db, 'users', auth.currentUser.uid), { notifications: newNotifications }, { merge: true });
                         }}
                       />
-                      <span className="w-4 h-4 relative -left-8 rounded-full transform transition-transform bg-white shadow-sm pointer-events-none block" style={{ transform: profile.notifications?.shoppingReminder ? 'translateX(16px)' : 'translateY(0px)' }} />
+                      <span className="w-4 h-4 relative -left-8 rounded-full transform transition-transform bg-stone-900 shadow-sm pointer-events-none block" style={{ transform: profile.notifications?.shoppingReminder ? 'translateX(16px)' : 'translateY(0px)' }} />
                     </label>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500">
+                      <div className="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center text-stone-500">
                         <Archive className="w-4 h-4" />
                       </div>
-                      <div className="text-sm text-stone-700 font-medium">Expiring Items Alert</div>
+                      <div className="text-sm text-stone-300 font-medium">Expiring Items Alert</div>
                     </div>
                     <label className="flex items-center relative w-max cursor-pointer select-none">
                       <input 
@@ -708,16 +327,16 @@ export function ProfileView({
                           if (auth.currentUser) setDoc(doc(db, 'users', auth.currentUser.uid), { notifications: newNotifications }, { merge: true });
                         }}
                       />
-                      <span className="w-4 h-4 relative -left-8 rounded-full transform transition-transform bg-white shadow-sm pointer-events-none block" style={{ transform: profile.notifications?.expiringReminder ? 'translateX(16px)' : 'translateY(0px)' }} />
+                      <span className="w-4 h-4 relative -left-8 rounded-full transform transition-transform bg-stone-900 shadow-sm pointer-events-none block" style={{ transform: profile.notifications?.expiringReminder ? 'translateX(16px)' : 'translateY(0px)' }} />
                     </label>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500">
+                      <div className="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center text-stone-500">
                         <Mail className="w-4 h-4" />
                       </div>
-                      <div className="text-sm text-stone-700 font-medium">Email Notifications</div>
+                      <div className="text-sm text-stone-300 font-medium">Email Notifications</div>
                     </div>
                     <label className="flex items-center relative w-max cursor-pointer select-none">
                       <input 
@@ -745,33 +364,10 @@ export function ProfileView({
                           }
                         }}
                       />
-                      <span className="w-4 h-4 relative -left-8 rounded-full transform transition-transform bg-white shadow-sm pointer-events-none block" style={{ transform: profile.notifications?.emailNotifications ? 'translateX(16px)' : 'translateY(0px)' }} />
+                      <span className="w-4 h-4 relative -left-8 rounded-full transform transition-transform bg-stone-900 shadow-sm pointer-events-none block" style={{ transform: profile.notifications?.emailNotifications ? 'translateX(16px)' : 'translateY(0px)' }} />
                     </label>
                   </div>
-                  {profile.notifications?.emailNotifications && (
-                    <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-stone-100 pl-11">
-                      <label className="text-xs font-medium text-stone-500">Notification Email Address</label>
-                      <input 
-                        type="email" 
-                        placeholder="Enter email address"
-                        value={profile.email || ''}
-                        onChange={(e) => {
-                          const email = e.target.value;
-                          setProfile(prev => ({ ...prev, email }));
-                        }}
-                        onBlur={(e) => {
-                          const email = e.target.value;
-                          if (auth.currentUser) {
-                            setDoc(doc(db, 'users', auth.currentUser.uid), { email }, { merge: true });
-                          }
-                        }}
-                        className="w-full bg-stone-50 border border-stone-200 text-stone-700 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2"
-                      />
-                      <p className="text-[10px] text-stone-400 mt-1 italic">
-                        Current: {profile.email || auth.currentUser?.email || 'Not verified'}
-                      </p>
-                    </div>
-                  )}
+                  
 
                   <div className="pt-4 mt-2 border-t border-stone-100">
                     <button
@@ -812,7 +408,7 @@ export function ProfileView({
                           await setDoc(doc(db, `users/${userId}/notifications`, notificationId), newNotif);
                         }
                       }}
-                      className="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-600 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+                      className="w-full py-2.5 px-4 bg-stone-800 hover:bg-stone-700 text-stone-400 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
                     >
                       <Sparkles className="w-4 h-4 text-emerald-500" /> Send Test Notification
                     </button>
@@ -820,84 +416,17 @@ export function ProfileView({
                 </div>
               )}
             </section>
-
-            {/* Skill Level */}
-            <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
+            <section className="pt-6 border-t border-stone-800 mt-8">
               <div className="flex items-center gap-2 mb-4">
-                <ChefHat className="w-4 h-4 text-emerald-600" />
-                <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Cooking Skill Level</h2>
-              </div>
-              <div className="flex gap-2">
-                {SKILL_OPTIONS.map(skill => (
-                  <button
-                    key={skill}
-                    onClick={() => {
-                      setProfile(prev => ({ ...prev, skillLevel: skill }));
-                      if (auth.currentUser) setDoc(doc(db, 'users', auth.currentUser.uid), { skillLevel: skill }, { merge: true });
-                    }}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
-                      profile.skillLevel === skill
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                        : 'bg-white border-stone-200/60 text-stone-600 hover:border-emerald-500 hover:text-emerald-600'
-                    }`}
-                  >
-                    {skill}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* Max Cooking Time */}
-            <section className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Clock className="w-4 h-4 text-emerald-600" />
-                <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">Max Cooking Time</h2>
-              </div>
-              <div className="flex gap-2">
-                {TIME_OPTIONS.map(time => (
-                  <button
-                    key={time}
-                    onClick={() => {
-                      setProfile(prev => ({ ...prev, maxCookingTime: time }));
-                      if (auth.currentUser) setDoc(doc(db, 'users', auth.currentUser.uid), { maxCookingTime: time }, { merge: true });
-                    }}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
-                      profile.maxCookingTime === time
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                        : 'bg-white border-stone-200/60 text-stone-600 hover:border-emerald-500 hover:text-emerald-600'
-                    }`}
-                  >
-                    {time} min
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* Refine Taste Button */}
-            <section className="pt-4 border-t border-stone-200/60 mt-8">
-              <button
-                onClick={() => setActiveTab('learning')}
-                className="w-full py-3.5 rounded-2xl text-lg font-semibold transition-all active:scale-[0.98] bg-emerald-600 text-white hover:bg-emerald-700 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
-              >
-                Refine My Palate
-              </button>
-              <p className="text-xs text-stone-500 text-center mt-3">
-                Swipe through dishes to improve your recommendations.
-              </p>
-            </section>
-
-            {/* Push Notifications Settings */}
-            <section className="pt-6 border-t border-stone-200/60 mt-8">
-              <div className="flex items-center gap-2 mb-4">
-                <Bell className="w-5 h-5 text-stone-700" />
-                <h2 className="text-sm font-display font-medium text-stone-900 uppercase tracking-wider">Push Notifications</h2>
+                <Bell className="w-5 h-5 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-medium text-white uppercase tracking-wider">Push Notifications</h2>
               </div>
               
-              <div className="bg-stone-50 border border-stone-200/80 rounded-2xl p-5">
+              <div className="bg-stone-900 border border-stone-800/80 rounded-2xl p-5">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm font-medium text-stone-700">Permission Status</span>
+                  <span className="text-sm font-medium text-stone-300">Permission Status</span>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                    permission === 'granted' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                    permission === 'granted' ? 'bg-emerald-50 text-[#FC5200] border border-emerald-200' :
                     permission === 'denied' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                     'bg-amber-50 text-amber-700 border border-amber-200'
                   }`}>
@@ -923,7 +452,7 @@ export function ProfileView({
                 )}
 
                 {permission === 'granted' && (
-                  <div className="flex gap-2.5 items-start text-emerald-700">
+                  <div className="flex gap-2.5 items-start text-[#FC5200]">
                     <Check className="w-4 h-4 mt-0.5 shrink-0" />
                     <div>
                       <h4 className="text-xs font-semibold">Notifications are on ✓</h4>
@@ -947,24 +476,574 @@ export function ProfileView({
                 )}
               </div>
             </section>
-
-            {/* Sign Out Button */}
-            <section className="pt-4 pb-8">
-              <button
-                onClick={handleSignOut}
-                className="w-full py-3.5 rounded-2xl text-sm font-medium transition-all active:scale-[0.98] bg-stone-100 text-stone-600 hover:bg-stone-200 flex items-center justify-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                {isConfirmingSignOut ? 'Tap again to confirm' : 'Sign out'}
-              </button>
+            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#FC5200]" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Household Members</h2>
+                </div>
+                <button 
+                  onClick={() => {
+                    const newId = Date.now().toString();
+                    const newMember: PersonProfile = { id: newId, name: 'New Member', dietary: [], dislikedIngredients: [], favoriteCuisines: [] };
+                    updateHouseholdMember(newMember);
+                    setEditingPersonId(newId);
+                  }}
+                  className="text-[#FC5200] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
+                >
+                  <Plus className="w-4 h-4" /> Add
+                </button>
+              </div>
+              <p className="text-sm text-stone-500 mb-4">
+                Meal suggestions will adapt based on the combined preferences, dietary restrictions, and favorite cuisines of everyone in your household.
+              </p>
+              <div className="space-y-4">
+                {household.map(person => (
+                  <div key={person.id} className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                      <h3 className="font-display font-bold text-white">{person.name}</h3>
+                      <p className="text-xs text-stone-500 mt-1">
+                        {person.dietary.length > 0 ? person.dietary.join(', ') : 'No dietary restrictions'}
+                        {person.dislikedIngredients.length > 0 ? ` • Dislikes: ${person.dislikedIngredients.join(', ')}` : ''}
+                        {person.favoriteCuisines.length > 0 ? ` • Loves: ${person.favoriteCuisines.join(', ')}` : ''}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setEditingPersonId(person.id)}
+                      className="text-sm font-medium text-stone-400 hover:text-white px-4 py-2 bg-stone-800 hover:bg-stone-700 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ))}
+              </div>
             </section>
             
-            {/* System Actions */}
-            <section className="pt-4 border-t border-stone-200/60 pb-8">
-              <div className="flex items-center gap-2 mb-2">
-                 <h2 className="text-sm font-display font-bold text-stone-900 uppercase tracking-wider">System Actions</h2>
+            {editingPersonId && (
+              <div className="pt-6 border-t border-stone-800 space-y-8 animate-in fade-in slide-in-from-bottom-4" id="member-settings">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-display font-bold text-white">
+                    Editing Member
+                  </h2>
+                  <button onClick={() => setEditingPersonId(null)} className="text-sm font-medium bg-emerald-50 text-[#FC5200] hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all active:scale-[0.98]">
+                    Close
+                  </button>
+                </div>
+                {(() => {
+              const person = household.find(p => p.id === editingPersonId);
+              if (!person) return null;
+              return (
+                <>
+                  <div className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                    <label className="block text-sm font-bold text-stone-300 mb-2">Name</label>
+                    <input 
+                      type="text" 
+                      value={person.name}
+                      onChange={e => updateHouseholdMember({ ...person, name: e.target.value })}
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white transition-all"
+                    />
+                  </div>
+
+                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Leaf className="w-4 h-4 text-[#FC5200]" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Dietary Preferences</h2>
+                    </div>
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newDietary.trim()) return;
+                        if (!person.dietary.includes(newDietary.trim())) {
+                          updateHouseholdMember({
+                            ...person,
+                            dietary: [...person.dietary, newDietary.trim()]
+                          });
+                        }
+                        setNewDietary('');
+                      }}
+                      className="flex gap-2 mb-3"
+                    >
+                      <input 
+                        type="text" 
+                        value={newDietary}
+                        onChange={e => setNewDietary(e.target.value)}
+                        placeholder="Add other preference..."
+                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
+                      />
+                      <button type="submit" className="bg-stone-900 border border-stone-800 text-stone-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-900 active:scale-[0.98] transition-all shadow-sm">Add</button>
+                    </form>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set([...DIETARY_OPTIONS, ...person.dietary])).map(diet => (
+                        <button
+                          key={diet}
+                          onClick={() => {
+                            updateHouseholdMember({
+                              ...person,
+                              dietary: person.dietary.includes(diet) 
+                                ? person.dietary.filter(d => d !== diet)
+                                : [...person.dietary, diet]
+                            });
+                          }}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
+                            person.dietary.includes(diet)
+                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                          }`}
+                        >
+                          {diet}
+                          {person.dietary.includes(diet) && !DIETARY_OPTIONS.includes(diet) && (
+                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Ban className="w-4 h-4 text-red-500" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Disliked Ingredients</h2>
+                    </div>
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newDislikedIngredient.trim()) return;
+                        if (!person.dislikedIngredients.includes(newDislikedIngredient.trim())) {
+                          updateHouseholdMember({
+                            ...person,
+                            dislikedIngredients: [...person.dislikedIngredients, newDislikedIngredient.trim()]
+                          });
+                        }
+                        setNewDislikedIngredient('');
+                      }}
+                      className="flex gap-2 mb-3"
+                    >
+                      <input 
+                        type="text" 
+                        value={newDislikedIngredient}
+                        onChange={e => setNewDislikedIngredient(e.target.value)}
+                        placeholder="Add other ingredient..."
+                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
+                      />
+                      <button type="submit" className="bg-stone-900 border border-stone-800 text-stone-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-900 active:scale-[0.98] transition-all shadow-sm">Add</button>
+                    </form>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...person.dislikedIngredients])).map(ing => (
+                        <button
+                          key={ing}
+                          onClick={() => {
+                            updateHouseholdMember({
+                              ...person,
+                              dislikedIngredients: person.dislikedIngredients.includes(ing) 
+                                ? person.dislikedIngredients.filter(i => i !== ing)
+                                : [...person.dislikedIngredients, ing]
+                            });
+                          }}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
+                            person.dislikedIngredients.includes(ing)
+                              ? 'bg-red-500 border-red-500 text-white shadow-sm'
+                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-red-500 hover:text-red-600'
+                          }`}
+                        >
+                          {ing}
+                          {person.dislikedIngredients.includes(ing) && !COMMON_DISLIKED_INGREDIENTS.includes(ing) && (
+                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+{/* Training Profile */}
+            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="w-4 h-4 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Race & Training Profile</h2>
               </div>
-              <p className="text-xs text-stone-500 mb-4">Pre-populate database with default stored recipes and their respective images.</p>
+              <p className="text-xs text-stone-500 mb-4 leading-relaxed">
+                Configure your race details. You'll set your daily training goal on the Home tab to get targeted recipes.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-stone-300 mb-1 block">Upcoming Race Type</label>
+                  <select 
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    value={person.raceType || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateHouseholdMember({ ...person, raceType: value });
+                      
+                    }}
+                  >
+                    <option value="">Select a race type...</option>
+                    {['5K', '10K', 'Half Marathon', 'Marathon', 'Sprint Triathlon', 'Olympic Triathlon', 'Half Ironman (70.3)', 'Ironman', 'Not training for a race'].map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-stone-300 mb-1 block">Race Date</label>
+                  <input 
+                    type="date"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    value={person.raceDate || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateHouseholdMember({ ...person, raceDate: value });
+                      
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-stone-300 mb-1 block">Weekly Training Days</label>
+                  <select 
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    value={person.weeklyTrainingDays || 0}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      updateHouseholdMember({ ...person, weeklyTrainingDays: value });
+                      
+                    }}
+                  >
+                    <option value={0}>Not training</option>
+                    {[1,2,3,4,5,6,7].map(d => (
+                      <option key={d} value={d}>{d} {d === 1 ? 'day' : 'days'} / week</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </section>\n
+            {/* Biometrics */}
+            <section className="bg-stone-900 border border-stone-800 rounded-3xl overflow-hidden shadow-sm">
+              <button 
+                onClick={() => setIsBiometricsOpen(!isBiometricsOpen)}
+                className="w-full flex items-center justify-between p-6 text-left active:bg-stone-800/50 transition-colors"
+              >
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Fine-tune your fueling</h3>
+                  <p className="text-xs text-stone-400 mt-1 font-medium">Optional — helps us personalize carb and calorie targets to your body.</p>
+                </div>
+                {isBiometricsOpen ? (
+                  <ChevronUp className="w-5 h-5 text-stone-400 shrink-0" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-stone-400 shrink-0" />
+                )}
+              </button>
+              
+              {isBiometricsOpen && (
+                <div className="px-6 pb-6 pt-2 border-t border-stone-800/50">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-stone-300 mb-1 block">Age</label>
+                      <input 
+                        type="number"
+                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                        value={person.age || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? Number(e.target.value) : undefined;
+                          updateHouseholdMember({ ...person, age: value });
+                          
+                        }}
+                        placeholder="e.g. 30"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-stone-300 mb-1 block">Biological Sex</label>
+                      <div className="flex gap-2">
+                        {BIOLOGICAL_SEX_OPTIONS.map(sex => (
+                          <button
+                            key={sex}
+                            onClick={() => {
+                              updateHouseholdMember({ ...person, biologicalSex: sex });
+                              
+                            }}
+                            className={`flex-1 py-2 rounded-lg text-xs font-medium capitalize transition-all active:scale-[0.98] border ${
+                              person.biologicalSex === sex
+                                ? 'bg-orange-500/10 border-[#FC5200] text-[#FC5200]'
+                                : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700 hover:text-white'
+                            }`}
+                          >
+                            {sex}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-stone-300 mb-1 block">Height (cm)</label>
+                      <input 
+                        type="number"
+                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                        value={person.heightCm || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? Number(e.target.value) : undefined;
+                          updateHouseholdMember({ ...person, heightCm: value });
+                          
+                        }}
+                        placeholder="e.g. 175"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-stone-300 mb-1 block">Weight (kg)</label>
+                      <input 
+                        type="number"
+                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                        value={person.weightKg || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? Number(e.target.value) : undefined;
+                          updateHouseholdMember({ ...person, weightKg: value });
+                          
+                        }}
+                        placeholder="e.g. 70"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* Skill Level */}
+            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <ChefHat className="w-4 h-4 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Cooking Skill Level</h2>
+              </div>
+              <div className="flex gap-2">
+                {SKILL_OPTIONS.map(skill => (
+                  <button
+                    key={skill}
+                    onClick={() => {
+                      updateHouseholdMember({ ...person, skillLevel: skill });
+                      
+                    }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
+                      person.skillLevel === skill
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Max Cooking Time */}
+            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-4 h-4 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Max Cooking Time</h2>
+              </div>
+              <div className="flex gap-2">
+                {TIME_OPTIONS.map(time => (
+                  <button
+                    key={time}
+                    onClick={() => {
+                      updateHouseholdMember({ ...person, maxCookingTime: time });
+                      
+                    }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
+                      person.maxCookingTime === time
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                    }`}
+                  >
+                    {time} min
+                  </button>
+                ))}
+              </div>
+            </section>
+
+
+                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Heart className="w-4 h-4 text-rose-500" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Favorite Cuisines</h2>
+                    </div>
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newFavoriteCuisine.trim()) return;
+                        if (!person.favoriteCuisines.includes(newFavoriteCuisine.trim())) {
+                          updateHouseholdMember({
+                            ...person,
+                            favoriteCuisines: [...person.favoriteCuisines, newFavoriteCuisine.trim()]
+                          });
+                        }
+                        setNewFavoriteCuisine('');
+                      }}
+                      className="flex gap-2 mb-3"
+                    >
+                      <input 
+                        type="text" 
+                        value={newFavoriteCuisine}
+                        onChange={e => setNewFavoriteCuisine(e.target.value)}
+                        placeholder="Add other cuisine..."
+                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
+                      />
+                      <button type="submit" className="bg-stone-900 border border-stone-800 text-stone-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-900 active:scale-[0.98] transition-all shadow-sm">Add</button>
+                    </form>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set([...CUISINE_OPTIONS, ...person.favoriteCuisines])).map(cuisine => (
+                        <button
+                          key={cuisine}
+                          onClick={() => {
+                            updateHouseholdMember({
+                              ...person,
+                              favoriteCuisines: person.favoriteCuisines.includes(cuisine) 
+                                ? person.favoriteCuisines.filter(c => c !== cuisine)
+                                : [...person.favoriteCuisines, cuisine]
+                            });
+                          }}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
+                            person.favoriteCuisines.includes(cuisine)
+                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                          }`}
+                        >
+                          {cuisine}
+                          {person.favoriteCuisines.includes(cuisine) && !CUISINE_OPTIONS.includes(cuisine) && (
+                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <div className="flex items-center gap-2 mb-4 pl-2">
+                      <Activity className="w-4 h-4 text-blue-500" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Medical & Health Conditions</h2>
+                    </div>
+                    <p className="text-xs text-stone-500 mb-4 pl-2">Tap to select any conditions you have. We'll strict-filter recipes to accommodate your needs.</p>
+                    <div className="pl-2">
+                      <form 
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (!newHealthCondition.trim()) return;
+                          if (!(person.healthConditions || []).includes(newHealthCondition.trim())) {
+                            updateHouseholdMember({
+                              ...person,
+                              healthConditions: [...(person.healthConditions || []), newHealthCondition.trim()]
+                            });
+                          }
+                          setNewHealthCondition('');
+                        }}
+                        className="flex gap-2 mb-3"
+                      >
+                        <input 
+                          type="text" 
+                          value={newHealthCondition}
+                          onChange={e => setNewHealthCondition(e.target.value)}
+                          placeholder="Add other condition..."
+                          className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-white placeholder:text-stone-400"
+                        />
+                        <button type="submit" className="bg-stone-900 border border-stone-800 text-stone-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-900 active:scale-[0.98] transition-all shadow-sm">Add</button>
+                      </form>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(new Set([...HEALTH_CONDITIONS, ...(person.healthConditions || [])])).map(condition => (
+                          <button
+                            key={condition}
+                            onClick={() => {
+                              updateHouseholdMember({
+                                ...person,
+                                healthConditions: (person.healthConditions || []).includes(condition) 
+                                  ? (person.healthConditions || []).filter(c => c !== condition)
+                                  : [...(person.healthConditions || []), condition]
+                              });
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
+                              (person.healthConditions || []).includes(condition)
+                                ? 'bg-blue-500 border-blue-500 text-white shadow-sm'
+                                : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-blue-500 hover:text-blue-600'
+                            }`}
+                          >
+                            {condition}
+                            {(person.healthConditions || []).includes(condition) && !HEALTH_CONDITIONS.includes(condition) && (
+                              <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+
+                  {household.length > 1 && (
+                    <div className="pt-4">
+                      <button
+                        onClick={() => {
+                          deleteHouseholdMember(person.id);
+                          setEditingPersonId(null);
+                        }}
+                        className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-100 transition-all active:scale-[0.98] border border-red-200"
+                      >
+                        Delete Member
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+              </div>
+            )}
+
+            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#FC5200]" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Groups</h2>
+                </div>
+                <button 
+                  onClick={() => {
+                    const newId = `g${Date.now()}`;
+                    const newGroup: Group = { id: newId, name: 'New Group', memberIds: [] };
+                    updateGroup(newGroup);
+                    setEditingGroupId(newId);
+                  }}
+                  className="text-[#FC5200] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
+                >
+                  <Plus className="w-4 h-4" /> Add
+                </button>
+              </div>
+              <p className="text-sm text-stone-500 mb-4">
+                Create groups like "Family" or "Friends" to quickly select who you are cooking for.
+              </p>
+              <div className="space-y-4">
+                {groups.map(group => (
+                  <div key={group.id} className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                      <h3 className="font-display font-bold text-white">{group.name}</h3>
+                      <p className="text-xs text-stone-500 mt-1">
+                        {group.memberIds.length} member{group.memberIds.length !== 1 ? 's' : ''}
+                        {group.memberIds.length > 0 && ` • ${group.memberIds.map(id => household.find(h => h.id === id)?.name).filter(Boolean).join(', ')}`}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setEditingGroupId(group.id)}
+                      className="text-sm font-medium text-stone-400 hover:text-white px-4 py-2 bg-stone-800 hover:bg-stone-700 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className="pt-4 border-t border-stone-800 mt-8">
+              <button
+                onClick={() => setActiveTab('learning')}
+                className="w-full py-3.5 rounded-2xl text-lg font-semibold transition-all active:scale-[0.98] bg-[#FC5200] text-white hover:bg-[#FC5200] flex items-center justify-center gap-2 shadow-lg shadow-[#FC5200]/20"
+              >
+                Refine My Palate
+              </button>
+              <p className="text-xs text-stone-500 text-center mt-3">
+                Swipe through dishes to improve your recommendations.
+              </p>
+            </section>
+            <section className="pt-4 border-t border-stone-800 pb-8">
+              <div className="flex items-center gap-2 mb-2">
+                 <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">System Actions</h2>
+              </div>
+              <p className="text-xs text-stone-400 mb-4">Pre-populate database with default stored recipes and their respective images.</p>
               <button
                 onClick={async () => {
                   try {
@@ -978,6 +1057,7 @@ export function ProfileView({
                        const url = await getOrGenerateRecipeImage(meal.id, meal.name, meal.cuisine, meal.details);
                        await setDoc(doc(db, 'recipes', meal.id), {
                          ...meal,
+                         uid: auth.currentUser?.uid,
                          image: url
                        }, { merge: true });
                     }
@@ -996,7 +1076,7 @@ export function ProfileView({
                 Note: Tailoring a large batch of recipes to your unique dietary needs and generating high-quality images can take several minutes running in the background.
               </p>
             </section>
-          </>
+          </div>
         )}
       </div>
     </motion.div>

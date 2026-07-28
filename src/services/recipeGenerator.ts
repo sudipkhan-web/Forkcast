@@ -1,6 +1,7 @@
 import { Meal } from "../data/recipes";
 import { db, auth } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { getOrGenerateRecipeImage } from "./imageGenerator";
 
 export const generateSmartStaples = async (
   inventoryItems: string[],
@@ -41,7 +42,9 @@ export const generateRecipes = async (
   favoriteMeals: Meal[] = [],
   inventoryItems: string[] = [],
   healthConditions: string[] = [],
-  specificMealType?: string
+  specificMealType?: string,
+  trainingDayType?: string,
+  weightKg?: number
 ): Promise<Meal[]> => {
   const favoriteMealNamesStr = favoriteMeals.map(m => m.name).join(", ");
 
@@ -63,7 +66,9 @@ export const generateRecipes = async (
         favoriteMealNamesStr,
         inventoryItems,
         healthConditions,
-        specificMealType
+        specificMealType,
+        trainingDayType,
+        weightKg
       })
     });
 
@@ -84,6 +89,18 @@ export const generateRecipes = async (
       difficulty: typeof r.difficulty === 'string' ? r.difficulty : 'Intermediate',
       mealType: typeof r.mealType === 'string' && ['Breakfast', 'Lunch', 'Dinner', 'Snack'].includes(r.mealType) ? r.mealType : 'Dinner'
     }));
+
+    // Pre-generate images and assign them to the recipe objects
+    for (const recipe of recipes) {
+      try {
+        const imageUrl = await getOrGenerateRecipeImage(recipe.id, recipe.name, recipe.cuisine || "", recipe.details || "");
+        if (imageUrl) {
+          recipe.image = imageUrl;
+        }
+      } catch (imgError) {
+        console.error("Failed to pre-generate image for recipe:", recipe.name, imgError);
+      }
+    }
 
     if (auth.currentUser) {
       for (const recipe of recipes) {

@@ -30,7 +30,7 @@ function TasteLearningCard({ meal, onLike, onDislike }: { key?: string, meal: Me
       <RecipeImage meal={meal} className="w-full h-[65%] object-cover pointer-events-none saturate-110 brightness-95 group-hover:scale-105 transition-transform duration-700" />
       <div className="p-6 h-[35%] flex flex-col justify-start bg-white pointer-events-none">
         {meal.isVariation && (
-          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+          <span className="text-[10px] font-bold text-[#FC5200] uppercase tracking-widest mb-1.5 flex items-center gap-1">
             <RefreshCw className="w-3 h-3" /> Variation
           </span>
         )}
@@ -51,7 +51,6 @@ interface TasteLearningScreenProps {
   dietary: string[];
   dislikedIngredients: string[];
   favoriteCuisines: string[];
-  goals: string[];
   healthConditions: string[];
   seenMealIds: string[];
   setSeenMealIds: React.Dispatch<React.SetStateAction<string[]>>;
@@ -76,7 +75,6 @@ export function TasteLearningScreen({
   dietary,
   dislikedIngredients,
   favoriteCuisines,
-  goals,
   healthConditions,
   seenMealIds,
   setSeenMealIds,
@@ -154,12 +152,12 @@ export function TasteLearningScreen({
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}
-      className="absolute inset-0 z-10 flex flex-col bg-[#fdfbf7]"
+      className="absolute inset-0 z-10 flex flex-col bg-[#17181C]"
     >
       <div className="flex-none p-6 pt-12 pb-4 relative text-center">
         <button 
           onClick={onClose}
-          className="absolute top-10 left-6 p-2 text-stone-400 hover:text-stone-900 transition-all active:scale-95 z-20"
+          className="absolute top-10 left-6 p-2 text-stone-400 hover:text-white transition-all active:scale-95 z-20"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -174,17 +172,17 @@ export function TasteLearningScreen({
           </button>
           <button 
             onClick={onOpenFavorites}
-            className="p-2 text-stone-400 hover:text-emerald-600 bg-white/50 rounded-full transition-all active:scale-[0.98] relative"
+            className="p-2 text-stone-400 hover:text-[#FC5200] bg-white/50 rounded-full transition-all active:scale-[0.98] relative"
           >
             <Star className="w-5 h-5" />
             {favorites.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-600 rounded-full border-2 border-[#fdfbf7] text-[9px] font-bold text-white flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FC5200] rounded-full border-2 border-[#17181C] text-[9px] font-bold text-white flex items-center justify-center">
                 {favorites.length}
               </span>
             )}
           </button>
         </div>
-        <h2 className="text-stone-900 text-2xl sm:text-3xl font-display font-bold tracking-tight mt-4">Refine Your Palate<br/><span className="text-xs sm:text-sm font-sans font-normal text-stone-500 mt-1 block">Swipe right to like, left to dislike</span></h2>
+        <h2 className="text-white text-2xl sm:text-3xl font-display font-bold tracking-tight mt-4">Refine Your Palate<br/><span className="text-xs sm:text-sm font-sans font-normal text-stone-400 mt-1 block">Swipe right to like, left to dislike</span></h2>
       </div>
       
       <div className="flex-1 relative w-full max-w-sm mx-auto min-h-0 px-6 pb-4">

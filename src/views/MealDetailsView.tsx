@@ -78,27 +78,27 @@ export function MealDetailsView({
         </motion.div>
         
         <div className="pt-[320px] relative z-10 pb-6 w-full">
-        <div className="bg-[#fdfbf7] p-6 rounded-t-3xl min-h-screen shadow-[0_-8px_30px_rgba(0,0,0,0.2)]">
+        <div className="bg-[#17181C] p-6 rounded-t-3xl min-h-screen shadow-[0_-8px_30px_rgba(0,0,0,0.2)]">
         <div>
           <h2 className="text-xs font-display font-bold text-stone-400 uppercase tracking-widest">Chef's Note</h2>
-          <p className="mt-3 text-stone-700 bg-stone-50 p-5 rounded-2xl border border-stone-200/60 leading-relaxed text-[15px]">
+          <p className="mt-3 text-stone-300 bg-stone-900 p-5 rounded-2xl border border-stone-800 leading-relaxed text-[15px]">
             {selectedMeal.reason}
           </p>
         </div>
 
         {substitutions.length > 0 && (
           <div className="mt-8">
-            <h2 className="text-xs font-display font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
+            <h2 className="text-xs font-display font-bold text-[#FC5200] uppercase tracking-widest flex items-center gap-1.5">
               <RefreshCw className="w-4 h-4" /> Smart Swaps
             </h2>
             <div className="mt-4 bg-emerald-50 p-5 rounded-2xl border border-emerald-100 space-y-3">
               {substitutions.map((sub, idx) => (
                 <div key={idx} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-200 text-[#FC5200] flex items-center justify-center shrink-0 mt-0.5">
                     <RefreshCw className="w-3 h-3" />
                   </div>
                   <div>
-                    <p className="text-[15px] text-stone-800">
+                    <p className="text-[15px] text-white">
                       Use <span className="font-bold">{sub.substitute}</span> instead of <span className="line-through text-stone-500">{sub.original}</span>
                     </p>
                     {sub.expiresSoon && (
@@ -123,28 +123,28 @@ export function MealDetailsView({
               const isAccepted = sub && acceptedSubstitutions.includes(sub.original);
               return (
                 <li key={idx} className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${has ? 'bg-emerald-100 text-emerald-600' : inCart ? 'bg-blue-100 text-blue-600' : isAccepted ? 'bg-emerald-100 text-emerald-600' : 'bg-stone-100 text-stone-400 border border-stone-200/60'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${has ? 'bg-emerald-100 text-[#FC5200]' : inCart ? 'bg-blue-100 text-blue-600' : isAccepted ? 'bg-emerald-100 text-[#FC5200]' : 'bg-stone-800 text-stone-400 border border-stone-800'}`}>
                     {has ? <Check className="w-3 h-3" /> : inCart ? <ShoppingCart className="w-3 h-3" /> : isAccepted ? <RefreshCw className="w-3 h-3" /> : <div className="w-1.5 h-1.5 rounded-full bg-stone-300" />}
                   </div>
-                  <span className={`text-sm ${has || inCart || isAccepted ? 'text-stone-900' : 'text-stone-500'}`}>
+                  <span className={`text-sm ${has || inCart || isAccepted ? 'text-white' : 'text-stone-500'}`}>
                     {isAccepted ? (
-                      <span><span className="line-through text-stone-400">{ing.name}</span> <span className="font-bold text-emerald-700 ml-1">{sub.substitute}</span></span>
+                      <span><span className="line-through text-stone-400">{ing.name}</span> <span className="font-bold text-[#FC5200] ml-1">{sub.substitute}</span></span>
                     ) : (
                       ing.name
                     )}
                     <span className="text-stone-400 text-xs ml-1">({ing.amount})</span>
                   </span>
-                  {!has && !inCart && !sub && <span className="text-[10px] font-display font-bold uppercase tracking-wider text-stone-400 ml-auto bg-stone-100 px-2 py-0.5 rounded-sm">Missing</span>}
+                  {!has && !inCart && !sub && <span className="text-[10px] font-display font-bold uppercase tracking-wider text-stone-400 ml-auto bg-stone-800 px-2 py-0.5 rounded-sm">Missing</span>}
                   {!has && inCart && !sub && <span className="text-[10px] font-display font-bold uppercase tracking-wider text-blue-500 ml-auto bg-blue-50 px-2 py-0.5 rounded-sm">In Cart</span>}
                   {sub && !isAccepted && (
                     <button 
                       onClick={() => setAcceptedSubstitutions(prev => [...prev, sub.original])}
-                      className="text-[10px] font-display font-bold uppercase tracking-wider text-emerald-600 ml-auto bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-sm hover:bg-emerald-100 transition-colors"
+                      className="text-[10px] font-display font-bold uppercase tracking-wider text-[#FC5200] ml-auto bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-sm hover:bg-emerald-100 transition-colors"
                     >
                       Swap: {sub.substitute}
                     </button>
                   )}
-                  {sub && isAccepted && <span className="text-[10px] font-display font-bold uppercase tracking-wider text-emerald-600 ml-auto bg-emerald-100 px-2 py-0.5 rounded-sm">Swapped</span>}
+                  {sub && isAccepted && <span className="text-[10px] font-display font-bold uppercase tracking-wider text-[#FC5200] ml-auto bg-emerald-100 px-2 py-0.5 rounded-sm">Swapped</span>}
                 </li>
               );
             })}
@@ -166,7 +166,7 @@ export function MealDetailsView({
                       const parts = el.split(regex);
                       parts.forEach((part, partIdx) => {
                         if (part.toLowerCase() === sub.original.toLowerCase()) {
-                          newElements.push(<span key={partIdx + Math.random()} className="font-bold text-emerald-700">{sub.substitute}</span>);
+                          newElements.push(<span key={partIdx + Math.random()} className="font-bold text-[#FC5200]">{sub.substitute}</span>);
                         } else if (part) {
                           newElements.push(part);
                         }
@@ -181,10 +181,10 @@ export function MealDetailsView({
 
               return (
                 <div key={idx} className="flex gap-4">
-                  <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-stone-800 text-stone-500 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                     {idx + 1}
                   </div>
-                  <p className="text-[15px] text-stone-700 leading-relaxed">{elements}</p>
+                  <p className="text-[15px] text-white leading-relaxed">{elements}</p>
                 </div>
               );
             })}
@@ -193,7 +193,7 @@ export function MealDetailsView({
         </div>
         </div>
       </div>
-      <div className="p-6 border-t border-stone-200/60 bg-white shrink-0 space-y-3">
+      <div className="p-6 border-t border-stone-800 bg-stone-900 shrink-0 space-y-3">
         <button 
           onClick={() => {
             setNewMealName(selectedMeal.name);
@@ -233,7 +233,7 @@ export function MealDetailsView({
               handleAddMissingToShoppingList(selectedMeal.ingredients, acceptedSubs);
               handleSelectMeal(null);
             }}
-            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-semibold text-lg hover:bg-emerald-700 transition-all active:scale-[0.98] shadow-lg shadow-emerald-600/20 mt-3"
+            className="w-full py-4 bg-[#FC5200] text-white rounded-2xl font-semibold text-lg hover:bg-[#FC5200] transition-all active:scale-[0.98] shadow-lg shadow-[#FC5200]/20 mt-3"
           >
             Add Missing to Shopping List
           </button>

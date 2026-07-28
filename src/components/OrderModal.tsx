@@ -45,16 +45,16 @@ export function OrderModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+            className="bg-stone-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-stone-200/60 flex items-center justify-between bg-stone-50">
-              <h2 className="text-xl font-display font-bold text-stone-900">
+            <div className="p-6 border-b border-stone-800 flex items-center justify-between bg-stone-900">
+              <h2 className="text-xl font-display font-bold text-white">
                 {orderStep === 'provider' ? 'Order Groceries' : orderStep === 'checkout' ? 'Checkout' : 'Order Placed'}
               </h2>
               <button 
                 onClick={onClose}
-                className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-200/50 rounded-full transition-all active:scale-95"
+                className="p-2 text-stone-400 hover:text-stone-400 hover:bg-stone-700/50 rounded-full transition-all active:scale-95"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -73,14 +73,14 @@ export function OrderModal({
                             setSelectedProvider(provider);
                             setOrderStep('checkout');
                           }}
-                          className="w-full flex items-center justify-between p-4 rounded-2xl border border-stone-200/60 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all group"
+                          className="w-full flex items-center justify-between p-4 rounded-2xl border border-stone-800 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all group"
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-full ${provider.bgClass} flex items-center justify-center ${provider.textClass}`}>
                               {provider.logo}
                             </div>
                             <div className="text-left">
-                              <p className="font-bold text-stone-900">{provider.name}</p>
+                              <p className="font-bold text-white">{provider.name}</p>
                               <p className="text-xs text-stone-500">{provider.time}</p>
                             </div>
                           </div>
@@ -94,28 +94,28 @@ export function OrderModal({
 
               {orderStep === 'checkout' && selectedProvider && (
                 <div className="space-y-6">
-                  <div className="flex items-center gap-4 bg-stone-50 p-4 rounded-2xl border border-stone-200/60">
-                    <div className={`w-12 h-12 rounded-full ${selectedProvider.bgClass || 'bg-white'} flex items-center justify-center shadow-sm ${selectedProvider.textClass || 'text-stone-700'}`}>
+                  <div className="flex items-center gap-4 bg-stone-900 p-4 rounded-2xl border border-stone-800">
+                    <div className={`w-12 h-12 rounded-full ${selectedProvider.bgClass || 'bg-stone-900'} flex items-center justify-center shadow-sm ${selectedProvider.textClass || 'text-stone-300'}`}>
                       {selectedProvider.logo}
                     </div>
                     <div>
-                      <p className="font-bold text-stone-900">{selectedProvider.name}</p>
+                      <p className="font-bold text-white">{selectedProvider.name}</p>
                       <p className="text-xs text-stone-500">{selectedProvider.time}</p>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-display font-bold text-stone-900 mb-3">Order Summary</h3>
+                    <h3 className="text-sm font-display font-bold text-white mb-3">Order Summary</h3>
                     <ul className="space-y-3 mb-4">
                       {combinedShoppingList.filter(i => !i.checked).map(item => (
                         <li key={item.id} className="flex items-center justify-between text-sm">
-                          <span className="text-stone-600"><span className="text-stone-400 mr-2">{item.quantity}x</span>{item.name}</span>
-                          <span className="text-stone-900 font-medium">€{(item.quantity * 3.50).toFixed(2)}</span>
+                          <span className="text-stone-400"><span className="text-stone-400 mr-2">{item.quantity}x</span>{item.name}</span>
+                          <span className="text-white font-medium">€{(item.quantity * 3.50).toFixed(2)}</span>
                         </li>
                       ))}
                     </ul>
                     
-                    <div className="border-t border-stone-200/60 pt-4 space-y-2 text-sm">
+                    <div className="border-t border-stone-800 pt-4 space-y-2 text-sm">
                       <div className="flex justify-between text-stone-500">
                         <span>Subtotal</span>
                         <span>€{(combinedShoppingList.filter(i => !i.checked).reduce((acc, item) => acc + item.quantity * 3.50, 0)).toFixed(2)}</span>
@@ -124,7 +124,7 @@ export function OrderModal({
                         <span>Delivery Fee</span>
                         <span>€{selectedProvider.fee.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between font-bold text-stone-900 text-base pt-2 border-t border-stone-200/60 mt-2">
+                      <div className="flex justify-between font-bold text-white text-base pt-2 border-t border-stone-800 mt-2">
                         <span>Total</span>
                         <span>€{(combinedShoppingList.filter(i => !i.checked).reduce((acc, item) => acc + item.quantity * 3.50, 0) + selectedProvider.fee).toFixed(2)}</span>
                       </div>
@@ -133,7 +133,7 @@ export function OrderModal({
 
                   <button 
                     onClick={() => setOrderStep('success')}
-                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-semibold text-lg hover:bg-emerald-700 transition-all active:scale-[0.98] shadow-lg shadow-emerald-600/20"
+                    className="w-full py-4 bg-[#FC5200] text-white rounded-2xl font-semibold text-lg hover:bg-[#FC5200] transition-all active:scale-[0.98] shadow-lg shadow-[#FC5200]/20"
                   >
                     Place Order
                   </button>
@@ -142,10 +142,10 @@ export function OrderModal({
 
               {orderStep === 'success' && (
                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
-                  <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
+                  <div className="w-20 h-20 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center mb-4">
                     <Check className="w-10 h-10" />
                   </div>
-                  <h3 className="text-2xl font-display font-bold text-stone-900">Order Placed!</h3>
+                  <h3 className="text-2xl font-display font-bold text-white">Order Placed!</h3>
                   <p className="text-stone-500">Your groceries are on the way via {selectedProvider?.name}.</p>
                   
                   <button 
@@ -154,7 +154,7 @@ export function OrderModal({
                       onMoveToPantry(orderedItems);
                       onClose();
                     }}
-                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-semibold hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                    className="w-full py-4 bg-[#FC5200] text-white rounded-2xl font-semibold hover:bg-[#FC5200] transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
                   >
                     <Package className="w-5 h-5" />
                     Confirm Delivery & Add to Pantry
@@ -162,7 +162,7 @@ export function OrderModal({
 
                   <button 
                     onClick={onClose}
-                    className="w-full py-4 bg-stone-100 text-stone-900 rounded-2xl font-semibold hover:bg-stone-200 transition-all active:scale-[0.98]"
+                    className="w-full py-4 bg-stone-800 text-white rounded-2xl font-semibold hover:bg-stone-700 transition-all active:scale-[0.98]"
                   >
                     Close
                   </button>

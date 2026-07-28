@@ -87,13 +87,13 @@ export class ErrorBoundary extends Component<Props, State> {
         // Not JSON
       }
       return (
-        <div className="min-h-screen flex items-center justify-center bg-stone-50 p-6">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-red-200 max-w-md w-full text-center">
+        <div className="min-h-screen flex items-center justify-center bg-stone-900 p-6">
+          <div className="bg-stone-900 p-8 rounded-2xl shadow-sm border border-red-200 max-w-md w-full text-center">
             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold">!</span>
             </div>
-            <h2 className="text-2xl font-display font-bold text-stone-900 mb-2">Something went wrong</h2>
-            <p className="text-stone-600 mb-6">{errorMessage}</p>
+            <h2 className="text-2xl font-display font-bold text-white mb-2">Something went wrong</h2>
+            <p className="text-stone-400 mb-6">{errorMessage}</p>
             <button
               onClick={() => window.location.reload()}
               className="bg-stone-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-stone-800 transition-all active:scale-95"
