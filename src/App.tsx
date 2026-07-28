@@ -902,7 +902,7 @@ function MainApp() {
         }
       },
       execute: (args: any) => {
-        if (['home', 'inventory', 'shopping', 'learning', 'profile', 'plan'].includes(args.tab)) {
+        if (['home', 'inventory', 'shopping', 'progress', 'refine', 'profile', 'plan'].includes(args.tab)) {
           setActiveTab(args.tab);
           return { success: true };
         }

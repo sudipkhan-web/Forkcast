@@ -67,7 +67,7 @@ export function MealCard({
         }}
         onClick={onClick}
         whileTap={{ scale: 0.98 }}
-        className="relative bg-stone-900 rounded-[28px] shadow-xl border border-stone-800 flex flex-col cursor-pointer touch-none overflow-hidden"
+        className="relative bg-stone-900 rounded-[28px] shadow-xl border border-stone-800 flex flex-col cursor-pointer touch-pan-y overflow-hidden"
       >
         <div className="relative h-64 w-full shrink-0">
           <RecipeImage meal={meal} className="w-full h-full object-cover saturate-110 brightness-95" />
@@ -144,6 +144,7 @@ export function MealCard({
         </div>
         <div className="p-4 pt-0">
           <button 
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               onClick();

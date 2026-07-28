@@ -25,16 +25,40 @@ function TasteLearningCard({ meal, onLike, onDislike }: { key?: string, meal: Me
           onDislike();
         }
       }}
-      className="absolute inset-0 bg-white rounded-[28px] overflow-hidden shadow-[0_20px_60px_rgb(28,25,23,0.08)] border border-stone-200/60 origin-bottom cursor-grab active:cursor-grabbing group"
+      className="absolute inset-0 bg-stone-900 rounded-[28px] overflow-hidden shadow-[0_20px_60px_rgb(0,0,0,0.5)] border border-stone-800 origin-bottom cursor-grab active:cursor-grabbing group"
     >
       <RecipeImage meal={meal} className="w-full h-[65%] object-cover pointer-events-none saturate-110 brightness-95 group-hover:scale-105 transition-transform duration-700" />
-      <div className="p-6 h-[35%] flex flex-col justify-start bg-white pointer-events-none">
+      <div className="p-6 h-[35%] flex flex-col justify-start bg-stone-900 pointer-events-none">
         {meal.isVariation && (
-          <span className="text-[10px] font-bold text-[#FC5200] uppercase tracking-widest mb-1.5 flex items-center gap-1">
+          <span className="text-[10px] font-bold text-[#FC5200] uppercase tracking-widest mb-1.5 flex items-center gap-1 shrink-0">
             <RefreshCw className="w-3 h-3" /> Variation
           </span>
         )}
-        <h3 className="text-xl sm:text-2xl font-display font-bold text-stone-900 tracking-tight leading-tight">{meal.name}</h3>
+        <h3 className="text-lg font-display font-bold text-white tracking-tight leading-tight mb-1 line-clamp-2 shrink-0">{meal.name}</h3>
+        
+        {(meal.cuisine || meal.mealType) && (
+          <p className="text-stone-400 text-sm mb-1.5 shrink-0 line-clamp-1">
+            {[meal.cuisine, meal.mealType].filter(Boolean).join(" · ")}
+          </p>
+        )}
+        
+        {meal.calories != null && meal.carbsGrams != null && meal.proteinGrams != null && meal.fatGrams != null && (
+          <div className="flex items-center gap-2 mb-1.5 shrink-0">
+            <div className="flex items-baseline gap-0.5"><span className="text-[11px] font-mono font-bold text-stone-300">{meal.calories}</span><span className="text-[9px] font-medium text-stone-500">cal</span></div>
+            <div className="w-0.5 h-0.5 rounded-full bg-stone-700" />
+            <div className="flex items-baseline gap-0.5"><span className="text-[11px] font-mono font-bold text-stone-300">{meal.carbsGrams}g</span><span className="text-[9px] font-medium text-stone-500">C</span></div>
+            <div className="w-0.5 h-0.5 rounded-full bg-stone-700" />
+            <div className="flex items-baseline gap-0.5"><span className="text-[11px] font-mono font-bold text-stone-300">{meal.proteinGrams}g</span><span className="text-[9px] font-medium text-stone-500">P</span></div>
+            <div className="w-0.5 h-0.5 rounded-full bg-stone-700" />
+            <div className="flex items-baseline gap-0.5"><span className="text-[11px] font-mono font-bold text-stone-300">{meal.fatGrams}g</span><span className="text-[9px] font-medium text-stone-500">F</span></div>
+          </div>
+        )}
+
+        {meal.fuelingNote && (
+          <p className="text-stone-400 text-xs italic line-clamp-2 leading-snug shrink-0">
+            {meal.fuelingNote}
+          </p>
+        )}
       </div>
     </motion.div>
   );
@@ -164,7 +188,7 @@ export function TasteLearningScreen({
         <div className="absolute top-10 right-6 flex items-center gap-2 z-20">
           <button
             onClick={() => setSuggestions([])}
-            className="p-2 text-stone-400 hover:text-stone-900 bg-white/50 rounded-full transition-all active:scale-95"
+            className="p-2 text-stone-400 hover:text-white bg-white/10 rounded-full transition-all active:scale-95"
             aria-label="Refresh Swipes"
             title="Get a new batch of meals to review (This may take a few minutes running in the background to tailor to your preferences)"
           >
@@ -172,7 +196,7 @@ export function TasteLearningScreen({
           </button>
           <button 
             onClick={onOpenFavorites}
-            className="p-2 text-stone-400 hover:text-[#FC5200] bg-white/50 rounded-full transition-all active:scale-[0.98] relative"
+            className="p-2 text-stone-400 hover:text-[#FC5200] bg-white/10 rounded-full transition-all active:scale-[0.98] relative"
           >
             <Star className="w-5 h-5" />
             {favorites.length > 0 && (
@@ -198,16 +222,16 @@ export function TasteLearningScreen({
             ) : (
               <motion.div 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="flex flex-col items-center text-center p-6 bg-white rounded-3xl shadow-xl border border-stone-200/60 w-full"
+                className="flex flex-col items-center text-center p-6 bg-stone-900 rounded-3xl shadow-xl border border-stone-800 w-full"
               >
-                <RefreshCw className="w-12 h-12 text-emerald-500 mb-4 animate-spin" />
-                <h3 className="text-xl font-display font-bold text-stone-900 mb-2">Recalibrating...</h3>
-                <p className="text-stone-500 text-sm mb-6">
+                <RefreshCw className="w-12 h-12 text-[#FC5200] mb-4 animate-spin" />
+                <h3 className="text-xl font-display font-bold text-white mb-2">Recalibrating...</h3>
+                <p className="text-stone-400 text-sm mb-6">
                   Learning your preferences and generating endless new recipes tailored just for you.
                 </p>
                 <button
                   onClick={onClose}
-                  className="w-full py-3.5 rounded-2xl text-stone-500 font-semibold transition-all active:scale-95 hover:bg-stone-50"
+                  className="w-full py-3.5 rounded-2xl text-stone-400 font-semibold transition-all active:scale-95 hover:bg-stone-800 hover:text-white"
                 >
                   Back to Menu
                 </button>
@@ -221,19 +245,19 @@ export function TasteLearningScreen({
         <div className="flex-none flex items-center justify-center gap-6 p-6 pb-6">
           <button 
             onClick={handleDislike}
-            className="w-16 h-16 bg-white rounded-full shadow-lg border border-stone-200/60 flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-95"
+            className="w-16 h-16 bg-stone-900 rounded-full shadow-lg border border-stone-800 flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95"
           >
             <X className="w-8 h-8" />
           </button>
           <button 
             onClick={handleStar}
-            className="w-16 h-16 bg-white rounded-full shadow-lg border border-stone-200/60 flex items-center justify-center text-stone-400 hover:text-yellow-500 hover:bg-yellow-50 transition-all active:scale-95"
+            className="w-16 h-16 bg-stone-900 rounded-full shadow-lg border border-stone-800 flex items-center justify-center text-stone-400 hover:text-yellow-500 hover:bg-yellow-500/10 transition-all active:scale-95"
           >
             <Star className="w-8 h-8" />
           </button>
           <button 
             onClick={handleLike}
-            className="w-16 h-16 bg-white rounded-full shadow-lg border border-stone-200/60 flex items-center justify-center text-stone-400 hover:text-emerald-500 hover:bg-emerald-50 transition-all active:scale-95"
+            className="w-16 h-16 bg-stone-900 rounded-full shadow-lg border border-stone-800 flex items-center justify-center text-stone-400 hover:text-[#FC5200] hover:bg-[#FC5200]/10 transition-all active:scale-95"
           >
             <Heart className="w-8 h-8" />
           </button>

@@ -103,6 +103,14 @@ export function HomeView({
       <header className="px-6 py-4 flex items-center justify-between bg-[#17181C]/80 backdrop-blur-xl border-b border-stone-800 shrink-0 z-20 sticky top-0">
         <h1 className="text-2xl font-display font-bold text-white tracking-tight">Forkcast</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSuggestions([])}
+            className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative"
+            aria-label="Refresh Suggestions"
+            title="Refresh Suggestions based on new preferences (This may take a few minutes running in the background)"
+          >
+            <RefreshCw className="w-5 h-5" />
+          </button>
           <NotificationBell />
           <button 
             onClick={() => setActiveTab('profile')}
@@ -121,59 +129,39 @@ export function HomeView({
               </span>
             )}
           </button>
-          <button 
-            onClick={() => setIsShareModalOpen(true)}
-            className="p-2 text-stone-400 hover:text-[#FC5200] hover:bg-emerald-50 rounded-full transition-all active:scale-95"
-          >
-            <Share className="w-5 h-5" />
-          </button>
+
         </div>
       </header>
       
-      <div className="px-6 mt-2 mb-2 flex items-center justify-between">
-        <h2 className="text-4xl font-display font-bold text-white tracking-tight">Today's Menu</h2>
-        <button
-          onClick={() => setSuggestions([])}
-          className="p-2 bg-stone-800 hover:bg-stone-700 text-stone-400 rounded-full transition-all active:scale-95 flex items-center justify-center shrink-0"
-          aria-label="Refresh Suggestions"
-          title="Refresh Suggestions based on new preferences (This may take a few minutes running in the background)"
-        >
-          <RefreshCw className="w-5 h-5" />
-        </button>
-      </div>
 
-      <div className="px-6 mt-1 flex gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0 w-full">
-        {TRAINING_DAY_OPTIONS.map(day => (
-          <button
-            key={day}
-            onClick={() => {
-              const next = trainingDayType === day ? null : day;
+
+      <div className="mx-6 mt-3 p-4 rounded-2xl bg-stone-900/60 border border-stone-800 flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Training Today</span>
+          <select
+            value={trainingDayType || ''}
+            onChange={(e) => {
+              const next = e.target.value || null;
               setTrainingDayType(next);
               if (auth.currentUser) {
                 const today = new Date().toISOString().split('T')[0];
                 const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
-                if (next) {
-                  setDoc(logRef, { dayType: next }, { merge: true });
-                } else {
-                  setDoc(logRef, { dayType: null }, { merge: true });
-                }
+                setDoc(logRef, { dayType: next }, { merge: true });
               }
+              setIsGeneratingMeals(true);
+              setSuggestions([]);
+              setIsGeneratingMeals(false);
             }}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border shrink-0 flex items-center gap-1 ${
-              trainingDayType === day
-                ? 'bg-[#FC5200] border-[#FC5200] text-white shadow-sm'
-                : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-[#FC5200] hover:text-[#FC5200]'
-            }`}
+            className="w-full px-4 py-2.5 rounded-xl bg-stone-800 border border-stone-700 text-white text-sm font-medium focus:outline-none focus:border-[#FC5200]"
           >
-            <Target className="w-3.5 h-3.5" />
-            {day}
-          </button>
-        ))}
-      </div>
+            <option value="">No training today</option>
+            {TRAINING_DAY_OPTIONS.map(day => <option key={day} value={day}>{day}</option>)}
+          </select>
+        </div>
 
-      <div className="px-6 mt-3 mb-2 flex gap-4 w-full">
-        {[
-          { label: 'CARBS', data: todayMacros.carbs },
+        <div className="flex gap-4 w-full">
+          {[
+            { label: 'CARBS', data: todayMacros.carbs },
           { label: 'PROTEIN', data: todayMacros.protein },
           { label: 'FAT', data: todayMacros.fat }
         ].map(macro => {
@@ -198,22 +186,22 @@ export function HomeView({
             </div>
           );
         })}
+        </div>
       </div>
 
-      <div className="px-6 mt-1 flex gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0 w-full">
-        {['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => (
-          <button
-            key={type}
-            onClick={() => setMealTypeFilter(type)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border shrink-0 ${
-              mealTypeFilter === type
-                ? 'bg-stone-800 border-stone-800 text-white shadow-sm'
-                : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-800 hover:bg-stone-800 hover:text-white'
-            }`}
+      <div className="px-6 mt-3 flex gap-2 w-full pb-2 shrink-0">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Meal Type</span>
+          <select
+            value={mealTypeFilter}
+            onChange={(e) => setMealTypeFilter(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-xl bg-stone-800 border border-stone-700 text-white text-sm font-medium focus:outline-none focus:border-[#FC5200]"
           >
-            {type}
-          </button>
-        ))}
+            {['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="pb-2 px-6 mt-2">

@@ -171,8 +171,7 @@ service cloud.firestore {
              (!('dislikedTags' in request.resource.data) || request.resource.data.dislikedTags is map) &&
              (!('hasCompletedOnboarding' in request.resource.data) || request.resource.data.hasCompletedOnboarding is bool) &&
              (!('selectedGroupId' in request.resource.data) || request.resource.data.selectedGroupId is string) &&
-             (!('notifications' in request.resource.data) || request.resource.data.notifications is map) &&
-             (!('currentTrainingDayType' in request.resource.data) || request.resource.data.currentTrainingDayType in ['Rest', 'Easy', 'Long', 'Speed/Interval', 'Brick', 'Race Day']);
+             (!('notifications' in request.resource.data) || request.resource.data.notifications is map);
     }
 
     function isValidInventoryItem() {
