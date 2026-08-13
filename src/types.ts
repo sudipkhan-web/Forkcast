@@ -64,6 +64,8 @@ export type UserProfile = {
   healthConditions?: string[];
   hasCompletedOnboarding?: boolean;
   selectedGroupId?: string;
+  hasAcceptedTerms?: boolean;
+  termsAcceptedAt?: string;
   notifications?: {
     enabled: boolean;
     mealPlanningTime?: string; // HH:mm format

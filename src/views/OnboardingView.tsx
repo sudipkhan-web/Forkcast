@@ -3,6 +3,7 @@ import { Sparkles, Plus, Check, ArrowRight, ChefHat } from 'lucide-react';
 import { PersonProfile, InventoryItem } from '../types';
 import { AppContext } from '../context/AppContext';
 import { estimateExpirationDate } from '../utils/expiration';
+import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../constants';
 
 interface OnboardingViewProps {
   household: PersonProfile[];
@@ -31,6 +32,7 @@ export function OnboardingView({
   const { customIngredientRules } = useContext(AppContext)!;
   const [step, setStep] = useState(1);
   const [addedItemsCount, setAddedItemsCount] = useState(0);
+  const [agreed, setAgreed] = useState(false);
 
   const handleTogglePantryItem = (item: string) => {
     const existing = inventory.find(i => i.name.toLowerCase() === item.toLowerCase());
@@ -147,6 +149,23 @@ export function OnboardingView({
             </p>
           </div>
         )}
+        {step === 4 && (
+          <div className="flex flex-col items-center justify-center h-full text-center mt-12">
+            <h1 className="text-3xl font-display font-bold text-white mb-4">One last thing,</h1>
+            <p className="text-stone-500 text-base max-w-[280px] mx-auto mb-8">
+              Please review our <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer" className="text-[#FC5200] underline">Privacy Policy</a> and <a href={TERMS_OF_SERVICE_URL} target="_blank" rel="noopener noreferrer" className="text-[#FC5200] underline">Terms of Service</a> before continuing.
+            </p>
+            <label className="flex items-center gap-3 text-stone-300 text-sm text-left max-w-[280px] mx-auto cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={agreed} 
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="w-5 h-5 rounded border-stone-700 bg-stone-900 text-[#FC5200] focus:ring-[#FC5200] focus:ring-offset-stone-900 shrink-0"
+              />
+              <span>I have read and agree to the Privacy Policy and Terms of Service</span>
+            </label>
+          </div>
+        )}
       </div>
 
       <div className="p-6 bg-stone-900 border-t border-stone-800">
@@ -180,8 +199,21 @@ export function OnboardingView({
 
         {step === 3 && (
           <button
-            onClick={onContinue}
+            onClick={() => setStep(4)}
             className="w-full py-4 rounded-2xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg bg-[#FC5200] text-white hover:bg-[#FC5200] shadow-[#FC5200]/20 flex items-center justify-center gap-2"
+          >
+            Next <ArrowRight className="w-5 h-5" />
+          </button>
+        )}
+        {step === 4 && (
+          <button
+            onClick={onContinue}
+            disabled={!agreed}
+            className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 ${
+              agreed
+                ? 'bg-[#FC5200] text-white hover:bg-[#FC5200] shadow-[#FC5200]/20'
+                : 'bg-stone-800 text-stone-500 cursor-not-allowed'
+            }`}
           >
             Let's Cook!
           </button>

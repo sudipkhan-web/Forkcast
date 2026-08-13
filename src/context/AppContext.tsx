@@ -124,6 +124,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             favoriteCuisines: data.favoriteCuisines || [],
             healthConditions: data.healthConditions || [],
             hasCompletedOnboarding: data.hasCompletedOnboarding || false,
+            hasAcceptedTerms: data.hasAcceptedTerms || false,
             selectedGroupId: data.selectedGroupId,
             notifications: data.notifications,
           };

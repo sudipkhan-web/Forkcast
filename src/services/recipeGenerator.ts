@@ -124,6 +124,54 @@ export const generateRecipes = async (
     return recipes;
   } catch (error) {
     console.error("Error generating recipes:", error);
-    return [];
+    // Fallback if API fails or quota is exceeded
+    return [
+      {
+        id: crypto.randomUUID(),
+        name: "Quick Quinoa Salad",
+        cuisine: "Mediterranean",
+        time: "15 min",
+        timeMinutes: 15,
+        difficulty: "Beginner",
+        reason: "A fast, healthy quinoa salad with fresh veggies.",
+        details: "Perfect for a quick lunch.",
+        calories: 450,
+        carbsGrams: 50, proteinGrams: 15, fatGrams: 20,
+        ingredients: [
+          { name: "Quinoa", amount: "1 cup" },
+          { name: "Cucumber", amount: "1/2" },
+          { name: "Tomatoes", amount: "1/2 cup" },
+          { name: "Feta", amount: "1/4 cup" },
+          { name: "Olive Oil", amount: "1 tbsp" }
+        ],
+        steps: ["Boil quinoa", "Chop veggies", "Mix and serve"],
+        tags: ["Healthy", "Vegetarian", "Quick"],
+        mealType: "Lunch",
+        image: "https://image.pollinations.ai/prompt/Professional%20food%20photography%20of%20Quick%20Quinoa%20Salad%20Mediterranean?width=800&height=800&nologo=true"
+      } as Meal,
+      {
+        id: crypto.randomUUID(),
+        name: "Avocado Toast with Egg",
+        cuisine: "American",
+        time: "10 min",
+        timeMinutes: 10,
+        difficulty: "Beginner",
+        reason: "Classic avocado toast topped with a sunny-side-up egg.",
+        details: "Great for breakfast or a post-workout snack.",
+        calories: 350,
+        carbsGrams: 30, proteinGrams: 18, fatGrams: 22,
+        ingredients: [
+          { name: "Bread", amount: "2 slices" },
+          { name: "Avocado", amount: "1/2" },
+          { name: "Egg", amount: "2" },
+          { name: "Salt", amount: "pinch" },
+          { name: "Pepper", amount: "pinch" }
+        ],
+        steps: ["Toast bread", "Mash avocado", "Fry egg", "Assemble"],
+        tags: ["Breakfast", "High Protein", "Quick"],
+        mealType: "Breakfast",
+        image: "https://image.pollinations.ai/prompt/Professional%20food%20photography%20of%20Avocado%20Toast%20with%20Egg?width=800&height=800&nologo=true"
+      } as Meal
+    ];
   }
 };

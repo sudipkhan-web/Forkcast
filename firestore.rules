@@ -171,6 +171,8 @@ service cloud.firestore {
              (!('dislikedTags' in request.resource.data) || request.resource.data.dislikedTags is map) &&
              (!('hasCompletedOnboarding' in request.resource.data) || request.resource.data.hasCompletedOnboarding is bool) &&
              (!('selectedGroupId' in request.resource.data) || request.resource.data.selectedGroupId is string) &&
+             (!('hasAcceptedTerms' in request.resource.data) || request.resource.data.hasAcceptedTerms is bool) &&
+             (!('termsAcceptedAt' in request.resource.data) || request.resource.data.termsAcceptedAt is string) &&
              (!('notifications' in request.resource.data) || request.resource.data.notifications is map);
     }
 

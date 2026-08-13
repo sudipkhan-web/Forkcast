@@ -12,11 +12,10 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
-        'formdata-polyfill': path.resolve(__dirname, 'src/dummy.js'),
-        'formdata-polyfill/esm.min.js': path.resolve(__dirname, 'src/dummy.js'),
-        'node-fetch': path.resolve(__dirname, 'src/dummy.js'),
-        'undici': path.resolve(__dirname, 'src/dummy.js')
+        '@': path.resolve(import.meta.dirname, '.'),
+        'formdata-polyfill': path.resolve(import.meta.dirname, 'src/dummy.js'),
+        'node-fetch': path.resolve(import.meta.dirname, 'src/dummy.js'),
+        'undici': path.resolve(import.meta.dirname, 'src/dummy.js')
       },
     },
     server: {

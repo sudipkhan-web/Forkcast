@@ -21,6 +21,7 @@ import { ProfileView } from './views/ProfileView';
 import { HomeView } from './views/HomeView';
 import { AuthView } from './views/AuthView';
 import { OnboardingView } from './views/OnboardingView';
+import { TermsGateView } from './views/TermsGateView';
 import { FavoritesView } from './views/FavoritesView';
 import { ProgressView } from './views/ProgressView';
 import { MealDetailsView } from './views/MealDetailsView';
@@ -1144,7 +1145,7 @@ function MainApp() {
           setInventory={setInventory}
           onContinue={async () => {
             if (userId) {
-              await setDoc(doc(db, 'users', userId), { hasCompletedOnboarding: true }, { merge: true })
+              await setDoc(doc(db, 'users', userId), { hasCompletedOnboarding: true, hasAcceptedTerms: true, termsAcceptedAt: new Date().toISOString() }, { merge: true })
                 .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}`));
                 
               for (const item of inventory) {
@@ -1156,6 +1157,13 @@ function MainApp() {
             }
           }}
         />
+      ) : isProfileLoaded && !profile.hasAcceptedTerms ? (
+        <TermsGateView onAccept={async () => {
+          if (userId) {
+            await setDoc(doc(db, 'users', userId), { hasAcceptedTerms: true, termsAcceptedAt: new Date().toISOString() }, { merge: true })
+              .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}`));
+          }
+        }} />
       ) : (
         <>
           {/* Main Content Area */}
