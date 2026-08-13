@@ -1,6 +1,6 @@
 {
   "name": "Forkcast",
-  "description": "A food decision assistant that helps users quickly decide what to eat.",
+  "description": "An AI-powered smart meal planner, nutrition tracker, and inventory manager that generates personalized recipes using Gemini AI based on your training schedule and macro goals.",
   "requestFramePermissions": ["microphone", "camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -13,11 +13,13 @@ export default defineConfig(({mode}) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'formdata-polyfill': path.resolve(__dirname, 'src/dummy.js'),
+        'formdata-polyfill/esm.min.js': path.resolve(__dirname, 'src/dummy.js'),
+        'node-fetch': path.resolve(__dirname, 'src/dummy.js'),
+        'undici': path.resolve(__dirname, 'src/dummy.js')
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
     },
   };

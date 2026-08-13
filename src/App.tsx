@@ -10,6 +10,7 @@ import { generateRecipes } from './services/recipeGenerator';
 import { getTopMeals, generateDynamicReason, generateGroupReason, hasIngredient, getSmartSubstitutions, getExpiringIngredients, getActiveConstraints, Substitution } from './services/recommendationEngine';
 import { getOrGenerateRecipeImage } from './services/imageGenerator';
 import { getNextDays, getAdjustedIngredients, calculateConfidence, getPrimaryPerson } from './utils/mealUtils';
+import { getTodayMacros } from './utils/progressUtils';
 import { MealCard } from './components/MealCard';
 import { TasteLearningScreen } from './components/TasteLearningScreen';
 import { useShoppingList } from './hooks/useShoppingList';
@@ -30,7 +31,7 @@ import { trackBehavior, TrackingAction } from './services/behaviorTracking';
 import { InventoryItem, ShoppingItem, PersonProfile, Group, PlannedMeal, UserProfile, PantryLog, AppNotification } from './types';
 import { useAppContext, AppProvider } from './context/AppContext';
 import { VoiceAssistantUI } from './components/VoiceAssistantUI';
-import { Type } from '@google/genai';
+import { Type } from '@google/genai/web';
 import { DIETARY_OPTIONS, CUISINE_OPTIONS, SKILL_OPTIONS } from './constants';
 import { estimateExpirationDate } from './utils/expiration';
 import { checkNotifications } from './services/notificationService';
@@ -622,6 +623,7 @@ function MainApp() {
         // Fetch training day type for background generation
         const fetchAndGenerate = async () => {
           let trainingDayType: string | undefined = undefined;
+          let acceptedMeals: any[] = [];
           if (auth.currentUser) {
             const today = new Date().toISOString().split('T')[0];
             try {
@@ -629,6 +631,7 @@ function MainApp() {
               const docSnap = await getDoc(logRef);
               if (docSnap.exists()) {
                 trainingDayType = docSnap.data().dayType || undefined;
+                acceptedMeals = docSnap.data().acceptedMeals || [];
               }
             } catch (e) {
               console.error("Error fetching training day type:", e);
@@ -637,7 +640,12 @@ function MainApp() {
 
           try {
             const primaryPerson = getPrimaryPerson(household);
-            const newMeals = await generateRecipes(12, liked, disliked, dietary, dislikedIngredients, favoriteCuisines, goals, seenNames, favorites, inventoryNames, healthConditions, undefined, trainingDayType, primaryPerson?.weightKg);
+            const todayMacros = getTodayMacros(acceptedMeals, primaryPerson || {}, trainingDayType);
+            const remainingCarbsGrams = Math.max(0, todayMacros.carbs.target[1] - todayMacros.carbs.current);
+            const remainingProteinGrams = Math.max(0, todayMacros.protein.target[1] - todayMacros.protein.current);
+            const remainingFatGrams = Math.max(0, todayMacros.fat.target[1] - todayMacros.fat.current);
+            
+            const newMeals = await generateRecipes(12, liked, disliked, dietary, dislikedIngredients, favoriteCuisines, goals, seenNames, favorites, inventoryNames, healthConditions, undefined, trainingDayType, primaryPerson?.weightKg, remainingCarbsGrams, remainingProteinGrams, remainingFatGrams);
             if (newMeals.length > 0) {
               setSuggestions(prev => {
                 const updated = [...prev];

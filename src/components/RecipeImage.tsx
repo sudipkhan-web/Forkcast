@@ -31,15 +31,6 @@ export const RecipeImage: React.FC<RecipeImageProps> = ({ meal, className = '' }
         if (isMounted) {
           setImageUrl(url);
           
-          if (url.startsWith('data:image')) {
-             try {
-                const { doc, updateDoc } = await import('firebase/firestore');
-                const { db } = await import('../firebase');
-                await updateDoc(doc(db, 'recipes', meal.id), { image: url });
-             } catch (e) {
-                // Not authenticated or permission denied, safe to ignore
-             }
-          }
         }
       } catch (err) {
         if (isMounted) {

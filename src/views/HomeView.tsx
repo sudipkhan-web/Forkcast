@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, RefreshCw, Sparkles, Share, Target, User } from 'lucide-react';
+import { Star, RefreshCw, Sparkles, Share, Target, User, ChevronDown, Flame } from 'lucide-react';
 import { Group, PersonProfile, InventoryItem, UserProfile } from '../types';
 import { Meal, ALL_MEALS } from '../data/recipes';
 import { MealCard } from '../components/MealCard';
@@ -75,6 +75,9 @@ export function HomeView({
   const todayLog = trainingLogs.find((l: any) => l.date === today);
   const primaryPerson = getPrimaryPerson(household);
   const todayMacros = getTodayMacros(todayLog?.acceptedMeals || [], primaryPerson || {}, trainingDayType || undefined);
+  const remainingCarbsGrams = Math.max(0, todayMacros.carbs.target[1] - todayMacros.carbs.current);
+  const remainingProteinGrams = Math.max(0, todayMacros.protein.target[1] - todayMacros.protein.current);
+  const remainingFatGrams = Math.max(0, todayMacros.fat.target[1] - todayMacros.fat.current);
 
   React.useEffect(() => {
     if (auth.currentUser) {
@@ -87,6 +90,46 @@ export function HomeView({
       });
     }
   }, []);
+
+  const regenerateSuggestions = async (replace: boolean, overrideTrainingDayType?: string | null) => {
+    const liked = Object.entries(likedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
+    const disliked = Object.entries(dislikedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
+    const primaryPerson = getPrimaryPerson(household);
+    const { dietary, dislikedIngredients, favoriteCuisines, healthConditions } = getActiveConstraints(selectedGroupId ? groups.find(g => g.id === selectedGroupId)?.memberIds || [] : [primaryPerson?.id || ''], household);
+    const goals: string[] = [];
+    const seenNames = [...ALL_MEALS, ...globalRecipes, ...suggestions].map(m => m.name);
+    const inventoryNames = inventory.map(i => i.name);
+
+    let effectiveCarbs = remainingCarbsGrams;
+    let effectiveProtein = remainingProteinGrams;
+    let effectiveFat = remainingFatGrams;
+    
+    if (overrideTrainingDayType !== undefined) {
+      const macros = getTodayMacros(todayLog?.acceptedMeals || [], primaryPerson || {}, overrideTrainingDayType || undefined);
+      effectiveCarbs = Math.max(0, macros.carbs.target[1] - macros.carbs.current);
+      effectiveProtein = Math.max(0, macros.protein.target[1] - macros.protein.current);
+      effectiveFat = Math.max(0, macros.fat.target[1] - macros.fat.current);
+    }
+
+    const currentDayType = overrideTrainingDayType !== undefined ? overrideTrainingDayType : trainingDayType;
+
+    const newMeals = await generateRecipes(12, liked, disliked, dietary, dislikedIngredients, favoriteCuisines, goals, seenNames, favorites, inventoryNames, healthConditions, mealTypeFilter === 'All' ? undefined : mealTypeFilter, currentDayType || undefined, primaryPerson?.weightKg, effectiveCarbs, effectiveProtein, effectiveFat);
+    
+    if (newMeals.length > 0) {
+      const mapped = newMeals.map((m, idx) => ({
+        ...m,
+        id: `ai-manual-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+        dynamicReason: 'Freshly generated for you!',
+        groupReason: 'AI Recommended'
+      }));
+      
+      if (replace) {
+        setSuggestions(mapped);
+      } else {
+        setSuggestions([...mapped, ...suggestions]);
+      }
+    }
+  };
 
   const filteredSuggestions = React.useMemo(() => {
     return suggestions.filter(m => mealTypeFilter === 'All' || m.mealType === mealTypeFilter);
@@ -135,52 +178,67 @@ export function HomeView({
       
 
 
-      <div className="mx-6 mt-3 p-4 rounded-2xl bg-stone-900/60 border border-stone-800 flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Training Today</span>
-          <select
-            value={trainingDayType || ''}
-            onChange={(e) => {
-              const next = e.target.value || null;
-              setTrainingDayType(next);
-              if (auth.currentUser) {
-                const today = new Date().toISOString().split('T')[0];
-                const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
-                setDoc(logRef, { dayType: next }, { merge: true });
-              }
-              setIsGeneratingMeals(true);
-              setSuggestions([]);
-              setIsGeneratingMeals(false);
-            }}
-            className="w-full px-4 py-2.5 rounded-xl bg-stone-800 border border-stone-700 text-white text-sm font-medium focus:outline-none focus:border-[#FC5200]"
-          >
-            <option value="">No training today</option>
-            {TRAINING_DAY_OPTIONS.map(day => <option key={day} value={day}>{day}</option>)}
-          </select>
+      <div className="mx-6 mt-3 p-[14px] rounded-2xl bg-stone-900 flex flex-col gap-3">
+        <div className="flex flex-col w-full">
+          <span className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-1.5">Training Today</span>
+          <div className="relative">
+            <select
+              value={trainingDayType || ''}
+              onChange={(e) => {
+                const next = e.target.value || null;
+                setTrainingDayType(next);
+                if (auth.currentUser) {
+                  const today = new Date().toISOString().split('T')[0];
+                  const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+                  setDoc(logRef, { dayType: next }, { merge: true });
+                }
+                setIsGeneratingMeals(true);
+                setSuggestions([]);
+                setIsGeneratingMeals(false);
+              }}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+            >
+              <option value="">No training today</option>
+              {TRAINING_DAY_OPTIONS.map(day => <option key={day} value={day}>{day}</option>)}
+            </select>
+            <div className="bg-stone-800 border border-stone-700 rounded-[10px] px-3 py-[9px] flex items-center justify-between">
+              <span className="text-sm text-white flex items-center gap-2">
+                {trainingDayType ? (
+                  <>
+                    <Flame className="w-4 h-4 text-[#FC5200]" />
+                    {trainingDayType}
+                  </>
+                ) : (
+                  'No training today'
+                )}
+              </span>
+              <ChevronDown className="w-4 h-4 text-stone-400" />
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-4 w-full">
+        <div className="flex gap-[14px] w-full">
           {[
             { label: 'CARBS', data: todayMacros.carbs },
           { label: 'PROTEIN', data: todayMacros.protein },
           { label: 'FAT', data: todayMacros.fat }
         ].map(macro => {
-          const [min, max] = macro.data.target;
+          const [, max] = macro.data.target;
           const current = macro.data.current;
           const percentage = Math.min((current / max) * 100, 100);
           const isOver = current > max;
-          const isUnder = current < min;
+          const isUnder = current < macro.data.target[0];
           let activeColor = 'bg-[#FC5200]';
           if (isUnder) activeColor = 'bg-stone-500';
           if (isOver) activeColor = 'bg-red-500';
           
           return (
-            <div key={macro.label} className="flex-1 flex flex-col gap-1">
-              <div className="flex justify-between items-end">
-                <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">{macro.label}</span>
-                <span className="text-[10px] font-mono text-stone-300">{current} <span className="text-stone-600">/ {min}-{max}g</span></span>
+            <div key={macro.label} className="flex-1 flex flex-col">
+              <div className="flex justify-between items-end mb-1">
+                <span className="text-[9px] font-medium text-stone-400 uppercase tracking-wide">{macro.label}</span>
+                <span className="text-[9px] font-mono text-stone-300">{current}/{max}g</span>
               </div>
-              <div className="h-1.5 w-full bg-stone-800 rounded-full overflow-hidden">
+              <div className="h-[5px] w-full bg-stone-800 rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all duration-500 ${activeColor}`} style={{ width: `${percentage}%` }} />
               </div>
             </div>
@@ -190,29 +248,37 @@ export function HomeView({
       </div>
 
       <div className="px-6 mt-3 flex gap-2 w-full pb-2 shrink-0">
-        <div className="flex flex-col gap-1">
-          <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Meal Type</span>
-          <select
-            value={mealTypeFilter}
-            onChange={(e) => setMealTypeFilter(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl bg-stone-800 border border-stone-700 text-white text-sm font-medium focus:outline-none focus:border-[#FC5200]"
-          >
-            {['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
+        <div className="flex flex-col w-full">
+          <span className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-1.5 mt-2.5">Meal Type</span>
+          <div className="relative">
+            <select
+              value={mealTypeFilter}
+              onChange={(e) => setMealTypeFilter(e.target.value)}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+            >
+              {['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+            <div className="bg-stone-900 border border-stone-800 rounded-[10px] px-3 py-[9px] flex items-center justify-between">
+              <span className="text-sm text-white flex items-center gap-2">
+                {mealTypeFilter === 'All' ? 'All Meals' : mealTypeFilter}
+              </span>
+              <ChevronDown className="w-4 h-4 text-stone-400" />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="pb-2 px-6 mt-2">
-        <h3 className="text-xs font-display font-bold text-stone-400 uppercase tracking-widest mb-3 px-2">Cooking For</h3>
+      <div className="pb-2 px-6 mt-3">
+        <h3 className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-1.5 px-2">Cooking For</h3>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-2">
           <button
             onClick={() => handleSelectGroup('')}
-            className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all active:scale-[0.98] border ${
+            className={`transition-all active:scale-[0.98] ${
               !selectedGroupId
-                ? 'bg-stone-800 border-stone-800 text-white shadow-sm'
-                : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-800 hover:bg-stone-800 hover:text-white'
+                ? 'bg-stone-800 text-white text-xs font-medium px-3.5 py-1.5 rounded-full'
+                : 'bg-stone-900 border border-stone-800 text-stone-400 text-xs px-3.5 py-1.5 rounded-full hover:bg-stone-800 hover:text-white'
             }`}
           >
             Just Me
@@ -221,10 +287,10 @@ export function HomeView({
             <button
               key={group.id}
               onClick={() => handleSelectGroup(group.id)}
-              className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all active:scale-[0.98] border ${
+              className={`transition-all active:scale-[0.98] ${
                 selectedGroupId === group.id
-                  ? 'bg-stone-800 border-stone-800 text-white shadow-sm'
-                  : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-800 hover:bg-stone-800 hover:text-white'
+                  ? 'bg-stone-800 text-white text-xs font-medium px-3.5 py-1.5 rounded-full'
+                  : 'bg-stone-900 border border-stone-800 text-stone-400 text-xs px-3.5 py-1.5 rounded-full hover:bg-stone-800 hover:text-white'
               }`}
             >
               {group.name}
@@ -235,7 +301,17 @@ export function HomeView({
 
       <div className="flex flex-col gap-6 px-6 mt-4">
         <AnimatePresence mode="popLayout">
-          {filteredSuggestions.length === 0 ? (
+          {isGeneratingMeals && suggestions.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center py-20 gap-4"
+            >
+              <RefreshCw className="w-8 h-8 text-[#FC5200] animate-spin" />
+              <p className="text-sm font-medium text-stone-400">Finding your fuel...</p>
+            </motion.div>
+          ) : filteredSuggestions.length === 0 ? (
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
@@ -279,26 +355,7 @@ export function HomeView({
           onClick={async () => {
             setIsGeneratingMeals(true);
             try {
-              const liked = Object.entries(likedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
-              const disliked = Object.entries(dislikedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
-              const primaryPerson = getPrimaryPerson(household);
-              const { dietary, dislikedIngredients, favoriteCuisines, healthConditions } = getActiveConstraints(selectedGroupId ? groups.find(g => g.id === selectedGroupId)?.memberIds || [] : [primaryPerson?.id || ''], household);
-              const goals: string[] = [];
-              const seenNames = [...ALL_MEALS, ...globalRecipes, ...suggestions].map(m => m.name);
-              const inventoryNames = inventory.map(i => i.name);
-              const newMeals = await generateRecipes(12, liked, disliked, dietary, dislikedIngredients, favoriteCuisines, goals, seenNames, favorites, inventoryNames, healthConditions, mealTypeFilter === 'All' ? undefined : mealTypeFilter, trainingDayType || undefined, primaryPerson?.weightKg);
-              if (newMeals.length > 0) {
-                // If filtering by specific type, we might want to *add* them to the top of suggestions or replace.
-                // Right now it just replaces the suggestions, or sets a big chunk of them. 
-                // Wait, previously it did: "setSuggestions(newMeals...)". But suggestions should retain other meals 
-                // so we don't wipe out other meal types.
-                setSuggestions([...newMeals.map((m, idx) => ({
-                  ...m,
-                  id: `ai-manual-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
-                  dynamicReason: 'Freshly generated for you!',
-                  groupReason: 'AI Recommended'
-                })), ...suggestions]);
-              }
+              await regenerateSuggestions(false);
             } catch (err) {
               console.error("Error generating meals manually:", err);
             } finally {

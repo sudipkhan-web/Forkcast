@@ -1,57 +1,33 @@
-# Smart Meal Planner & Inventory Manager
+# Forkcast - Smart Meal Planner & AI Nutrition Assistant
 
-A comprehensive React application designed to help households manage their kitchen inventory, discover personalized recipes, plan meals, and automatically generate smart shopping lists. The app actively works to reduce food waste by prioritizing perishable and soon-to-expire ingredients through intelligent recipe matching and ingredient substitutions.
+A comprehensive full-stack React and Express application designed to help households manage their kitchen inventory, discover personalized recipes, track nutrition, and generate dynamic AI-powered meal recommendations. The app actively works to reduce food waste, align with daily macro targets (protein/fat/carbs), and adapt meals based on the user's daily training/activity schedule.
 
 ## Core Features
 
-### 1. Smart Recipe Discovery
-- **Inventory Matching:** Suggests meals based on what's currently in your fridge and pantry.
-- **Confidence Scoring:** Calculates a "Match" percentage for each recipe based on available ingredients, expiring items, dietary preferences, and cooking time.
-- **Intelligent Substitutions:** Automatically suggests "Smart Swaps" for missing ingredients using items you already own. It prioritizes substitutions that are perishable or expiring soon (e.g., swapping missing chicken for tofu if the tofu is expiring).
-- **Dynamic Reasoning:** Explains *why* a meal was suggested (e.g., "Uses Spinach which needs to be used soon!").
+### 1. AI-Powered Recipe Discovery (Gemini AI)
+- **Generative AI Meals:** Uses Google's Gemini AI to dynamically generate personalized recipes based on current preferences, constraints, macros, and inventory.
+- **Smart Pantry Scanning:** Utilizes Gemini Vision capabilities to scan photos of your fridge or pantry, automatically detecting and adding items to your inventory.
+- **Context-Aware Recommendations:** Automatically tailors meal suggestions depending on the user's daily training logs (e.g., suggesting high-carb meals for "Long/Race Days" and adjusting if the user has already maxed out their daily carb limits).
+- **AI Image Generation:** Automatically pre-generates appetizing, high-quality images for newly AI-generated recipes using Gemini's image generation capabilities.
 
-### 2. Household & Preference Management
-- **Profiles:** Manage multiple household members with individual dietary restrictions (Vegetarian, Vegan, Gluten-Free, Keto), disliked ingredients, and favorite cuisines.
-- **Groups:** Create groups (e.g., "Kids", "Parents", "Whole Family") to easily plan meals that satisfy everyone's combined constraints.
-- **Auto-Adjusting Recipes:** Automatically scales ingredient quantities based on the number of people in the selected group and swaps out incompatible ingredients (e.g., replacing regular pasta with gluten-free pasta).
+### 2. Intelligent Inventory & Substitution
+- **Perishable Tracking & Expiration:** Tracks expiration dates and visually flags items that need to be used soon.
+- **Smart Swaps:** Recommends "Smart Swaps" for missing ingredients using items you already own, prioritizing perishables.
 
-### 3. Inventory Management
-- **Perishable Tracking:** Automatically identifies perishable items and tracks their expiration dates.
-- **Visual Indicators:** Highlights items that are expiring soon to encourage immediate use.
+### 3. Nutrition & Training Tracking
+- **Macro Goals:** Tracks daily macro intake (Carbs, Protein, Fat) against a user's defined goals based on weight and activity level.
+- **Adaptive Guidance:** Integrates closely with the AI backend to avoid suggesting high-carb meals if the user has already hit their carb limit for the day, prioritizing what's missing instead.
+- **Dietary Constraints:** Supports multi-person households with individual restrictions (Vegan, Keto, Gluten-Free), translating these constraints directly to the AI generation prompt.
 
-### 4. Meal Planning & My Cart
-- **Calendar Planning:** Schedule meals for specific days.
-- **Automated Shopping List:** Automatically aggregates ingredients needed for planned meals.
-- **Smart Filtering:** Excludes ingredients you already have in your inventory or that have been successfully substituted.
-- **Buy Later (Defer):** Allows deferring non-perishable items or items needed for later in the week to a "Buy Later" list.
-- **Grocery Ordering:** Mock integration for ordering the finalized cart via delivery services like Instacart or Walmart.
+### 4. Background Workers & Cloud Infrastructure
+- **Server-Side API (`server.ts`):** A robust Node/Express backend that securely proxies all Gemini AI interactions, keeping API keys hidden from the client.
+- **Automated Notifications:** Backend services manage offline background cron-style jobs for notifications, tracking expiring ingredients, and reminding users of their weekly plans.
+- **Firestore Persistence:** Secure, robust cloud persistence using Firebase Firestore for user profiles, training logs, inventory, and globally generated recipes.
 
 ## Technical Architecture
 
-- **Framework:** React 18 with Vite
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Animations:** Framer Motion (`AnimatePresence`, `motion`)
-- **Icons:** Lucide React
-
-## Key Algorithms & Logic
-
-### `getSmartSubstitutions`
-Evaluates missing ingredients against the user's current inventory. It maps ingredients to categories (e.g., Proteins, Greens, Dairy) and finds available matches. It sorts potential substitutes by perishability and expiration date to minimize food waste.
-
-### `calculateConfidence`
-Generates a 0-99 score for how well a recipe fits the current context. Factors include:
-- Percentage of ingredients owned (including valid substitutions).
-- Presence of expiring ingredients (heavy bonus).
-- Match with user's maximum cooking time.
-- Match with household's favorite cuisines and liked tags.
-- Penalties for violating dietary restrictions or containing disliked ingredients.
-
-### `getAdjustedIngredients`
-Takes a base recipe and a list of household members. It scales the ingredient amounts mathematically based on the group size and applies text-replacements for dietary needs (e.g., replacing "Milk" with "Almond Milk" for vegans).
-
-### `combinedShoppingList` (useMemo)
-A complex aggregation function that merges manually added shopping items with ingredients required for planned meals. It deduplicates items, sums quantities, tracks the earliest date an item is needed, and explicitly filters out items that the user already has in their `inventory`.
-
-## State Management
-The application relies heavily on React's local state (`useState`) and derived state (`useMemo`) to maintain a reactive, client-side data store. Key state objects include `inventory`, `shoppingList`, `plannedMeals`, `household`, `groups`, and `favorites`.
+- **Frontend:** React 18 with Vite, TypeScript, Tailwind CSS, and Framer Motion.
+- **Backend:** Node.js with Express, compiled via ESBuild.
+- **AI Integration:** `@google/genai` (Server-side only).
+- **Database:** Firebase Firestore & Firebase Auth.
+- **Icons:** Lucide React.

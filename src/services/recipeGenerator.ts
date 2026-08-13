@@ -44,7 +44,10 @@ export const generateRecipes = async (
   healthConditions: string[] = [],
   specificMealType?: string,
   trainingDayType?: string,
-  weightKg?: number
+  weightKg?: number,
+  remainingCarbsGrams?: number,
+  remainingProteinGrams?: number,
+  remainingFatGrams?: number
 ): Promise<Meal[]> => {
   const favoriteMealNamesStr = favoriteMeals.map(m => m.name).join(", ");
 
@@ -68,7 +71,10 @@ export const generateRecipes = async (
         healthConditions,
         specificMealType,
         trainingDayType,
-        weightKg
+        weightKg,
+        remainingCarbsGrams,
+        remainingProteinGrams,
+        remainingFatGrams
       })
     });
 

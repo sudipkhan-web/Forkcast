@@ -74,7 +74,7 @@ export function MealCard({
           <div className="absolute inset-0 bg-gradient-to-t from-[#17181C]/90 via-[#17181C]/40 to-transparent" />
           {meal.isVariation && (
             <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
-              <div className="bg-emerald-500/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+              <div className="bg-[#FC5200]/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
                 <RefreshCw className="w-3.5 h-3.5 text-white animate-spin-slow" />
                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">Variation</span>
               </div>
@@ -85,7 +85,7 @@ export function MealCard({
             <span className="text-xs font-bold text-white">{meal.time}</span>
           </div>
           <div className={`absolute top-4 left-4 ${meal.isVariation ? 'mt-10' : ''} bg-stone-900/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm`}>
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <Sparkles className="w-4 h-4 text-[#FC5200]" />
             <span className="text-xs font-bold text-white">{confidence}% Match</span>
           </div>
         </div>
@@ -93,8 +93,14 @@ export function MealCard({
         <div className="p-6 flex flex-col gap-4">
           <h3 className="text-3xl font-display font-bold text-white leading-tight tracking-tight">{meal.name}</h3>
           
+          {meal.calories != null && meal.carbsGrams != null && meal.proteinGrams != null && meal.fatGrams != null && (
+            <div className="text-xs font-mono text-stone-400 font-medium tracking-wide">
+              {meal.calories} kcal &middot; {meal.carbsGrams}c &middot; {meal.proteinGrams}p &middot; {meal.fatGrams}f
+            </div>
+          )}
+          
           <div className="bg-stone-900 rounded-2xl p-5 border border-stone-800 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-emerald-400 rounded-l-2xl" />
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#FC5200] rounded-l-2xl" />
             <p className="text-sm text-stone-300 leading-relaxed font-medium">
               {dynamicReason}
             </p>
@@ -112,7 +118,7 @@ export function MealCard({
                 <div className="space-y-1.5">
                   {substitutions.slice(0, 2).map((sub, idx) => (
                     <p key={idx} className="text-xs text-stone-400 flex items-start gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FC5200] mt-1 shrink-0" />
                       <span>Use <span className="font-bold text-white">{sub.substitute}</span> {sub.expiresSoon && <span className="text-red-500 font-medium">(expires soon)</span>} instead of {sub.original}</span>
                     </p>
                   ))}
@@ -126,7 +132,7 @@ export function MealCard({
           
           <div className="flex items-center gap-4 pt-1">
             <div className="flex items-center gap-1.5 text-sm text-stone-400 font-medium">
-              <Carrot className="w-4 h-4 text-emerald-500" />
+              <Carrot className="w-4 h-4 text-[#FC5200]" />
               <span>{availableIngredients.length + substitutions.length} ingredients</span>
             </div>
             {missingIngredients.length - substitutions.length > 0 ? (

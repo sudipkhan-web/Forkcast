@@ -61,7 +61,10 @@ async function startServer() {
         healthConditions,
         specificMealType,
         trainingDayType,
-        weightKg
+        weightKg,
+        remainingCarbsGrams,
+        remainingProteinGrams,
+        remainingFatGrams
       } = req.body;
 
       const result = await serverGenerateRecipes(
@@ -78,7 +81,10 @@ async function startServer() {
         healthConditions || [],
         specificMealType,
         trainingDayType,
-        weightKg
+        weightKg,
+        remainingCarbsGrams,
+        remainingProteinGrams,
+        remainingFatGrams
       );
       res.json(result);
     } catch (error: any) {

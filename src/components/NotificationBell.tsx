@@ -16,7 +16,7 @@ export const NotificationBell = () => {
         className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative rounded-full hover:bg-stone-800"
         aria-label="Notifications"
       >
-        <Bell className="w-6 h-6" />
+        <Bell className="w-[19px] h-[19px]" />
         {unreadCount > 0 && (
           <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#17181C]">
             {unreadCount > 9 ? '9+' : unreadCount}

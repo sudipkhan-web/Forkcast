@@ -126,7 +126,10 @@ export async function serverGenerateRecipes(
   healthConditions: string[] = [],
   specificMealType?: string,
   trainingDayType?: string,
-  weightKg?: number
+  weightKg?: number,
+  remainingCarbsGrams?: number,
+  remainingProteinGrams?: number,
+  remainingFatGrams?: number
 ) {
   const ai = getGeminiClient();
 
@@ -141,6 +144,12 @@ export async function serverGenerateRecipes(
     - If Speed/Interval: moderate carbs, easy to digest, avoid high-fat/high-fiber close to the session.
     - If Rest: balanced macros, emphasize protein for recovery.
     - If Easy: normal balanced fueling, no special timing needed.
+    ` : ''}
+    ${(remainingCarbsGrams !== undefined) ? `
+    So far today, the user has already logged meals toward their targets. Remaining room today: ~${remainingCarbsGrams}g carbs, ~${remainingProteinGrams}g protein, ~${remainingFatGrams}g fat.
+    - If remaining carbs are low (under 40g), don't suggest another high-carb meal even on a Long/Race Day — favor protein/fat instead.
+    - If remaining protein is high relative to what's left in the day, favor protein-forward meals.
+    - Treat these as guidance to bias suggestions toward closing the gap, not a rigid rule — a realistic, appealing meal always comes first.
     ` : ''}
     - Dietary restrictions: ${dietary.join(", ") || "None"}.
     - Medical/Health: ${healthConditions.join(", ") || "None"}.

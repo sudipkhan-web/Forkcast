@@ -143,55 +143,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
                   <div className="w-full h-full relative rounded-t-sm overflow-hidden flex items-end justify-center">
                     {/* Target Band */}
                     <div 
-                      className="absolute w-full bg-stone-800/80 rounded-sm z-0"
-                      style={{ bottom: `${targetBottom}%`, height: `${targetHeight}%` }}
-                    />
-                    
-                    {/* Actual Bar */}
-                    <div 
-                      className={`w-full rounded-t-sm relative z-10 transition-all duration-500 ${barColor}`}
-                      style={{ height: `${barHeight}%` }}
-                    />
-                  </div>
-                  
-                  {/* X-axis Label */}
-                  <span className="text-[10px] font-medium text-stone-500 mt-2">{dayLabel}</span>
-                </div>
-              );
-            })}
-          </div>
-          
-          <div className="flex items-end gap-1.5 h-48 mt-4 relative">
-            {carbTrend.map((day, i) => {
-              const maxScale = Math.max(500, ...carbTrend.map(d => Math.max(d.totalCarbs, d.targetMax)));
-              const targetBottom = (day.targetMin / maxScale) * 100;
-              const targetHeight = ((day.targetMax - day.targetMin) / maxScale) * 100;
-              const barHeight = Math.min((day.totalCarbs / maxScale) * 100, 100);
-              
-              const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'narrow' });
-              
-              // Color bar based on target
-              let barColor = 'bg-[#FC5200]';
-              if (day.totalCarbs < day.targetMin) barColor = 'bg-stone-500';
-              if (day.totalCarbs > day.targetMax) barColor = 'bg-rose-500';
-              if (day.totalCarbs === 0) barColor = 'bg-stone-800'; // No data
-              
-              return (
-                <div 
-                  key={day.date} 
-                  className="flex-1 flex flex-col items-center group relative"
-                  title={`${day.totalCarbs}g (Target: ${day.targetMin}-${day.targetMax}g)`}
-                >
-                  {/* Tooltip on hover/tap */}
-                  <div className="absolute -top-10 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity bg-stone-800 text-white text-[10px] font-mono px-2 py-1 rounded pointer-events-none whitespace-nowrap z-10 shadow-lg">
-                    {day.totalCarbs}g
-                  </div>
-                  
-                  {/* Chart Area */}
-                  <div className="w-full h-full relative rounded-t-sm overflow-hidden flex items-end justify-center">
-                    {/* Target Band */}
-                    <div 
-                      className="absolute w-full bg-stone-800/80 rounded-sm z-0"
+                      className="absolute w-full bg-stone-700 rounded-sm z-0"
                       style={{ bottom: `${targetBottom}%`, height: `${targetHeight}%` }}
                     />
                     
