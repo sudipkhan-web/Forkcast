@@ -887,7 +887,7 @@ function MainApp() {
       declaration: {
         name: 'getUserData',
         description: 'Read the current inventory and shopping list from the app state. Use this to check what ingredients the user has at home and what is on their shopping list, to answer their questions about what they can cook or what they need to buy.',
-        parameters: { type: Type.OBJECT, properties: {} }
+        
       },
       execute: () => {
         return {
@@ -922,7 +922,7 @@ function MainApp() {
       declaration: {
         name: 'muteMicrophone',
         description: 'Mute the assistant microphone and disconnect the voice session when the user indicates they are done planning or done using the app. Only do this if they do not need persistent help like reading steps while cooking or shopping.',
-        parameters: { type: Type.OBJECT, properties: {} }
+        
       },
       execute: () => {
         window.dispatchEvent(new Event('disconnectAssistant'));

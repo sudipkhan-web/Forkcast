@@ -102,7 +102,7 @@ async function startServer() {
       const base64Data = await serverGenerateRecipeImage(recipeName, cuisine || "", details || "");
       res.json({ base64: base64Data });
     } catch (error: any) {
-      console.warn("[SERVER] Recipe image generation failed or quota exceeded. Returning a beautiful fallback URL instead of throwing a 500. Error details:", error.message || error);
+      console.info("Using fallback image generator.");
       const fallbackPrompt = `Professional food photography of ${req.body.recipeName}. ${req.body.cuisine ? req.body.cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
       const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?width=800&height=800&nologo=true`;
       res.json({ base64: null, fallbackUrl });

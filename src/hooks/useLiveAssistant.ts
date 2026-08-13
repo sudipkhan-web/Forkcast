@@ -26,7 +26,7 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
   
   const connect = useCallback(async () => {
     try {
-      const apiKey = (typeof process !== 'undefined' ? process?.env?.GEMINI_API_KEY : '') || '';
+      const apiKey = process.env.GEMINI_API_KEY || '';
       const ai = new GoogleGenAI({ apiKey });
       
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -47,7 +47,7 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
       const toolDeclarations = toolsRef.current.map(t => t.declaration);
       
       const sessionPromise = ai.live.connect({
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-3.1-flash-live-preview",
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -168,10 +168,11 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
           },
         }
       });
+      sessionPromise.catch(e => { console.error("Session promise rejected:", e); disconnect(); });
       sessionRef.current = sessionPromise;
 
     } catch (e) {
-      console.error("Error connecting to Live API", e);
+      console.error("Error connecting to Live API", e.message, e.stack, e.name);
       disconnect();
     }
   }, [systemInstruction]);

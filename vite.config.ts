@@ -14,6 +14,7 @@ export default defineConfig(({mode}) => {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),
         'formdata-polyfill': path.resolve(import.meta.dirname, 'src/dummy.js'),
+        'formdata-polyfill/esm.min.js': path.resolve(import.meta.dirname, 'src/dummy.js'),
         'node-fetch': path.resolve(import.meta.dirname, 'src/dummy.js'),
         'undici': path.resolve(import.meta.dirname, 'src/dummy.js')
       },
