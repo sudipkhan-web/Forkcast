@@ -184,7 +184,7 @@ export function HomeView({
           <div className="relative">
             <select
               value={trainingDayType || ''}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const next = e.target.value || null;
                 setTrainingDayType(next);
                 if (auth.currentUser) {
@@ -193,27 +193,19 @@ export function HomeView({
                   setDoc(logRef, { dayType: next }, { merge: true });
                 }
                 setIsGeneratingMeals(true);
-                setSuggestions([]);
-                setIsGeneratingMeals(false);
+                try {
+                  await regenerateSuggestions(true, next);
+                } finally {
+                  setIsGeneratingMeals(false);
+                }
               }}
-              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+              className="w-full appearance-none bg-stone-800 border border-stone-700 rounded-[10px] px-3 py-[9px] pl-9 pr-9 text-sm font-medium text-white focus:outline-none focus:border-[#FC5200] cursor-pointer"
             >
               <option value="">No training today</option>
               {TRAINING_DAY_OPTIONS.map(day => <option key={day} value={day}>{day}</option>)}
             </select>
-            <div className="bg-stone-800 border border-stone-700 rounded-[10px] px-3 py-[9px] flex items-center justify-between">
-              <span className="text-sm text-white flex items-center gap-2">
-                {trainingDayType ? (
-                  <>
-                    <Flame className="w-4 h-4 text-[#FC5200]" />
-                    {trainingDayType}
-                  </>
-                ) : (
-                  'No training today'
-                )}
-              </span>
-              <ChevronDown className="w-4 h-4 text-stone-400" />
-            </div>
+            <Flame className="w-4 h-4 text-[#FC5200] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
@@ -254,18 +246,14 @@ export function HomeView({
             <select
               value={mealTypeFilter}
               onChange={(e) => setMealTypeFilter(e.target.value)}
-              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+              className="w-full appearance-none bg-stone-900 border border-stone-800 rounded-[10px] px-3 py-[9px] pr-9 text-sm font-medium text-white focus:outline-none focus:border-[#FC5200] cursor-pointer"
             >
-              {['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => (
+              <option value="All">All Meals</option>
+              {['Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
             </select>
-            <div className="bg-stone-900 border border-stone-800 rounded-[10px] px-3 py-[9px] flex items-center justify-between">
-              <span className="text-sm text-white flex items-center gap-2">
-                {mealTypeFilter === 'All' ? 'All Meals' : mealTypeFilter}
-              </span>
-              <ChevronDown className="w-4 h-4 text-stone-400" />
-            </div>
+            <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
       </div>
