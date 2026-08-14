@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../constants';
 import { FileText } from 'lucide-react';
+import { CARD, PRIMARY_BUTTON } from '../styles/designTokens';
 
 interface TermsGateViewProps {
   onAccept: () => void;
@@ -10,8 +11,8 @@ export function TermsGateView({ onAccept }: TermsGateViewProps) {
   const [agreed, setAgreed] = useState(false);
 
   return (
-    <div className="flex-1 flex flex-col bg-[#17181C] overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center text-center">
+    <div className="min-h-screen flex items-center justify-center bg-[#17181C] p-4 font-sans">
+      <div className={`${CARD} w-full max-w-md p-8 sm:p-10 text-center flex flex-col items-center justify-center`}>
         <div className="w-20 h-20 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-6">
           <FileText className="w-10 h-10" />
         </div>
@@ -28,19 +29,15 @@ export function TermsGateView({ onAccept }: TermsGateViewProps) {
           />
           <span>I have read and agree to the Privacy Policy and Terms of Service</span>
         </label>
-      </div>
-      <div className="p-6 bg-stone-900 border-t border-stone-800">
+        <div className="mt-8 w-full">
         <button
           onClick={onAccept}
           disabled={!agreed}
-          className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 ${
-            agreed
-              ? 'bg-[#FC5200] text-white hover:bg-[#FC5200] shadow-[#FC5200]/20'
-              : 'bg-stone-800 text-stone-500 cursor-not-allowed'
-          }`}
+          className={`w-full py-4 text-lg flex items-center justify-center gap-2 ${agreed ? PRIMARY_BUTTON : "bg-stone-800 text-stone-500 cursor-not-allowed rounded-xl"}`}
         >
           Continue
         </button>
+      </div>
       </div>
     </div>
   );

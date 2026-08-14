@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChefHat } from 'lucide-react';
+import { CARD, PRIMARY_BUTTON } from '../styles/designTokens';
 import { auth, db } from '../firebase';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -81,7 +82,7 @@ export function AuthView() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-900 p-4 font-sans">
-      <div className="w-full max-w-md bg-stone-900 rounded-3xl shadow-xl border border-stone-100 p-8 sm:p-10 text-center">
+      <div className={`${CARD} w-full max-w-md p-8 sm:p-10 text-center`}>
         <div className="flex justify-center mb-4">
           <div className="w-16 h-16 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center">
             <ChefHat className="w-8 h-8" />
@@ -129,7 +130,7 @@ export function AuthView() {
           
           <button
             type="submit"
-            className="w-full bg-[#FC5200] text-white px-4 py-3.5 rounded-xl font-medium hover:bg-[#FC5200] active:scale-[0.98] transition-all shadow-sm mt-2"
+            className={`${PRIMARY_BUTTON} w-full px-4 py-3.5 mt-2`}
           >
             {isSignUp ? 'Create new account' : 'Sign In as existing user'}
           </button>

@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Sparkles, Plus, Check, ArrowRight, ChefHat } from 'lucide-react';
+import { CARD, PILL, PRIMARY_BUTTON } from '../styles/designTokens';
 import { PersonProfile, InventoryItem } from '../types';
 import { AppContext } from '../context/AppContext';
 import { estimateExpirationDate } from '../utils/expiration';
@@ -72,7 +73,7 @@ export function OnboardingView({
             <div className="space-y-4 mt-8">
               <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Add Household Members</h2>
               {household.map(person => (
-                <div key={person.id} className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div key={person.id} className={`${CARD} p-5 flex items-center justify-between`}>
                   <div>
                     <h3 className="font-display font-bold text-white">{person.name}</h3>
                     <p className="text-xs text-stone-500 mt-1">
@@ -123,11 +124,7 @@ export function OnboardingView({
                   <button
                     key={item}
                     onClick={() => handleTogglePantryItem(item)}
-                    className={`px-4 py-3 rounded-xl text-sm font-medium transition-all active:scale-95 flex items-center gap-2 border ${
-                      isSelected 
-                        ? 'bg-[#FC5200] border-[#FC5200] text-white shadow-md shadow-[#FC5200]/20' 
-                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-300'
-                    }`}
+                    className={isSelected ? 'px-4 py-3 rounded-xl text-sm font-medium transition-all active:scale-95 flex items-center gap-2 border bg-[#FC5200] border-[#FC5200] text-white shadow-md shadow-[#FC5200]/20' : `${PILL} flex items-center gap-2`}
                   >
                     {isSelected && <Check className="w-4 h-4" />}
                     {item}
@@ -174,11 +171,7 @@ export function OnboardingView({
             <button
               onClick={() => setStep(2)}
               disabled={household.length === 0}
-              className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 ${
-                household.length > 0 
-                  ? 'bg-[#FC5200] text-white hover:bg-[#FC5200] shadow-[#FC5200]/20' 
-                  : 'bg-stone-200 text-stone-400 cursor-not-allowed'
-              }`}
+              className={`${PRIMARY_BUTTON} w-full py-4 text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:bg-stone-800 disabled:text-stone-500`}
             >
               Next <ArrowRight className="w-5 h-5" />
             </button>
@@ -191,7 +184,7 @@ export function OnboardingView({
         {step === 2 && (
           <button
             onClick={() => setStep(3)}
-            className="w-full py-4 rounded-2xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg bg-[#FC5200] text-white hover:bg-[#FC5200] shadow-[#FC5200]/20 flex items-center justify-center gap-2"
+            className={`${PRIMARY_BUTTON} w-full py-4 text-lg flex items-center justify-center gap-2`}
           >
             Next <ArrowRight className="w-5 h-5" />
           </button>
@@ -200,7 +193,7 @@ export function OnboardingView({
         {step === 3 && (
           <button
             onClick={() => setStep(4)}
-            className="w-full py-4 rounded-2xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg bg-[#FC5200] text-white hover:bg-[#FC5200] shadow-[#FC5200]/20 flex items-center justify-center gap-2"
+            className={`${PRIMARY_BUTTON} w-full py-4 text-lg flex items-center justify-center gap-2`}
           >
             Next <ArrowRight className="w-5 h-5" />
           </button>
@@ -209,11 +202,7 @@ export function OnboardingView({
           <button
             onClick={onContinue}
             disabled={!agreed}
-            className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 ${
-              agreed
-                ? 'bg-[#FC5200] text-white hover:bg-[#FC5200] shadow-[#FC5200]/20'
-                : 'bg-stone-800 text-stone-500 cursor-not-allowed'
-            }`}
+            className={`w-full py-4 text-lg flex items-center justify-center gap-2 ${agreed ? PRIMARY_BUTTON : "bg-stone-800 text-stone-500 cursor-not-allowed rounded-xl"}`}
           >
             Let's Cook!
           </button>
