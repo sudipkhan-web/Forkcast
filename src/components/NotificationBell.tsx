@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, Check, X } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { ICON_BUTTON } from '../styles/designTokens';
 
 export const NotificationBell = () => {
   const { appNotifications, markNotificationAsRead, markAllNotificationsAsRead } = useAppContext();
@@ -37,9 +37,9 @@ export const NotificationBell = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 mt-2 w-80 bg-stone-900 rounded-2xl shadow-xl border border-stone-800 z-50 overflow-hidden"
+              className={`absolute right-0 mt-2 w-80 z-50 overflow-hidden ${CARD}`}
             >
-              <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-900/50">
+              <div className="p-4 border-b border-stone-800 flex items-center justify-between">
                 <h3 className="font-semibold text-white">Notifications</h3>
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
@@ -50,7 +50,7 @@ export const NotificationBell = () => {
                       Mark all as read
                     </button>
                   )}
-                  <button onClick={() => setIsOpen(false)} className="text-stone-400 hover:text-stone-400">
+                  <button onClick={() => setIsOpen(false)} className={`${ICON_BUTTON}`}>
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -66,7 +66,7 @@ export const NotificationBell = () => {
                     {appNotifications.map(notification => (
                       <div 
                         key={notification.id} 
-                        className={`p-4 border-b border-stone-100 last:border-0 transition-colors ${notification.read ? 'opacity-70 bg-stone-900' : 'bg-emerald-50/30'}`}
+                        className={`p-4 border-b border-stone-800 last:border-0 transition-colors ${notification.read ? 'opacity-70 bg-stone-900' : 'bg-emerald-50/30'}`}
                       >
                         <div className="flex gap-3">
                           <div className="flex-1">
@@ -79,7 +79,7 @@ export const NotificationBell = () => {
                           {!notification.read && (
                             <button 
                               onClick={() => markNotificationAsRead(notification.id)}
-                              className="w-6 h-6 rounded-full bg-stone-800 hover:bg-emerald-100 text-stone-400 hover:text-[#FC5200] flex items-center justify-center shrink-0 transition-colors"
+                              className={`shrink-0 ${ICON_BUTTON}`}
                               title="Mark as read"
                             >
                               <Check className="w-3.5 h-3.5" />

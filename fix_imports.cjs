@@ -1,19 +1,21 @@
 const fs = require('fs');
 
-let authCode = fs.readFileSync('src/views/AuthView.tsx', 'utf8');
-if (!authCode.includes('import { CARD, PRIMARY_BUTTON }')) {
-  authCode = authCode.replace(
-    "import { ChefHat } from 'lucide-react';",
-    "import { ChefHat } from 'lucide-react';\nimport { CARD, PRIMARY_BUTTON } from '../styles/designTokens';"
-  );
-  fs.writeFileSync('src/views/AuthView.tsx', authCode);
+function fixImports(file) {
+  let code = fs.readFileSync(file, 'utf8');
+  const duplicate = "import { ICON_BUTTON } from '../styles/designTokens';\n";
+  if (code.includes(duplicate)) {
+    code = code.replace(duplicate, "");
+  }
+  const duplicate2 = "import { ICON_BUTTON } from '../styles/designTokens';";
+  if (code.includes(duplicate2)) {
+    // only replace if there's multiple designTokens imports
+    const match = code.match(/styles\/designTokens/g);
+    if (match && match.length > 1) {
+      code = code.replace(duplicate2, "");
+    }
+  }
+  fs.writeFileSync(file, code);
 }
 
-let onbCode = fs.readFileSync('src/views/OnboardingView.tsx', 'utf8');
-if (!onbCode.includes('import { CARD, PILL, PRIMARY_BUTTON }')) {
-  onbCode = onbCode.replace(
-    "import { Sparkles, Plus, Check, ArrowRight, ChefHat } from 'lucide-react';",
-    "import { Sparkles, Plus, Check, ArrowRight, ChefHat } from 'lucide-react';\nimport { CARD, PILL, PRIMARY_BUTTON } from '../styles/designTokens';"
-  );
-  fs.writeFileSync('src/views/OnboardingView.tsx', onbCode);
-}
+fixImports('src/components/NotificationBell.tsx');
+

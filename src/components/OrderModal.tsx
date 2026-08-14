@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingCart, Package, Store, ChevronLeft, Check } from 'lucide-react';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON } from '../styles/designTokens';
 import { ShoppingItem } from '../types';
 
 interface OrderModalProps {
@@ -45,16 +46,16 @@ export function OrderModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="bg-stone-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+            className={`${CARD} w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden`}
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-stone-800 flex items-center justify-between bg-stone-900">
+            <div className="p-6 border-b border-stone-800 flex items-center justify-between">
               <h2 className="text-xl font-display font-bold text-white">
                 {orderStep === 'provider' ? 'Order Groceries' : orderStep === 'checkout' ? 'Checkout' : 'Order Placed'}
               </h2>
               <button 
                 onClick={onClose}
-                className="p-2 text-stone-400 hover:text-stone-400 hover:bg-stone-700/50 rounded-full transition-all active:scale-95"
+                className={`${ICON_BUTTON}`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -133,7 +134,7 @@ export function OrderModal({
 
                   <button 
                     onClick={() => setOrderStep('success')}
-                    className="w-full py-4 bg-[#FC5200] text-white rounded-2xl font-semibold text-lg hover:bg-[#FC5200] transition-all active:scale-[0.98] shadow-lg shadow-[#FC5200]/20"
+                    className={`${PRIMARY_BUTTON} w-full py-4 text-lg`}
                   >
                     Place Order
                   </button>
@@ -154,7 +155,7 @@ export function OrderModal({
                       onMoveToPantry(orderedItems);
                       onClose();
                     }}
-                    className="w-full py-4 bg-[#FC5200] text-white rounded-2xl font-semibold hover:bg-[#FC5200] transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                    className={`${PRIMARY_BUTTON} w-full py-4 flex items-center justify-center gap-2`}
                   >
                     <Package className="w-5 h-5" />
                     Confirm Delivery & Add to Pantry

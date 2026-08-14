@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plus, Minus, Check } from 'lucide-react';
 import { InventoryItem } from '../types';
@@ -75,16 +76,16 @@ export function ScannedItemsModal({ isOpen, onClose, scannedItems, onConfirm }: 
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="bg-[#17181C] w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+            className={`${CARD} w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]`}
           >
-            <div className="px-6 py-4 border-b border-stone-800 flex items-center justify-between bg-stone-900 shrink-0">
+            <div className="px-6 py-4 border-b border-stone-800 flex items-center justify-between shrink-0">
               <div>
                 <h2 className="text-xl font-display font-bold text-white">Review Items</h2>
                 <p className="text-xs text-stone-500 mt-1">These were found in your scan.</p>
               </div>
               <button 
                 onClick={onClose}
-                className="p-2 text-stone-400 hover:text-stone-400 hover:bg-stone-800 rounded-full transition-colors"
+                className={`${ICON_BUTTON}`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -98,28 +99,28 @@ export function ScannedItemsModal({ isOpen, onClose, scannedItems, onConfirm }: 
               ) : (
                 <div className="space-y-3">
                   {items.map(item => (
-                    <div key={item.id} className="bg-stone-900 border border-stone-800 rounded-xl p-3 flex flex-col gap-3 shadow-sm">
+                    <div key={item.id} className={`${CARD} p-3 flex flex-col gap-3 shadow-sm`}>
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-white text-sm flex-1">{item.name}</span>
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center bg-stone-900 rounded-lg border border-stone-800 p-1">
+                          <div className="flex items-center gap-1">
                             <button 
                               onClick={() => handleQuantityChange(item.id, -1)}
-                              className="p-1 text-stone-400 hover:text-white transition-all active:scale-[0.98]"
+                              className={`${ICON_BUTTON}`}
                             >
                               <Minus className="w-3 h-3" />
                             </button>
                             <span className="w-6 text-center text-xs font-semibold text-stone-300">{item.quantity}</span>
                             <button 
                               onClick={() => handleQuantityChange(item.id, 1)}
-                              className="p-1 text-stone-400 hover:text-white transition-all active:scale-[0.98]"
+                              className={`${ICON_BUTTON}`}
                             >
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
                           <button 
                             onClick={() => removeItem(item.id)}
-                            className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all"
+                            className={`${ICON_BUTTON} hover:text-red-600 hover:bg-red-500/10`}
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -161,7 +162,7 @@ export function ScannedItemsModal({ isOpen, onClose, scannedItems, onConfirm }: 
                   <button 
                     type="submit"
                     disabled={!newItemName.trim()}
-                    className="bg-stone-800 text-white p-2 px-3 rounded-xl disabled:opacity-50 hover:bg-stone-900 flex items-center justify-center transition-all"
+                    className={`${ICON_BUTTON} disabled:opacity-50`}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -169,7 +170,7 @@ export function ScannedItemsModal({ isOpen, onClose, scannedItems, onConfirm }: 
               </div>
             </div>
 
-            <div className="p-6 bg-stone-900 border-t border-stone-800 shrink-0">
+            <div className="p-6 border-t border-stone-800 shrink-0">
               <button
                 onClick={() => {
                   onConfirm(items);

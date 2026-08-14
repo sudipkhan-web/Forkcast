@@ -1,4 +1,5 @@
 import React from 'react';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Users, Link, Mail } from 'lucide-react';
 
@@ -23,16 +24,16 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="bg-stone-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+            className={`${CARD} w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden`}
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-stone-800 flex items-center justify-between bg-stone-900">
+            <div className="p-6 border-b border-stone-800 flex items-center justify-between">
               <h2 className="text-xl font-display font-bold text-white">
                 Share Profile
               </h2>
               <button 
                 onClick={onClose}
-                className="p-2 text-stone-400 hover:text-stone-400 hover:bg-stone-700/50 rounded-full transition-all active:scale-95"
+                className={`${ICON_BUTTON}`}
               >
                 <X className="w-5 h-5" />
               </button>
