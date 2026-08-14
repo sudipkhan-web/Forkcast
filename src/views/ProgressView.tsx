@@ -1,4 +1,5 @@
 import React from 'react';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
 import { motion } from 'motion/react';
 import { Flame, Target } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';

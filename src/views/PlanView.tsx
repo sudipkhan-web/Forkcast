@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
 import { Star, Share, PlusCircle, Trash2, Calendar, Clock, RotateCcw } from 'lucide-react';
 import { PlannedMeal, Group } from '../types';
@@ -68,7 +69,7 @@ export function PlanView({
           <NotificationBell />
           <button 
             onClick={() => setActiveTab('favorites')}
-            className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative"
+            className={`relative ${ICON_BUTTON}`}
           >
             <Star className="w-6 h-6" />
             {favorites.length > 0 && (
@@ -116,7 +117,7 @@ export function PlanView({
                   const isToday = idx === 0;
                   
                   return (
-                    <div key={dateStr} className="bg-stone-900 rounded-2xl border border-stone-800 shadow-sm overflow-hidden">
+                    <div key={dateStr} className={`${CARD} overflow-hidden`}>
                       <div className="bg-stone-900 px-4 py-3 border-b border-stone-800 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className={`font-display font-bold ${isToday ? 'text-[#FC5200]' : 'text-white'}`}>
@@ -132,7 +133,7 @@ export function PlanView({
                             setNewMealGroupId(selectedGroupId);
                             setIsPlanModalOpen(true);
                           }}
-                          className="p-1.5 text-stone-400 hover:text-[#FC5200] hover:bg-emerald-50 rounded-full transition-all active:scale-95"
+                          className={`${ICON_BUTTON}`}
                         >
                           <PlusCircle className="w-5 h-5" />
                         </button>
@@ -195,7 +196,7 @@ export function PlanView({
                                       }
                                     });
                                   }}
-                                  className="p-1.5 text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                  className={`opacity-0 group-hover:opacity-100 ${ICON_BUTTON} hover:text-red-500 hover:border-red-900/50`}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -230,7 +231,7 @@ export function PlanView({
                     const dayMeals = pastMeals.filter(m => m.date === dateStr);
                     
                     return (
-                      <div key={dateStr} className="bg-stone-900 rounded-2xl border border-stone-800 shadow-sm overflow-hidden opacity-90">
+                      <div key={dateStr} className={`${CARD} overflow-hidden opacity-90`}>
                         <div className="bg-stone-900 px-4 py-3 border-b border-stone-800 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="font-display font-medium text-stone-300">
@@ -267,7 +268,7 @@ export function PlanView({
                                           handleSelectMeal(originalMeal);
                                         }
                                       }}
-                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-[#FC5200] hover:bg-emerald-200 text-xs font-medium rounded-full transition-colors mr-2"
+                                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs mr-2 ${PRIMARY_BUTTON} rounded-full`}
                                       title="Plan Again"
                                     >
                                       <RotateCcw className="w-3.5 h-3.5" />
@@ -285,7 +286,7 @@ export function PlanView({
                                         }
                                       });
                                     }}
-                                    className="p-1.5 text-stone-400 hover:text-red-500 transition-all rounded-full hover:bg-red-50"
+                                    className={`${ICON_BUTTON} hover:text-red-500 hover:border-red-900/50`}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>

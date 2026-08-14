@@ -1,4 +1,5 @@
 import React, { useState, useRef, useContext, useMemo } from 'react';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
 import { Star, Share, Camera, Scan, Receipt, Plus, Minus, Trash2, Archive, ChevronDown } from 'lucide-react';
 import { InventoryItem, PantryLog } from '../types';
@@ -275,7 +276,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
           <NotificationBell />
           <button 
             onClick={() => setActiveTab('favorites')}
-            className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative"
+            className={`relative ${ICON_BUTTON}`}
           >
             <Star className="w-6 h-6" />
             {favorites.length > 0 && (
@@ -366,11 +367,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                     key={item}
                                     onClick={() => handleQuickAdd(item)}
                                     disabled={isSelected}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 border ${
-                                      isSelected 
-                                        ? 'bg-emerald-50 border-emerald-200 text-[#FC5200] opacity-50 cursor-not-allowed' 
-                                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-300 hover:bg-stone-900'
-                                    }`}
+                                    className={isSelected ? 'px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 border bg-emerald-50 border-emerald-200 text-[#FC5200] opacity-50 cursor-not-allowed' : `${PILL}`}
                                   >
                                     {item}
                                   </button>
@@ -403,7 +400,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                         <button 
                           type="submit"
                           disabled={!newIngredientName.trim()}
-                          className="bg-[#FC5200] text-white p-3 rounded-xl disabled:opacity-50 hover:bg-[#FC5200] transition-all active:scale-[0.98] shadow-sm flex items-center justify-center"
+                          className={`${PRIMARY_BUTTON} p-3 disabled:opacity-50`}
                         >
                           <Plus className="w-5 h-5" />
                         </button>
@@ -513,7 +510,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                           })();
 
                           return (
-                            <li key={item.id} className="bg-stone-900 border border-stone-800 rounded-xl p-4 flex flex-col gap-2 shadow-sm">
+                            <li key={item.id} className={`${CARD} p-4 flex flex-col gap-2`}>
                               <div className="flex items-center justify-between">
                                 <div className="flex flex-col">
                                   <span className="font-medium text-white text-sm">{item.name}</span>
@@ -544,7 +541,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                   </div>
                                   <button 
                                     onClick={() => removeInventoryItem(item.id)}
-                                    className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-[0.98]"
+                                    className={`${ICON_BUTTON} hover:text-red-600 hover:bg-red-50`}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -600,7 +597,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
           ) : (
             <ul className="space-y-4">
               {pantryLogs.map(log => (
-                <li key={log.id} className="bg-stone-900 border border-stone-800 rounded-2xl p-5 flex items-start gap-4 shadow-sm">
+                <li key={log.id} className={`${CARD} p-5 flex items-start gap-4`}>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                     log.action === 'add' ? 'bg-emerald-100 text-[#FC5200]' :
                     log.action === 'consume' ? 'bg-orange-100 text-orange-600' :

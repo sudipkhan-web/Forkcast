@@ -2,6 +2,7 @@ import { useToast } from '../components/Toast';
 import React from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, Star, XCircle, Clock } from 'lucide-react';
+import { CARD, ICON_BUTTON } from '../styles/designTokens';
 import { Meal } from '../data/recipes';
 import { auth, db } from '../firebase';
 import { doc, deleteDoc } from 'firebase/firestore';
@@ -50,7 +51,7 @@ export function FavoritesView({
       <header className="px-6 py-4 flex items-center gap-4 bg-[#17181C]/80 backdrop-blur-xl border-b border-stone-800 shrink-0 z-20 sticky top-0">
         <button 
           onClick={() => setActiveTab('home')}
-          className="p-2 -ml-2 text-stone-400 hover:text-white transition-all active:scale-95"
+          className={`${ICON_BUTTON} -ml-2`}
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -68,7 +69,7 @@ export function FavoritesView({
             {favorites.map(meal => (
               <div 
                 key={meal.id} 
-                className="bg-stone-900 rounded-2xl shadow-sm border border-stone-800 overflow-hidden cursor-pointer hover:border-stone-400 transition-colors relative group"
+                className={`${CARD} overflow-hidden cursor-pointer hover:border-stone-400 transition-colors relative group`}
                 onClick={() => {
                   handleSelectMeal(meal);
                   setAcceptedSubstitutions([]);
@@ -76,7 +77,7 @@ export function FavoritesView({
               >
                 <button
                   onClick={(e) => handleDeleteFavorite(e, meal)}
-                  className="absolute top-2 right-2 p-1 bg-stone-900/90 backdrop-blur-md rounded-full text-stone-400 hover:text-red-500 hover:bg-stone-900 transition-all active:scale-95 shadow-sm z-10 opacity-70 hover:opacity-100"
+                  className={`absolute top-2 right-2 z-10 opacity-70 hover:opacity-100 ${ICON_BUTTON}`}
                   aria-label="Remove from favorites"
                 >
                   <XCircle className="w-5 h-5" />
