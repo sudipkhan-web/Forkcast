@@ -367,7 +367,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                     key={item}
                                     onClick={() => handleQuickAdd(item)}
                                     disabled={isSelected}
-                                    className={isSelected ? 'px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 border bg-emerald-50 border-emerald-200 text-[#FC5200] opacity-50 cursor-not-allowed' : `${PILL}`}
+                                    className={isSelected ? 'px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 border bg-[#FC5200]/15 border-[#FC5200]/40 text-[#FC5200] opacity-50 cursor-not-allowed' : `${PILL}`}
                                   >
                                     {item}
                                   </button>
@@ -541,7 +541,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                   </div>
                                   <button 
                                     onClick={() => removeInventoryItem(item.id)}
-                                    className={`${ICON_BUTTON} hover:text-red-600 hover:bg-red-50`}
+                                    className={`${ICON_BUTTON} hover:text-red-600 hover:bg-red-500/10`}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>

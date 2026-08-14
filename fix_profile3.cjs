@@ -1,19 +1,8 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/views/ProfileView.tsx', 'utf8');
 
-code = code.replace(
-  'className="bg-stone-900 border border-stone-800 rounded-3xl overflow-hidden shadow-sm"',
-  'className={`${CARD} overflow-hidden`}'
-);
-
-code = code.replace(
-  'className="bg-stone-900 border border-stone-800/80 rounded-2xl p-5"',
-  'className={`${CARD} p-5`}'
-);
-
-code = code.replace(
-  'className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm relative overflow-hidden"',
-  'className={`${CARD} p-6 relative overflow-hidden`}'
-);
+code = code.replace(/bg-red-50 /g, 'bg-red-500/10 ');
+code = code.replace(/hover:bg-red-100/g, 'hover:bg-red-500/20');
+code = code.replace(/border-red-200/g, 'border-red-500/20');
 
 fs.writeFileSync('src/views/ProfileView.tsx', code);

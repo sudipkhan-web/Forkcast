@@ -119,7 +119,7 @@ export function ScannedItemsModal({ isOpen, onClose, scannedItems, onConfirm }: 
                           </div>
                           <button 
                             onClick={() => removeItem(item.id)}
-                            className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all"
                           >
                             <X className="w-4 h-4" />
                           </button>

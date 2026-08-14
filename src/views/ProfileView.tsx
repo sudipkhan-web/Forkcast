@@ -183,7 +183,7 @@ export function ProfileView({
                           handleSelectGroup(nextGroupId);
                         }
                       }}
-                      className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-100 transition-all active:scale-[0.98] border border-red-200"
+                      className="w-full py-4 bg-red-500/10 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-500/20 transition-all active:scale-[0.98] border border-red-500/20"
                     >
                       Delete Group
                     </button>
@@ -975,7 +975,7 @@ export function ProfileView({
                           deleteHouseholdMember(person.id);
                           setEditingPersonId(null);
                         }}
-                        className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-100 transition-all active:scale-[0.98] border border-red-200"
+                        className="w-full py-4 bg-red-500/10 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-500/20 transition-all active:scale-[0.98] border border-red-500/20"
                       >
                         Delete Member
                       </button>
@@ -1066,7 +1066,7 @@ export function ProfileView({
                     alert('Pre-population failed: ' + e);
                   }
                 }}
-                className="w-full py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-[0.98] bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center pb-4"
+                className="w-full py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-[0.98] bg-red-500/10 text-red-600 hover:bg-red-500/20 flex items-center justify-center pb-4"
                 title="Pre-populate the database with a set of default recipes (This may take a few minutes running in the background)"
               >
                 Pre-Populate Recipes Database
