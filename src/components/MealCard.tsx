@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, useMotionValue, useTransform, useAnimation } from 'motion/react';
 import { Star, RefreshCw, Clock, Sparkles, Users, Carrot, ShoppingCart } from 'lucide-react';
 import { Meal } from '../data/recipes';
+import { CARD, PRIMARY_BUTTON } from '../styles/designTokens';
 import { Substitution } from '../services/recommendationEngine';
 import { RecipeImage } from './RecipeImage';
 
@@ -67,7 +68,7 @@ export function MealCard({
         }}
         onClick={onClick}
         whileTap={{ scale: 0.98 }}
-        className="relative bg-stone-900 rounded-[28px] shadow-xl border border-stone-800 flex flex-col cursor-pointer touch-pan-y overflow-hidden"
+        className={`${CARD} relative flex flex-col cursor-pointer touch-pan-y overflow-hidden`}
       >
         <div className="relative h-64 w-full shrink-0">
           <RecipeImage meal={meal} className="w-full h-full object-cover saturate-110 brightness-95" />
@@ -155,7 +156,7 @@ export function MealCard({
               e.stopPropagation();
               onClick();
             }}
-            className="w-full py-3.5 bg-[#FC5200] text-white rounded-2xl font-semibold text-lg hover:bg-[#FC5200] transition-all active:scale-[0.98] shadow-lg shadow-[#FC5200]/20"
+            className={`${PRIMARY_BUTTON} w-full py-3.5 flex items-center justify-center gap-2`}
           >
             View Recipe
           </button>

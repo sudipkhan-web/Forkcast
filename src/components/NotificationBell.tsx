@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, Check, X } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { ICON_BUTTON } from '../styles/designTokens';
 
 export const NotificationBell = () => {
   const { appNotifications, markNotificationAsRead, markAllNotificationsAsRead } = useAppContext();
@@ -13,7 +14,7 @@ export const NotificationBell = () => {
     <div className="relative">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative rounded-full hover:bg-stone-800"
+        className={`${ICON_BUTTON} relative`}
         aria-label="Notifications"
       >
         <Bell className="w-[19px] h-[19px]" />

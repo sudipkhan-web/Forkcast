@@ -107,7 +107,7 @@ export function ShopView({
           <button 
             type="submit"
             disabled={!newShoppingItemName.trim()}
-            className="bg-[#FC5200] text-white px-5 py-3 rounded-xl font-medium hover:bg-[#FC5200] active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 text-sm"
+            className={`${PRIMARY_BUTTON} px-5 py-3 disabled:opacity-50 text-sm`}
           >
             Add
           </button>

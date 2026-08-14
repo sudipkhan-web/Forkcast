@@ -11,6 +11,7 @@ import { useAppContext } from '../context/AppContext';
 import { useToast } from '../components/Toast';
 import { getTodayMacros } from '../utils/progressUtils';
 import { NotificationBell } from '../components/NotificationBell';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON } from '../styles/designTokens';
 import { TRAINING_DAY_OPTIONS } from '../constants';
 import { auth, db } from '../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -151,7 +152,7 @@ export function HomeView({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSuggestions([])}
-            className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative"
+            className={`${ICON_BUTTON} relative`}
             aria-label="Refresh Suggestions"
             title="Refresh Suggestions based on new preferences (This may take a few minutes running in the background)"
           >
@@ -160,13 +161,13 @@ export function HomeView({
           <NotificationBell />
           <button 
             onClick={() => setActiveTab('profile')}
-            className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative"
+            className={`${ICON_BUTTON} relative`}
           >
             <User className="w-5 h-5" />
           </button>
           <button 
             onClick={() => setActiveTab('favorites')}
-            className="p-2 text-stone-400 hover:text-[#FC5200] transition-all active:scale-[0.98] relative"
+            className={`${ICON_BUTTON} relative`}
           >
             <Star className="w-6 h-6" />
             {favorites.length > 0 && (
@@ -181,7 +182,7 @@ export function HomeView({
       
 
 
-      <div className="mx-6 mt-3 p-[14px] rounded-2xl bg-stone-900 flex flex-col gap-3">
+      <div className={`${CARD} mx-6 mt-3 p-[14px] flex flex-col gap-3`}>
         <div className="flex flex-col w-full">
           <span className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-1.5">Training Today</span>
           <div className="relative">
@@ -355,7 +356,7 @@ export function HomeView({
             }
           }}
           disabled={isGeneratingMeals}
-          className="w-full py-4 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 bg-[#FC5200] hover:bg-[#FC5200] disabled:opacity-70 disabled:active:scale-100 shadow-lg shadow-[#FC5200]/20"
+          className={`${PRIMARY_BUTTON} w-full py-4 flex items-center justify-center gap-2 disabled:opacity-70 disabled:active:scale-100`}
         >
           {isGeneratingMeals ? (
             <>
