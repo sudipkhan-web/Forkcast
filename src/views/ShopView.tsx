@@ -7,6 +7,7 @@ import { generateSmartStaples } from '../services/recipeGenerator';
 import { InventoryItem, PersonProfile, UserProfile } from '../types';
 import { NotificationBell } from '../components/NotificationBell';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
+import { useToast } from '../components/Toast';
 
 interface ShopViewProps {
   setActiveTab: (tab: any) => void;
@@ -29,6 +30,7 @@ export function ShopView({
   profile,
   likedTags
 }: ShopViewProps) {
+  const { showToast } = useToast();
   const {
     newShoppingItemName,
     setNewShoppingItemName,
@@ -64,6 +66,8 @@ export function ShopView({
       setStapleSuggestions(staples.map(s => ({ name: s, selected: true })));
     } catch (error) {
       console.error("Failed to suggest staples:", error);
+      showToast("Couldn't load staple suggestions — check your connection and try again.", 'error');
+      setIsStaplesModalOpen(false);
     } finally {
       setIsGeneratingStaples(false);
     }

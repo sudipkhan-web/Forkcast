@@ -21,6 +21,10 @@ export const generateSmartStaples = async (
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.error || `Server returned status ${res.status}`);
     }
+    const contentType = res.headers.get("content-type");
+    if (!contentType || contentType.indexOf("application/json") === -1) {
+      throw new Error("Received non-JSON response from server. Please try again.");
+    }
 
     const items = await res.json();
     return Array.isArray(items) ? items : [];
@@ -82,6 +86,10 @@ export const generateRecipes = async (
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.error || `Server returned status ${res.status}`);
     }
+    const contentType = res.headers.get("content-type");
+    if (!contentType || contentType.indexOf("application/json") === -1) {
+      throw new Error("Received non-JSON response from server. Please try again.");
+    }
 
     const fetchedRecipes = await res.json();
     if (!Array.isArray(fetchedRecipes)) {
@@ -96,16 +104,20 @@ export const generateRecipes = async (
       mealType: typeof r.mealType === 'string' && ['Breakfast', 'Lunch', 'Dinner', 'Snack'].includes(r.mealType) ? r.mealType : 'Dinner'
     }));
 
-    // Pre-generate images and assign them to the recipe objects
-    for (const recipe of recipes) {
-      try {
-        const imageUrl = await getOrGenerateRecipeImage(recipe.id, recipe.name, recipe.cuisine || "", recipe.details || "");
-        if (imageUrl) {
-          recipe.image = imageUrl;
+    // Pre-generate images and assign them to the recipe objects in batches to avoid rate limits
+    const CHUNK_SIZE = 4;
+    for (let i = 0; i < recipes.length; i += CHUNK_SIZE) {
+      const chunk = recipes.slice(i, i + CHUNK_SIZE);
+      await Promise.all(chunk.map(async (recipe) => {
+        try {
+          const imageUrl = await getOrGenerateRecipeImage(recipe.id, recipe.name, recipe.cuisine || "", recipe.details || "");
+          if (imageUrl) {
+            recipe.image = imageUrl;
+          }
+        } catch (imgError) {
+          console.error("Failed to pre-generate image for recipe:", recipe.name, imgError);
         }
-      } catch (imgError) {
-        console.error("Failed to pre-generate image for recipe:", recipe.name, imgError);
-      }
+      }));
     }
 
     if (auth.currentUser) {
