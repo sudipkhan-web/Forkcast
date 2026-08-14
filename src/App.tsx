@@ -40,6 +40,8 @@ import { estimateExpirationDate } from './utils/expiration';
 import { checkNotifications } from './services/notificationService';
 
 const preloadedImageUrls = new Set<string>();
+window.isGeneratingBg = false;
+window.bgGenerationCount = 0;
 
 function MainApp() {
   const { showToast } = useToast();
@@ -552,11 +554,11 @@ function MainApp() {
     const groupName = group ? group.name : 'Just Me';
     
     // Instead of overriding a stored queue, only grab top meals if we don't have enough
-    const missingCount = 50 - suggestions.length;
+    const missingCount = 20 - suggestions.length;
     if (missingCount <= 0 && suggestions.length > 0) return;
     
     // We only want to fill what's missing, mostly this effect runs when starting or changing groups
-    const topMeals = getTopMeals(50 - suggestions.length, [...suggestions.map(s => s.id), ...seenMealIds, ...dislikedMealIds], memberIds, globalRecipes, household, dislikedTags, likedTags, profile, inventory, favorites);
+    const topMeals = getTopMeals(20 - suggestions.length, [...suggestions.map(s => s.id), ...seenMealIds, ...dislikedMealIds], memberIds, globalRecipes, household, dislikedTags, likedTags, profile, inventory, favorites);
     setSuggestions(prev => {
       // Don't overwrite if we already have the items, just append the missing ones
       const newItems = topMeals.map(s => ({
@@ -564,7 +566,7 @@ function MainApp() {
         dynamicReason: generateDynamicReason(s, profile, likedTags, household, memberIds, inventory),
         groupReason: generateGroupReason(s, groupName)
       }));
-      return [...prev, ...newItems].slice(0, 50);
+      return [...prev, ...newItems].slice(0, 20);
     });
     
     trackBehavior(TrackingAction.VIEWED_RECOMMENDATIONS, undefined, undefined, {
@@ -574,11 +576,11 @@ function MainApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroupId, profile, household, groups, hasLoadedSuggestions]);
 
-  // Declaratively maintain the 50-item background queue
+  // Declaratively maintain the 20-item background queue
   React.useEffect(() => {
     if (!hasLoadedSuggestions) return; // Only process when fully loaded
     
-    const shortfall = 50 - suggestions.length;
+    const shortfall = 20 - suggestions.length;
     if (shortfall > 0) {
       const group = groups.find(g => g.id === selectedGroupId) || groups[0];
       const memberIds = group ? group.memberIds : [];
@@ -605,14 +607,16 @@ function MainApp() {
             dynamicReason: generateDynamicReason(s, profile, likedTags, household, memberIds, inventory),
             groupReason: generateGroupReason(s, groupName)
           }));
-          return [...prev, ...newItems].slice(0, 50);
+          return [...prev, ...newItems].slice(0, 20);
         });
         return; // We added items, let the effect re-evaluate
       }
 
       // If we still have a shortfall and we've run out of existing matching recipes in the database,
       // and suggestions is low (e.g. fewer than 20 suggestions available), we generate new ones using Gemini.
-      if (suggestions.length < 20 && !window.isGeneratingBg) {
+      if (suggestions.length < 8 && !window.isGeneratingBg) {
+        if (window.bgGenerationCount && window.bgGenerationCount >= 3) return;
+        window.bgGenerationCount = (window.bgGenerationCount || 0) + 1;
         window.isGeneratingBg = true;
 
         const liked = Object.entries(likedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
@@ -661,7 +665,7 @@ function MainApp() {
                     groupReason: 'AI Recommended'
                   });
                 });
-                return updated.slice(0, 50);
+                return updated.slice(0, 20);
               });
             }
           } catch (err) {
@@ -675,11 +679,11 @@ function MainApp() {
     }
   }, [suggestions.length, hasLoadedSuggestions, selectedGroupId, likedTags, dislikedTags, household, groups, inventory, favorites, globalRecipes, seenMealIds, dislikedMealIds]);
 
-  // Declaratively maintain the 50-item refine queue (TasteLearningScreen)
+  // Declaratively maintain the 20-item refine queue (TasteLearningScreen)
   React.useEffect(() => {
     if (!hasLoadedSuggestions) return;
     
-    const shortfall = 50 - refineSuggestions.length;
+    const shortfall = 20 - refineSuggestions.length;
     if (shortfall > 0) {
       const group = groups.find(g => g.id === selectedGroupId) || groups[0];
       const memberIds = group ? group.memberIds : [];
@@ -706,12 +710,14 @@ function MainApp() {
             dynamicReason: generateDynamicReason(s, profile, likedTags, household, memberIds, inventory),
             groupReason: generateGroupReason(s, groupName)
           }));
-          return [...prev, ...newItems].slice(0, 50);
+          return [...prev, ...newItems].slice(0, 20);
         });
         return;
       }
 
-      if (refineSuggestions.length < 20 && !window.isGeneratingBg) {
+      if (refineSuggestions.length < 8 && !window.isGeneratingBg) {
+        if (window.bgGenerationCount && window.bgGenerationCount >= 3) return;
+        window.bgGenerationCount = (window.bgGenerationCount || 0) + 1;
         window.isGeneratingBg = true;
 
         const liked = Object.entries(likedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
@@ -758,7 +764,7 @@ function MainApp() {
                     groupReason: 'AI Recommended'
                   });
                 });
-                return updated.slice(0, 50);
+                return updated.slice(0, 20);
               });
             }
           } catch (err) {
@@ -1617,6 +1623,7 @@ function MainApp() {
 declare global {
   interface Window {
     isGeneratingBg?: boolean;
+    bgGenerationCount?: number;
   }
 }
 
