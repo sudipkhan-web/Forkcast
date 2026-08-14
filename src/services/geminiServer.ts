@@ -81,7 +81,7 @@ export async function serverGenerateSmartStaples(
   const ai = getGeminiClient();
 
   const prompt = `
-    Suggest 5 useful, NON-PERISHABLE pantry staples or condiments to buy.
+    Suggest 10 useful, NON-PERISHABLE pantry staples or condiments to buy.
     The goal is to widen the variety of meals the user can cook at any time without foods spoiling.
     
     Current Inventory: ${inventoryItems.join(", ") || "None"}
