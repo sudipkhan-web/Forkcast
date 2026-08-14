@@ -113,7 +113,7 @@ export function ProfileView({
           <NotificationBell />
           <button 
             onClick={() => setIsShareModalOpen(true)}
-            className="p-2 text-stone-400 hover:text-[#FC5200] hover:bg-emerald-50 rounded-full transition-all active:scale-95"
+            className={`${ICON_BUTTON} relative`}
           >
             <Share className="w-5 h-5" />
           </button>
@@ -122,14 +122,14 @@ export function ProfileView({
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {editingGroupId ? (
           <div className="space-y-8">
-            <div className="flex items-center justify-between bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+            <div className={`flex items-center justify-between ${CARD} p-6`}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-[#FC5200]">
                   <Users className="w-5 h-5" />
                 </div>
                 <h2 className="text-base font-bold text-white">Edit Group</h2>
               </div>
-              <button onClick={() => setEditingGroupId(null)} className="text-sm font-medium bg-emerald-50 text-[#FC5200] hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all active:scale-[0.98]">Done</button>
+              <button onClick={() => setEditingGroupId(null)} className={`${PRIMARY_BUTTON} px-4 py-2 text-sm`}>Done</button>
             </div>
             
             {(() => {
@@ -137,7 +137,7 @@ export function ProfileView({
               if (!group) return null;
               return (
                 <>
-                  <div className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                  <div className={`${CARD} p-6`}>
                     <label className="block text-sm font-bold text-stone-300 mb-2">Group Name</label>
                     <input 
                       type="text" 
@@ -147,7 +147,7 @@ export function ProfileView({
                     />
                   </div>
 
-                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                  <section className={`${CARD} p-6`}>
                     <div className="flex items-center gap-2 mb-4">
                       <Users className="w-4 h-4 text-[#FC5200]" />
                       <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Group Members</h2>
@@ -194,7 +194,7 @@ export function ProfileView({
         ) : (
           <div className="space-y-6">
             
-            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm flex flex-col gap-4">
+            <section className={`${CARD} p-6 flex flex-col gap-4`}>
               <div className="flex items-center gap-2 mb-2">
                 <User className="w-5 h-5 text-[#FC5200]" />
                 <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Account & Authentication</h2>
@@ -224,7 +224,7 @@ export function ProfileView({
               </button>
             </section>
 
-            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+            <section className={`${CARD} p-6`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Bell className="w-5 h-5 text-indigo-500" />
@@ -422,7 +422,7 @@ export function ProfileView({
                 <h2 className="text-sm font-display font-medium text-white uppercase tracking-wider">Push Notifications</h2>
               </div>
               
-              <div className="bg-stone-900 border border-stone-800/80 rounded-2xl p-5">
+              <div className={`${CARD} p-5`}>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm font-medium text-stone-300">Permission Status</span>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
@@ -476,7 +476,7 @@ export function ProfileView({
                 )}
               </div>
             </section>
-            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+            <section className={`${CARD} p-6`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#FC5200]" />
@@ -499,7 +499,7 @@ export function ProfileView({
               </p>
               <div className="space-y-4">
                 {household.map(person => (
-                  <div key={person.id} className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                  <div key={person.id} className={`${CARD} p-5 flex items-center justify-between`}>
                     <div>
                       <h3 className="font-display font-bold text-white">{person.name}</h3>
                       <p className="text-xs text-stone-500 mt-1">
@@ -510,9 +510,8 @@ export function ProfileView({
                     </div>
                     <button 
                       onClick={() => setEditingPersonId(person.id)}
-                      className="text-sm font-medium text-stone-400 hover:text-white px-4 py-2 bg-stone-800 hover:bg-stone-700 rounded-xl transition-all active:scale-[0.98]"
-                    >
-                      Edit
+                      className={`${ICON_BUTTON}`}>
+                      <Settings className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
@@ -525,7 +524,7 @@ export function ProfileView({
                   <h2 className="text-xl font-display font-bold text-white">
                     Editing Member
                   </h2>
-                  <button onClick={() => setEditingPersonId(null)} className="text-sm font-medium bg-emerald-50 text-[#FC5200] hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all active:scale-[0.98]">
+                  <button onClick={() => setEditingPersonId(null)} className={`${PRIMARY_BUTTON} px-4 py-2 text-sm`}>
                     Close
                   </button>
                 </div>
@@ -534,7 +533,7 @@ export function ProfileView({
               if (!person) return null;
               return (
                 <>
-                  <div className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                  <div className={`${CARD} p-6`}>
                     <label className="block text-sm font-bold text-stone-300 mb-2">Name</label>
                     <input 
                       type="text" 
@@ -544,7 +543,7 @@ export function ProfileView({
                     />
                   </div>
 
-                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                  <section className={`${CARD} p-6`}>
                     <div className="flex items-center gap-2 mb-4">
                       <Leaf className="w-4 h-4 text-[#FC5200]" />
                       <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Dietary Preferences</h2>
@@ -570,7 +569,7 @@ export function ProfileView({
                         placeholder="Add other preference..."
                         className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
                       />
-                      <button type="submit" className="bg-stone-900 border border-stone-800 text-stone-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-900 active:scale-[0.98] transition-all shadow-sm">Add</button>
+                      <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
                     </form>
                     <div className="flex flex-wrap gap-2">
                       {Array.from(new Set([...DIETARY_OPTIONS, ...person.dietary])).map(diet => (
@@ -599,7 +598,7 @@ export function ProfileView({
                     </div>
                   </section>
 
-                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                  <section className={`${CARD} p-6`}>
                     <div className="flex items-center gap-2 mb-4">
                       <Ban className="w-4 h-4 text-red-500" />
                       <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Disliked Ingredients</h2>
@@ -625,7 +624,7 @@ export function ProfileView({
                         placeholder="Add other ingredient..."
                         className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
                       />
-                      <button type="submit" className="bg-stone-900 border border-stone-800 text-stone-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-900 active:scale-[0.98] transition-all shadow-sm">Add</button>
+                      <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
                     </form>
                     <div className="flex flex-wrap gap-2">
                       {Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...person.dislikedIngredients])).map(ing => (
@@ -655,7 +654,7 @@ export function ProfileView({
                   </section>
 
 {/* Training Profile */}
-            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+            <section className={`${CARD} p-6`}>
               <div className="flex items-center gap-2 mb-4">
                 <Activity className="w-4 h-4 text-[#FC5200]" />
                 <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Race & Training Profile</h2>
@@ -714,7 +713,7 @@ export function ProfileView({
               </div>
             </section>\n
             {/* Biometrics */}
-            <section className="bg-stone-900 border border-stone-800 rounded-3xl overflow-hidden shadow-sm">
+            <section className={`${CARD} overflow-hidden`}>
               <button 
                 onClick={() => setIsBiometricsOpen(!isBiometricsOpen)}
                 className="w-full flex items-center justify-between p-6 text-left active:bg-stone-800/50 transition-colors"
@@ -802,7 +801,7 @@ export function ProfileView({
             </section>
 
             {/* Skill Level */}
-            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+            <section className={`${CARD} p-6`}>
               <div className="flex items-center gap-2 mb-4">
                 <ChefHat className="w-4 h-4 text-[#FC5200]" />
                 <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Cooking Skill Level</h2>
@@ -828,7 +827,7 @@ export function ProfileView({
             </section>
 
             {/* Max Cooking Time */}
-            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+            <section className={`${CARD} p-6`}>
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="w-4 h-4 text-[#FC5200]" />
                 <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Max Cooking Time</h2>
@@ -854,7 +853,7 @@ export function ProfileView({
             </section>
 
 
-                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+                  <section className={`${CARD} p-6`}>
                     <div className="flex items-center gap-2 mb-4">
                       <Heart className="w-4 h-4 text-rose-500" />
                       <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Favorite Cuisines</h2>
@@ -880,7 +879,7 @@ export function ProfileView({
                         placeholder="Add other cuisine..."
                         className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
                       />
-                      <button type="submit" className="bg-stone-900 border border-stone-800 text-stone-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-900 active:scale-[0.98] transition-all shadow-sm">Add</button>
+                      <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
                     </form>
                     <div className="flex flex-wrap gap-2">
                       {Array.from(new Set([...CUISINE_OPTIONS, ...person.favoriteCuisines])).map(cuisine => (
@@ -909,7 +908,7 @@ export function ProfileView({
                     </div>
                   </section>
 
-                  <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm relative overflow-hidden">
+                  <section className={`${CARD} p-6 relative overflow-hidden`}>
                     <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                     <div className="flex items-center gap-2 mb-4 pl-2">
                       <Activity className="w-4 h-4 text-blue-500" />
@@ -938,7 +937,7 @@ export function ProfileView({
                           placeholder="Add other condition..."
                           className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-white placeholder:text-stone-400"
                         />
-                        <button type="submit" className="bg-stone-900 border border-stone-800 text-stone-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-900 active:scale-[0.98] transition-all shadow-sm">Add</button>
+                        <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
                       </form>
                       <div className="flex flex-wrap gap-2">
                         {Array.from(new Set([...HEALTH_CONDITIONS, ...(person.healthConditions || [])])).map(condition => (
@@ -987,7 +986,7 @@ export function ProfileView({
               </div>
             )}
 
-            <section className="bg-stone-900 p-6 rounded-2xl border border-stone-800 shadow-sm">
+            <section className={`${CARD} p-6`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#FC5200]" />
@@ -1010,7 +1009,7 @@ export function ProfileView({
               </p>
               <div className="space-y-4">
                 {groups.map(group => (
-                  <div key={group.id} className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                  <div key={group.id} className={`${CARD} p-5 flex items-center justify-between`}>
                     <div>
                       <h3 className="font-display font-bold text-white">{group.name}</h3>
                       <p className="text-xs text-stone-500 mt-1">
@@ -1020,9 +1019,8 @@ export function ProfileView({
                     </div>
                     <button 
                       onClick={() => setEditingGroupId(group.id)}
-                      className="text-sm font-medium text-stone-400 hover:text-white px-4 py-2 bg-stone-800 hover:bg-stone-700 rounded-xl transition-all active:scale-[0.98]"
-                    >
-                      Edit
+                      className={`${ICON_BUTTON}`}>
+                      <Settings className="w-4 h-4" />
                     </button>
                   </div>
                 ))}

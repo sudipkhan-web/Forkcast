@@ -38,7 +38,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
       <div className="px-6 mt-4 flex flex-col gap-6">
         {/* Race Countdown */}
         {daysRemaining !== null ? (
-          <div className="flex flex-col items-center justify-center py-6 bg-stone-900 rounded-3xl border border-stone-800 shadow-xl">
+          <div className={`${CARD} flex flex-col items-center justify-center py-6`}>
             <span className="text-6xl font-mono font-bold text-[#FC5200]">{daysRemaining}</span>
             <span className="text-sm font-display font-bold text-stone-400 uppercase tracking-widest mt-2">Days to Race</span>
             {primaryPerson?.raceType && (
@@ -46,7 +46,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-10 bg-stone-900 rounded-3xl border border-stone-800 shadow-xl text-center px-6">
+          <div className={`${CARD} flex flex-col items-center justify-center py-10 text-center px-6`}>
             <Target className="w-12 h-12 text-stone-600 mb-4" />
             <h2 className="text-lg font-bold text-white mb-2">No Race Date Set</h2>
             <p className="text-sm text-stone-400 mb-6">Complete your profile to track your countdown and daily fueling goals.</p>
@@ -60,7 +60,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
         )}
 
         {/* Weekly Coverage */}
-        <div className="bg-stone-900 rounded-3xl border border-stone-800 p-6 shadow-xl">
+        <div className={`${CARD} p-6`}>
           <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider mb-4">This Week</h3>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-stone-300">Fueled Days</span>
@@ -77,7 +77,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
         </div>
 
         {/* Streak */}
-        <div className="bg-stone-900 rounded-3xl border border-stone-800 p-6 shadow-xl flex items-center gap-4">
+        <div className={`${CARD} p-6 flex items-center gap-4`}>
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${currentStreak > 0 ? 'bg-orange-500/10 text-[#FC5200]' : 'bg-stone-800 text-stone-500'}`}>
             <Flame className={`w-7 h-7 ${currentStreak > 0 ? 'fill-[#FC5200]' : ''}`} />
           </div>
@@ -90,7 +90,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
           </div>
         </div>\n
         {/* Macro Trend Chart */}
-        <div className="bg-stone-900 rounded-3xl border border-stone-800 p-6 shadow-xl">
+        <div className={`${CARD} p-6`}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider">Macro Intake vs Target</h3>
             <span className="text-xs text-stone-500 font-medium">Last 14 days</span>
@@ -102,11 +102,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
               <button
                 key={macro}
                 onClick={() => setActiveMacro(macro as any)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border shrink-0 ${
-                  activeMacro === macro
-                    ? 'bg-[#FC5200] border-[#FC5200] text-white shadow-sm'
-                    : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-[#FC5200] hover:text-[#FC5200]'
-                }`}
+                className={activeMacro === macro ? 'px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border shrink-0 bg-[#FC5200] border-[#FC5200] text-white shadow-sm' : `${PILL} shrink-0 capitalize`}
               >
                 {macro.charAt(0).toUpperCase() + macro.slice(1)}
               </button>

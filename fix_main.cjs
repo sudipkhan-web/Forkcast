@@ -1,4 +1,7 @@
+const fs = require('fs');
+let code = fs.readFileSync('src/main.tsx', 'utf8');
 
+const patch = `
 // Polyfill wrapper to prevent "Cannot set property fetch of #<Window> which has only a getter"
 if (typeof window !== 'undefined') {
   const originalFetch = window.fetch;
@@ -14,17 +17,9 @@ if (typeof window !== 'undefined') {
     // Ignore if not configurable
   }
 }
+`;
 
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
-import { ErrorBoundary } from './firebaseUtils';
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </StrictMode>,
-);
+if (!code.includes("Cannot set property fetch")) {
+  code = patch + '\n' + code;
+  fs.writeFileSync('src/main.tsx', code);
+}
