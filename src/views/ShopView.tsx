@@ -163,7 +163,7 @@ export function ShopView({
               </div>
               <ul className="space-y-4">
                 {combinedShoppingList.filter(item => !deferredItems[item.name.toLowerCase()]).map(item => (
-                  <li key={item.id} className={`\${CARD} p-5 flex items-center justify-between transition-opacity ${item.checked ? 'opacity-60' : ''}`}>
+                  <li key={item.id} className={`${CARD} p-5 flex items-center justify-between transition-opacity ${item.checked ? 'opacity-60' : ''}`}>
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={() => toggleShoppingItem(item.id, item.isGenerated, item.name)}
@@ -191,7 +191,7 @@ export function ShopView({
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className={`\${STEPPER} ${item.isGenerated ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <div className={`${STEPPER} ${item.isGenerated ? 'opacity-50 pointer-events-none' : ''}`}>
                         <button 
                           onClick={() => updateShoppingItemQuantity(item.id, -1, item.isGenerated)}
                           className="p-1 text-stone-400 hover:text-white transition-all active:scale-[0.98]"
@@ -216,7 +216,7 @@ export function ShopView({
                       {!item.isGenerated && (
                         <button 
                           onClick={() => removeShoppingItem(item.id, item.isGenerated)}
-                          className={`\${ICON_BUTTON} hover:text-red-400`}
+                          className={`${ICON_BUTTON} hover:text-red-400`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -233,7 +233,7 @@ export function ShopView({
                 <h2 className="text-sm font-display font-bold text-stone-400 uppercase tracking-widest mb-4">Buy Later</h2>
                 <ul className="space-y-4 opacity-75">
                   {combinedShoppingList.filter(item => deferredItems[item.name.toLowerCase()]).map(item => (
-                    <li key={item.id} className={`\${CARD} p-5 flex items-center justify-between`}>
+                    <li key={item.id} className={`${CARD} p-5 flex items-center justify-between`}>
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col">
                           <span className="font-medium text-stone-400">
@@ -275,7 +275,7 @@ export function ShopView({
         <div className="absolute bottom-0 inset-x-0 px-6 pt-12 pb-4 bg-gradient-to-t from-[#17181C] via-[#17181C] to-transparent pointer-events-none flex justify-center">
           <button 
             onClick={onMoveCheckedToPantry}
-            className={`\${PRIMARY_BUTTON} pointer-events-auto w-full max-w-sm py-4 flex items-center justify-center gap-2 text-lg`}
+            className={`${PRIMARY_BUTTON} pointer-events-auto w-full max-w-sm py-4 flex items-center justify-center gap-2 text-lg`}
           >
             <Package className="w-5 h-5" />
             Move Checked to Pantry
