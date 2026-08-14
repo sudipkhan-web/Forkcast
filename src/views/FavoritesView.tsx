@@ -1,3 +1,4 @@
+import { useToast } from '../components/Toast';
 import React from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, Star, XCircle, Clock } from 'lucide-react';
@@ -23,6 +24,7 @@ export function FavoritesView({
   handleSelectMeal,
   setAcceptedSubstitutions
 }: FavoritesViewProps) {
+  const { showToast } = useToast();
   const handleDeleteFavorite = async (e: React.MouseEvent, meal: Meal) => {
     e.stopPropagation();
     setFavorites(prev => prev.filter(f => f.id !== meal.id));
@@ -32,7 +34,7 @@ export function FavoritesView({
         await deleteDoc(doc(db, `users/${auth.currentUser.uid}/favorites`, meal.id));
         trackBehavior(TrackingAction.REMOVED_FAVORITE, meal.id, meal.name, undefined, meal.tags || []);
       } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${auth.currentUser.uid}/favorites/${meal.id}`);
+        handleFirestoreError(err, OperationType.DELETE, `users/${auth.currentUser.uid}/favorites/${meal.id}`, showToast);
       }
     }
   };

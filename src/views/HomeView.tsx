@@ -8,6 +8,7 @@ import { generateRecipes } from '../services/recipeGenerator';
 import { getActiveConstraints, getSmartSubstitutions } from '../services/recommendationEngine';
 import { getPrimaryPerson } from '../utils/mealUtils';
 import { useAppContext } from '../context/AppContext';
+import { useToast } from '../components/Toast';
 import { getTodayMacros } from '../utils/progressUtils';
 import { NotificationBell } from '../components/NotificationBell';
 import { TRAINING_DAY_OPTIONS } from '../constants';
@@ -42,6 +43,7 @@ interface HomeViewProps {
 }
 
 export function HomeView({
+
   favorites,
   setActiveTab,
   setIsShareModalOpen,
@@ -67,6 +69,7 @@ export function HomeView({
   profile,
   setProfile
 }: HomeViewProps) {
+  const { showToast } = useToast();
   const [mealTypeFilter, setMealTypeFilter] = React.useState<string>('All');
   const [trainingDayType, setTrainingDayType] = React.useState<string | null>(null);
   const { trainingLogs } = useAppContext();
@@ -346,6 +349,7 @@ export function HomeView({
               await regenerateSuggestions(false);
             } catch (err) {
               console.error("Error generating meals manually:", err);
+              showToast("Couldn't generate recipes \u2014 check your connection and try again.", 'error');
             } finally {
               setIsGeneratingMeals(false);
             }

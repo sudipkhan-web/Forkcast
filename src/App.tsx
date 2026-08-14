@@ -1,3 +1,4 @@
+import { useToast } from './components/Toast';
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } from 'motion/react';
 import { TrendingUp, Clock, Heart, RefreshCw, ChevronLeft, Check, ShoppingCart, Package, Plus, Minus, Trash2, Brain, User, X, Camera, Receipt, Scan, Sparkles, Compass, Home, Utensils, Archive, ClipboardList, ChefHat, Carrot, Refrigerator, ListTodo, Users, Leaf, Ban, Flame, UsersRound, Calendar, CalendarDays, PlusCircle, Store, Share, Copy, Link, Mail, LogIn, BookOpen, Target } from 'lucide-react';
@@ -31,6 +32,7 @@ import { PlanModal } from './components/PlanModal';
 import { trackBehavior, TrackingAction } from './services/behaviorTracking';
 import { InventoryItem, ShoppingItem, PersonProfile, Group, PlannedMeal, UserProfile, PantryLog, AppNotification } from './types';
 import { useAppContext, AppProvider } from './context/AppContext';
+import { ToastProvider } from './components/Toast';
 import { VoiceAssistantUI } from './components/VoiceAssistantUI';
 import { Type } from '@google/genai/web';
 import { DIETARY_OPTIONS, CUISINE_OPTIONS, SKILL_OPTIONS } from './constants';
@@ -40,6 +42,7 @@ import { checkNotifications } from './services/notificationService';
 const preloadedImageUrls = new Set<string>();
 
 function MainApp() {
+  const { showToast } = useToast();
   const {
     userId,
     isAuthReady,
@@ -69,7 +72,8 @@ function MainApp() {
     setLikedMealIds,
     dislikedMealIds,
     setDislikedMealIds,
-    customIngredientRules
+    customIngredientRules,
+    queuedSuggestions
   } = useAppContext();
 
   const [showSplash, setShowSplash] = useState(true);
@@ -189,24 +193,17 @@ function MainApp() {
 
   useEffect(() => {
     if (userId && isAuthReady) {
-      const unsub = onSnapshot(doc(db, 'users', userId), (docSnap) => {
-        if (docSnap.exists() && docSnap.data().queuedSuggestions && !hasLoadedSuggestions) {
-          setSuggestions(docSnap.data().queuedSuggestions);
-          setHasLoadedSuggestions(true);
-        } else if (!hasLoadedSuggestions) {
-          // Initialize empty so the dynamic recommendation engine loads matching recipes instantly
-          setSuggestions([]);
-          setHasLoadedSuggestions(true);
-        }
-      });
-      return unsub;
+      if (!hasLoadedSuggestions && queuedSuggestions !== null) {
+        setSuggestions(queuedSuggestions);
+        setHasLoadedSuggestions(true);
+      }
     } else if (!userId && isAuthReady) {
       if (!hasLoadedSuggestions) {
         setSuggestions([]);
         setHasLoadedSuggestions(true);
       }
     }
-  }, [userId, isAuthReady, hasLoadedSuggestions]);
+  }, [userId, isAuthReady, hasLoadedSuggestions, queuedSuggestions]);
 
   useEffect(() => {
     // ONE TIME FLUSH TO APPLY NEW RECOMMENDATION RULES
@@ -253,9 +250,15 @@ function MainApp() {
   }, [suggestions]);
 
   const [seenMealIds, setSeenMealIds] = useState<string[]>([]);
+  const [seenRefineMealIds, setSeenRefineMealIds] = useState<string[]>([]);
+  const [refineSuggestions, setRefineSuggestions] = useState<(Meal & { dynamicReason: string, groupReason?: string })[]>([]);
 
   useEffect(() => {
     setSeenMealIds(prev => Array.from(new Set([...prev, ...likedMealIds, ...dislikedMealIds])));
+  }, [likedMealIds, dislikedMealIds]);
+
+  useEffect(() => {
+    setSeenRefineMealIds(prev => Array.from(new Set([...prev, ...likedMealIds, ...dislikedMealIds])));
   }, [likedMealIds, dislikedMealIds]);
   const [isGeneratingMeals, setIsGeneratingMeals] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
@@ -423,7 +426,7 @@ function MainApp() {
         await setDoc(doc(db, `users/${userId}/pantryLogs`, log.id), log);
       }
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/inventory`);
+      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/inventory`, showToast);
     }
   };
 
@@ -498,7 +501,7 @@ function MainApp() {
       }
       await setDoc(doc(db, `users/${userId}/plannedMeals`, newCookedMeal.id), newCookedMeal, { merge: true });
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/inventory`);
+      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/inventory`, showToast);
     }
   };
 
@@ -672,6 +675,103 @@ function MainApp() {
     }
   }, [suggestions.length, hasLoadedSuggestions, selectedGroupId, likedTags, dislikedTags, household, groups, inventory, favorites, globalRecipes, seenMealIds, dislikedMealIds]);
 
+  // Declaratively maintain the 50-item refine queue (TasteLearningScreen)
+  React.useEffect(() => {
+    if (!hasLoadedSuggestions) return;
+    
+    const shortfall = 50 - refineSuggestions.length;
+    if (shortfall > 0) {
+      const group = groups.find(g => g.id === selectedGroupId) || groups[0];
+      const memberIds = group ? group.memberIds : [];
+      const groupName = group ? group.name : 'Just Me';
+
+      // First, try to pull compatible existing recipes from the master database
+      const compatibleExisting = getTopMeals(
+        shortfall,
+        [...refineSuggestions.map(s => s.id), ...seenRefineMealIds, ...dislikedMealIds],
+        memberIds,
+        globalRecipes,
+        household,
+        dislikedTags,
+        likedTags,
+        profile,
+        inventory,
+        favorites
+      );
+
+      if (compatibleExisting.length > 0) {
+        setRefineSuggestions(prev => {
+          const newItems = compatibleExisting.map(s => ({
+            ...s,
+            dynamicReason: generateDynamicReason(s, profile, likedTags, household, memberIds, inventory),
+            groupReason: generateGroupReason(s, groupName)
+          }));
+          return [...prev, ...newItems].slice(0, 50);
+        });
+        return;
+      }
+
+      if (refineSuggestions.length < 20 && !window.isGeneratingBg) {
+        window.isGeneratingBg = true;
+
+        const liked = Object.entries(likedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
+        const disliked = Object.entries(dislikedTags).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
+        const { dietary, dislikedIngredients, favoriteCuisines, healthConditions } = getActiveConstraints(memberIds, household);
+        const goals: string[] = [];
+        
+        const seenNames = [...ALL_MEALS, ...globalRecipes, ...refineSuggestions].map(m => m.name);
+        const inventoryNames = inventory.map(i => i.name);
+        
+        const fetchAndGenerate = async () => {
+          let trainingDayType: string | undefined = undefined;
+          let acceptedMeals: any[] = [];
+          if (auth.currentUser) {
+            const today = new Date().toISOString().split('T')[0];
+            try {
+              const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+              const docSnap = await getDoc(logRef);
+              if (docSnap.exists()) {
+                trainingDayType = docSnap.data().dayType || undefined;
+                acceptedMeals = docSnap.data().acceptedMeals || [];
+              }
+            } catch (e) {
+              console.error("Error fetching training day type:", e);
+            }
+          }
+
+          try {
+            const primaryPerson = getPrimaryPerson(household);
+            const todayMacros = getTodayMacros(acceptedMeals, primaryPerson || {}, trainingDayType);
+            const remainingCarbsGrams = Math.max(0, todayMacros.carbs.target[1] - todayMacros.carbs.current);
+            const remainingProteinGrams = Math.max(0, todayMacros.protein.target[1] - todayMacros.protein.current);
+            const remainingFatGrams = Math.max(0, todayMacros.fat.target[1] - todayMacros.fat.current);
+            
+            const newMeals = await generateRecipes(12, liked, disliked, dietary, dislikedIngredients, favoriteCuisines, goals, seenNames, favorites, inventoryNames, healthConditions, undefined, trainingDayType, primaryPerson?.weightKg, remainingCarbsGrams, remainingProteinGrams, remainingFatGrams);
+            if (newMeals.length > 0) {
+              setRefineSuggestions(prev => {
+                const updated = [...prev];
+                newMeals.forEach((generatedMeal, idx) => {
+                  updated.push({
+                    ...generatedMeal,
+                    id: generatedMeal.id || `ai-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+                    dynamicReason: 'Freshly generated from your recent swipes!',
+                    groupReason: 'AI Recommended'
+                  });
+                });
+                return updated.slice(0, 50);
+              });
+            }
+          } catch (err) {
+            console.error(err);
+          } finally {
+            window.isGeneratingBg = false;
+          }
+        };
+        fetchAndGenerate();
+      }
+    }
+  }, [refineSuggestions.length, hasLoadedSuggestions, selectedGroupId, likedTags, dislikedTags, household, groups, inventory, favorites, globalRecipes, seenRefineMealIds, dislikedMealIds]);
+
   /**
    * Replaces a meal suggestion with a new one in the UI.
    * If isRejection is true, it tracks the swipe as a rejection.
@@ -776,7 +876,7 @@ function MainApp() {
             uid: userId
           }, { merge: true });
         } catch (e) {
-          handleFirestoreError(e, OperationType.WRITE, `users/${userId}/favorites/${meal.id}`);
+          handleFirestoreError(e, OperationType.WRITE, `users/${userId}/favorites/${meal.id}`, showToast);
         }
       }
     }
@@ -788,7 +888,7 @@ function MainApp() {
     try {
       await setDoc(doc(db, `users/${userId}/household`, member.id), { ...member, uid: userId }, { merge: true });
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/household/${member.id}`);
+      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/household/${member.id}`, showToast);
     }
   };
 
@@ -805,7 +905,7 @@ function MainApp() {
         await setDoc(doc(db, `users/${userId}/groups`, group.id), group);
       }
     } catch (e) {
-      handleFirestoreError(e, OperationType.DELETE, `users/${userId}/household/${memberId}`);
+      handleFirestoreError(e, OperationType.DELETE, `users/${userId}/household/${memberId}`, showToast);
     }
   };
 
@@ -814,7 +914,7 @@ function MainApp() {
     try {
       await setDoc(doc(db, `users/${userId}/groups`, group.id), { ...group, uid: userId }, { merge: true });
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/groups/${group.id}`);
+      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/groups/${group.id}`, showToast);
     }
   };
 
@@ -823,7 +923,7 @@ function MainApp() {
     try {
       await deleteDoc(doc(db, `users/${userId}/groups`, groupId));
     } catch (e) {
-      handleFirestoreError(e, OperationType.DELETE, `users/${userId}/groups/${groupId}`);
+      handleFirestoreError(e, OperationType.DELETE, `users/${userId}/groups/${groupId}`, showToast);
     }
   };
 
@@ -875,7 +975,7 @@ function MainApp() {
         await setDoc(doc(db, `users/${userId}/shoppingList`, item.id), item, { merge: true });
       }
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/shoppingList`);
+      handleFirestoreError(e, OperationType.WRITE, `users/${userId}/shoppingList`, showToast);
     }
   };
 
@@ -1112,7 +1212,14 @@ function MainApp() {
   ];
 
   if (!isAuthReady) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#17181C]">Loading...</div>;
+    return (
+      <div className="max-w-md mx-auto h-[100dvh] flex flex-col bg-[#FC5200] text-white overflow-hidden relative font-sans">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <Flame className="w-20 h-20 mb-4 animate-pulse" />
+          <h1 className="text-4xl font-display font-bold tracking-tight">Forkcast</h1>
+        </div>
+      </div>
+    );
   }
 
   if (!userId) {
@@ -1129,13 +1236,18 @@ function MainApp() {
             transition={{ duration: 0.5 }}
             className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#FC5200] text-white"
           >
-            <ChefHat className="w-20 h-20 mb-4 animate-pulse" />
+            <Flame className="w-20 h-20 mb-4 animate-pulse" />
             <h1 className="text-4xl font-display font-bold tracking-tight">Forkcast</h1>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {isProfileLoaded && !profile.hasCompletedOnboarding ? (
+      {!isProfileLoaded ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-[#FC5200] text-white">
+          <Flame className="w-20 h-20 mb-4 animate-pulse" />
+          <h1 className="text-4xl font-display font-bold tracking-tight">Forkcast</h1>
+        </div>
+      ) : !profile.hasCompletedOnboarding ? (
         <OnboardingView
           household={household}
           updateHouseholdMember={updateHouseholdMember}
@@ -1146,22 +1258,22 @@ function MainApp() {
           onContinue={async () => {
             if (userId) {
               await setDoc(doc(db, 'users', userId), { hasCompletedOnboarding: true, hasAcceptedTerms: true, termsAcceptedAt: new Date().toISOString() }, { merge: true })
-                .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}`));
+                .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}`, showToast));
                 
               for (const item of inventory) {
                 // Attach uid in case it is missing 
                 const syncedItem = { ...item, uid: userId };
                 await setDoc(doc(db, `users/${userId}/inventory`, item.id), syncedItem, { merge: true })
-                  .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}/inventory/${item.id}`));
+                  .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}/inventory/${item.id}`, showToast));
               }
             }
           }}
         />
-      ) : isProfileLoaded && !profile.hasAcceptedTerms ? (
+      ) : !profile.hasAcceptedTerms ? (
         <TermsGateView onAccept={async () => {
           if (userId) {
             await setDoc(doc(db, 'users', userId), { hasAcceptedTerms: true, termsAcceptedAt: new Date().toISOString() }, { merge: true })
-              .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}`));
+              .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}`, showToast));
           }
         }} />
       ) : (
@@ -1238,7 +1350,7 @@ function MainApp() {
                       uid: userId
                     }, { merge: true });
                   } catch (e) {
-                    handleFirestoreError(e, OperationType.WRITE, `users/${userId}/favorites/${meal.id}`);
+                    handleFirestoreError(e, OperationType.WRITE, `users/${userId}/favorites/${meal.id}`, showToast);
                   }
                 }
               }
@@ -1274,16 +1386,16 @@ function MainApp() {
             dislikedIngredients={getActiveConstraints(groups.find(g => g.id === selectedGroupId)?.memberIds || [], household).dislikedIngredients}
             favoriteCuisines={getActiveConstraints(groups.find(g => g.id === selectedGroupId)?.memberIds || [], household).favoriteCuisines}
             healthConditions={getActiveConstraints(groups.find(g => g.id === selectedGroupId)?.memberIds || [], household).healthConditions}
-            seenMealIds={seenMealIds}
-            setSeenMealIds={setSeenMealIds}
+            seenMealIds={seenRefineMealIds}
+            setSeenMealIds={setSeenRefineMealIds}
             favorites={favorites}
             groupId={selectedGroupId}
             groupName={groups.find(g => g.id === selectedGroupId)?.name || 'Just Me'}
             inventory={inventory}
             profile={profile}
             household={household}
-            suggestions={suggestions}
-            setSuggestions={setSuggestions}
+            suggestions={refineSuggestions}
+            setSuggestions={setRefineSuggestions}
           />
         )}
       </AnimatePresence>
@@ -1510,8 +1622,10 @@ declare global {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainApp />
-    </AppProvider>
+    <ToastProvider>
+      <AppProvider>
+        <MainApp />
+      </AppProvider>
+    </ToastProvider>
   );
 }

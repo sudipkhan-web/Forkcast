@@ -29,7 +29,10 @@ export interface FirestoreErrorInfo {
   }
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, showToast?: (msg: string, type: 'error'|'success') => void) {
+  if (showToast) {
+    showToast("Something went wrong saving your changes \u2014 please try again.", 'error');
+  }
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
