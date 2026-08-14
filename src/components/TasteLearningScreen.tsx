@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'motion/react';
 import { ChevronLeft, RefreshCw, X, Heart, Star } from 'lucide-react';
+import { ICON_BUTTON } from '../styles/designTokens';
 import { RecipeIngredient, Meal, ALL_MEALS } from '../data/recipes';
 import { generateRecipes } from '../services/recipeGenerator';
 import { trackBehavior, TrackingAction } from '../services/behaviorTracking';
@@ -181,14 +182,14 @@ export function TasteLearningScreen({
       <div className="flex-none p-6 pt-12 pb-4 relative text-center">
         <button 
           onClick={onClose}
-          className="absolute top-10 left-6 p-2 text-stone-400 hover:text-white transition-all active:scale-95 z-20"
+          className={`absolute top-10 left-6 z-20 ${ICON_BUTTON}`}
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="absolute top-10 right-6 flex items-center gap-2 z-20">
           <button
             onClick={() => setSuggestions([])}
-            className="p-2 text-stone-400 hover:text-white bg-white/10 rounded-full transition-all active:scale-95"
+            className={`${ICON_BUTTON}`}
             aria-label="Refresh Swipes"
             title="Get a new batch of meals to review (This may take a few minutes running in the background to tailor to your preferences)"
           >
@@ -196,7 +197,7 @@ export function TasteLearningScreen({
           </button>
           <button 
             onClick={onOpenFavorites}
-            className="p-2 text-stone-400 hover:text-[#FC5200] bg-white/10 rounded-full transition-all active:scale-[0.98] relative"
+            className={`relative ${ICON_BUTTON}`}
           >
             <Star className="w-5 h-5" />
             {favorites.length > 0 && (

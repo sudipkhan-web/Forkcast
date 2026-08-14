@@ -163,15 +163,15 @@ export function ShopView({
               </div>
               <ul className="space-y-4">
                 {combinedShoppingList.filter(item => !deferredItems[item.name.toLowerCase()]).map(item => (
-                  <li key={item.id} className={`${CARD} p-5 flex items-center justify-between transition-opacity ${item.checked ? 'opacity-60' : ''}`}>
-                    <div className="flex items-center gap-3">
+                  <li key={item.id} className={`${CARD} p-4 flex flex-col gap-3 transition-opacity ${item.checked ? 'opacity-60' : ''}`}>
+                    <div className="flex items-start gap-3 w-full">
                       <button 
                         onClick={() => toggleShoppingItem(item.id, item.isGenerated, item.name)}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border transition-all active:scale-[0.98] ${item.checked ? 'bg-emerald-500/100 border-emerald-500 text-white' : 'border-stone-300 text-transparent hover:border-emerald-500'}`}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border mt-0.5 transition-all active:scale-[0.98] ${item.checked ? 'bg-emerald-500/100 border-emerald-500 text-white' : 'border-stone-300 text-transparent hover:border-emerald-500'}`}
                       >
                         <Check className="w-4 h-4" />
                       </button>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col flex-1">
                         <span className={`font-medium ${item.checked ? 'text-stone-400 line-through' : 'text-white'}`}>
                           {item.name}
                           {item.isGenerated && <span className="ml-2 text-[10px] bg-emerald-500/20 text-[#FC5200] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Planned</span>}
@@ -190,7 +190,7 @@ export function ShopView({
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between ml-9">
                       <div className={`${STEPPER} ${item.isGenerated ? 'opacity-50 pointer-events-none' : ''}`}>
                         <button 
                           onClick={() => updateShoppingItemQuantity(item.id, -1, item.isGenerated)}
@@ -206,21 +206,23 @@ export function ShopView({
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
-                      <button 
-                        onClick={() => toggleDefer(item.name)}
-                        className={ICON_BUTTON}
-                        title="Buy Later"
-                      >
-                        <Clock className="w-4 h-4" />
-                      </button>
-                      {!item.isGenerated && (
+                      <div className="flex items-center gap-2">
                         <button 
-                          onClick={() => removeShoppingItem(item.id, item.isGenerated)}
-                          className={`${ICON_BUTTON} hover:text-red-400`}
+                          onClick={() => toggleDefer(item.name)}
+                          className={`${ICON_BUTTON} !w-[28px] !h-[28px] !p-0`}
+                          title="Buy Later"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Clock className="w-4 h-4" />
                         </button>
-                      )}
+                        {!item.isGenerated && (
+                          <button 
+                            onClick={() => removeShoppingItem(item.id, item.isGenerated)}
+                            className={`${ICON_BUTTON} !w-[28px] !h-[28px] !p-0 hover:text-red-400`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -233,9 +235,9 @@ export function ShopView({
                 <h2 className="text-sm font-display font-bold text-stone-400 uppercase tracking-widest mb-4">Buy Later</h2>
                 <ul className="space-y-4 opacity-75">
                   {combinedShoppingList.filter(item => deferredItems[item.name.toLowerCase()]).map(item => (
-                    <li key={item.id} className={`${CARD} p-5 flex items-center justify-between`}>
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col">
+                    <li key={item.id} className={`${CARD} p-4 flex flex-col gap-3`}>
+                      <div className="flex items-start w-full">
+                        <div className="flex flex-col flex-1">
                           <span className="font-medium text-stone-400">
                             {item.name}
                             {item.isGenerated && <span className="ml-2 text-[10px] bg-emerald-500/20 text-[#FC5200] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Planned</span>}
@@ -254,10 +256,10 @@ export function ShopView({
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-end">
                         <button 
                           onClick={() => toggleDefer(item.name)}
-                          className="p-2 text-[#FC5200] hover:bg-emerald-500/10 rounded-lg transition-all active:scale-[0.98] text-xs font-medium"
+                          className="p-1.5 px-3 text-[#FC5200] hover:bg-[#FC5200]/10 rounded-lg transition-all active:scale-[0.98] text-xs font-medium border border-[#FC5200]/20"
                         >
                           Move to Current
                         </button>
@@ -275,9 +277,9 @@ export function ShopView({
         <div className="absolute bottom-0 inset-x-0 px-6 pt-12 pb-4 bg-gradient-to-t from-[#17181C] via-[#17181C] to-transparent pointer-events-none flex justify-center">
           <button 
             onClick={onMoveCheckedToPantry}
-            className={`${PRIMARY_BUTTON} pointer-events-auto w-full max-w-sm py-4 flex items-center justify-center gap-2 text-lg`}
+            className={`${PRIMARY_BUTTON} pointer-events-auto w-full max-w-sm py-3 flex items-center justify-center gap-2 text-sm font-semibold`}
           >
-            <Package className="w-5 h-5" />
+            <Package className="w-4 h-4" />
             Move Checked to Pantry
           </button>
         </div>
