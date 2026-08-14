@@ -7,3 +7,5 @@ export const PRIMARY_BUTTON = "bg-gradient-to-b from-[#FF6A1A] to-[#FC5200] roun
 export const PILL = "bg-[#1c1d22] border border-[#2c2d33] rounded-full px-3.5 py-2 text-stone-300 text-xs font-medium flex items-center gap-1.5 transition-all active:scale-95";
 
 export const STEPPER = "flex items-center gap-0.5 bg-[#232428] border border-[#303136] rounded-xl p-[3px]";
+
+export const SECONDARY_BUTTON = "bg-[#232428] border border-[#303136] rounded-2xl text-stone-200 font-semibold transition-all active:scale-[0.98]";

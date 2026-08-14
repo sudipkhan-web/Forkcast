@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import { ChevronLeft, Clock, RefreshCw, ShoppingCart, Check, CalendarDays, ChefHat, Flame } from 'lucide-react';
 import { Meal } from '../data/recipes';
 import { RecipeImage } from '../components/RecipeImage';
+import { PRIMARY_BUTTON, SECONDARY_BUTTON } from '../styles/designTokens';
 
 interface MealDetailsViewProps {
   selectedMeal: Meal;
@@ -268,7 +269,7 @@ export function MealDetailsView({
             setIsPlanModalOpen(true);
             handleSelectMeal(null);
           }}
-          className="w-full py-4 bg-stone-900 text-white rounded-2xl font-semibold text-lg hover:bg-stone-800 transition-all active:scale-[0.98] shadow-lg shadow-stone-900/20 flex items-center justify-center gap-2"
+          className={`${SECONDARY_BUTTON} w-full py-3 text-sm flex items-center justify-center gap-2`}
         >
           <CalendarDays className="w-5 h-5" />
           Plan this Meal
@@ -279,9 +280,9 @@ export function MealDetailsView({
             handleCookMeal(selectedMeal, acceptedSubstitutions, substitutions);
             handleSelectMeal(null);
           }}
-          className="w-full py-4 bg-orange-500 text-white rounded-2xl font-semibold text-lg hover:bg-orange-600 transition-all active:scale-[0.98] shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
+          className={`${PRIMARY_BUTTON} w-full py-3 text-sm flex items-center justify-center gap-2`}
         >
-          <ChefHat className="w-5 h-5" />
+          <Flame className="w-5 h-5" />
           {selectedMeal.ingredients.filter(i => !checkIngredient(i.name) && !(substitutions.find(sub => sub.original === i.name) && acceptedSubstitutions.includes(i.name))).length === 0 ? "Cook Now" : "I Just Cooked This (Subtract Inventory)"}
         </button>
 
@@ -292,7 +293,7 @@ export function MealDetailsView({
               handleAddMissingToShoppingList(selectedMeal.ingredients, acceptedSubs);
               handleSelectMeal(null);
             }}
-            className="w-full py-4 bg-[#FC5200] text-white rounded-2xl font-semibold text-lg hover:bg-[#FC5200] transition-all active:scale-[0.98] shadow-lg shadow-[#FC5200]/20 mt-3"
+            className={`${PRIMARY_BUTTON} w-full py-3 text-sm mt-3`}
           >
             Add Missing to Shopping List
           </button>

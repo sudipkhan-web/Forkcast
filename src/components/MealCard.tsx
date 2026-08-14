@@ -156,7 +156,7 @@ export function MealCard({
               e.stopPropagation();
               onClick();
             }}
-            className={`${PRIMARY_BUTTON} w-full py-3.5 flex items-center justify-center gap-2`}
+            className={`${PRIMARY_BUTTON} w-full py-3 text-sm flex items-center justify-center gap-2`}
           >
             View Recipe
           </button>
