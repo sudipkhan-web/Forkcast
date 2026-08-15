@@ -186,12 +186,44 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
     try {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        // Extract just the base64 data, removing the "data:image/jpeg;base64," part
-        const base64Data = base64String.split(',')[1];
+        const rawDataUrl = reader.result as string;
         
         try {
-          const items = await analyzePantryImage(base64Data, file.type);
+          // Load into an HTMLImageElement to resize via off-screen canvas
+          const img = new Image();
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = (err) => reject(err);
+            img.src = rawDataUrl;
+          });
+
+          // Resize so longest side is at most 1600px preserving aspect ratio
+          const maxDim = 1600;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            throw new Error('Failed to get canvas 2D context');
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          const base64Data = jpegDataUrl.split(',')[1];
+          const mimeType = 'image/jpeg';
+
+          const items = await analyzePantryImage(base64Data, mimeType);
           
           setScannedItemsPreview(items.map((item, idx) => ({
              id: `scanned-${Date.now()}-${idx}`,
