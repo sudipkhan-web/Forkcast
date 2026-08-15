@@ -375,6 +375,8 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!!scanningState}
+                title="Open camera to scan items"
+                aria-label="Open camera to scan items"
                 className="w-full flex items-center justify-center gap-2 py-3 bg-stone-900 text-stone-300 rounded-lg hover:bg-emerald-50 hover:text-[#FC5200] transition-all font-semibold active:scale-[0.98] shadow-sm"
               >
                 <Camera className="w-5 h-5" />
@@ -384,6 +386,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                 type="file" 
                 accept="image/*" 
                 multiple 
+                capture="environment" 
                 ref={fileInputRef} 
                 className="hidden" 
                 onChange={handleImageUpload} 

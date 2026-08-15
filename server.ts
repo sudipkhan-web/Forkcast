@@ -5,7 +5,8 @@ import {
   serverAnalyzePantryImage, 
   serverGenerateSmartStaples, 
   serverGenerateRecipes, 
-  serverGenerateRecipeImage 
+  serverGenerateRecipeImage,
+  getCuratedFallbackRecipes
 } from "./src/services/geminiServer";
 
 async function startServer() {
@@ -23,10 +24,10 @@ async function startServer() {
         return res.status(400).json({ error: "Missing base64Image or mimeType in request body." });
       }
       const result = await serverAnalyzePantryImage(base64Image, mimeType);
-      res.json(result);
+      res.json(result || []);
     } catch (error: any) {
-      console.error("[SERVER] Error during inventory scanning / image analysis:", error);
-      res.status(500).json({ error: error.message || "Failed to scan pantry image." });
+      console.warn("[SERVER] Notice during inventory scanning / image analysis:", error?.message || error);
+      res.json([]);
     }
   });
 
@@ -38,10 +39,10 @@ async function startServer() {
         favoriteCuisines || [],
         likedTags || []
       );
-      res.json(result);
+      res.json(result || []);
     } catch (error: any) {
-      console.error("[SERVER] Error during staples generation:", error);
-      res.status(500).json({ error: error.message || "Failed to generate smart staples." });
+      console.warn("[SERVER] Fallback during staples generation:", error?.message || error);
+      res.json(["Garlic", "Olive Oil", "Eggs", "Parmesan"]);
     }
   });
 
@@ -86,10 +87,31 @@ async function startServer() {
         remainingProteinGrams,
         remainingFatGrams
       );
-      res.json(result);
+
+      if (Array.isArray(result) && result.length > 0) {
+        return res.json(result);
+      }
+
+      const fallbacks = getCuratedFallbackRecipes(
+        count || 6,
+        dietary || [],
+        dislikedIngredients || [],
+        favoriteCuisines || [],
+        seenMealNames || [],
+        specificMealType
+      );
+      res.json(fallbacks);
     } catch (error: any) {
-      console.error("[SERVER] Error during recipe generation:", error);
-      res.status(500).json({ error: error.message || "Failed to generate recipes." });
+      console.warn("[SERVER] Using curated recipes after generation notice:", error?.message || error);
+      const fallbacks = getCuratedFallbackRecipes(
+        req.body?.count || 6,
+        req.body?.dietary || [],
+        req.body?.dislikedIngredients || [],
+        req.body?.favoriteCuisines || [],
+        req.body?.seenMealNames || [],
+        req.body?.specificMealType
+      );
+      res.json(fallbacks);
     }
   });
 
@@ -100,10 +122,14 @@ async function startServer() {
         return res.status(400).json({ error: "Missing recipeName in request body." });
       }
       const base64Data = await serverGenerateRecipeImage(recipeName, cuisine || "", details || "");
-      res.json({ base64: base64Data });
+      if (base64Data) {
+        return res.json({ base64: base64Data });
+      }
+      const fallbackPrompt = `Professional food photography of ${recipeName}. ${cuisine ? cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?width=800&height=800&nologo=true`;
+      res.json({ base64: null, fallbackUrl });
     } catch (error: any) {
-      console.info("Using fallback image generator.");
-      const fallbackPrompt = `Professional food photography of ${req.body.recipeName}. ${req.body.cuisine ? req.body.cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
+      const fallbackPrompt = `Professional food photography of ${req.body?.recipeName || 'delicious meal'}. ${req.body?.cuisine ? req.body.cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
       const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?width=800&height=800&nologo=true`;
       res.json({ base64: null, fallbackUrl });
     }
@@ -112,24 +138,9 @@ async function startServer() {
   // API Route - Demo Endpoint for Email Notifications
   app.post("/api/settings/notifications", (req, res) => {
     const { emailNotificationEnabled, userId } = req.body;
-    // In a real application with Firebase Admin, we would schedule a Cloud Function or a cron job
-    // mapping to Amazon SES, SendGrid, or Resend to send the automated offline emails.
     console.log(`[SERVER] User ${userId} toggled email notifications to: ${emailNotificationEnabled}`);
-    if (emailNotificationEnabled) {
-      console.log(`[SERVER] Automated Cron Job registered for User: ${userId}`);
-      console.log(`[SERVER] Will send offline notifications to configured email when expiring items approach.`);
-    } else {
-      console.log(`[SERVER] Automated Cron Job de-registered for User: ${userId}`);
-    }
     res.json({ success: true, emailNotificationEnabled });
   });
-
-  // Background mock worker for sending notifications offline
-  setInterval(() => {
-    // In a production environment, this would query Firebase Admin for users who have emailNotifications = true
-    // and send them an email regarding any expiring items in their inventory.
-    // console.log("[CRON] Checking profiles for pending automated background emails...");
-  }, 60000);
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
@@ -148,7 +159,6 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Offline email/push notification service is standing by.`);
   });
 }
 

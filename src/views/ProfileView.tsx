@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
-import { motion } from 'motion/react';
-import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp, Settings, Info } from 'lucide-react';
 import { PersonProfile, Group, UserProfile, AppNotification } from '../types';
 import { Meal } from '../data/recipes';
 import { DIETARY_OPTIONS, CUISINE_OPTIONS, HEALTH_CONDITIONS, SKILL_OPTIONS, TIME_OPTIONS, COMMON_DISLIKED_INGREDIENTS, BIOLOGICAL_SEX_OPTIONS, RACE_TYPE_OPTIONS } from '../constants';
@@ -51,6 +51,7 @@ export function ProfileView({
   const [newHealthCondition, setNewHealthCondition] = useState('');
   const [newFavoriteCuisine, setNewFavoriteCuisine] = useState('');
   const [isConfirmingSignOut, setIsConfirmingSignOut] = useState(false);
+  const [isEnableModalOpen, setIsEnableModalOpen] = useState(false);
   const [isBiometricsOpen, setIsBiometricsOpen] = useState(false);
   const signOutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -465,14 +466,24 @@ export function ProfileView({
                 )}
 
                 {permission === 'denied' && (
-                  <div className="text-rose-700">
-                    <div className="flex gap-2 items-start mb-1.5">
-                      <X className="w-4 h-4 mt-0.5 shrink-0 text-rose-600" />
-                      <h4 className="text-xs font-semibold text-rose-800">Notifications are blocked</h4>
+                  <div>
+                    <div className="text-rose-700">
+                      <div className="flex gap-2 items-start mb-1.5">
+                        <X className="w-4 h-4 mt-0.5 shrink-0 text-rose-600" />
+                        <h4 className="text-xs font-semibold text-rose-800">Notifications are blocked</h4>
+                      </div>
+                      <p className="text-[11px] text-stone-500 leading-relaxed">
+                        Enable notifications in your browser's site settings to unlock real-time expiry alerts and customized meal preparation cues.
+                      </p>
                     </div>
-                    <p className="text-[11px] text-stone-500 leading-relaxed">
-                      Enable notifications in your browser's site settings to unlock real-time expiry alerts and customized meal preparation cues.
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsEnableModalOpen(true)}
+                      className="mt-3 w-full py-2 px-3 bg-stone-850 hover:bg-stone-800 text-stone-300 hover:text-white text-xs font-medium rounded-xl transition-colors border border-stone-800 flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                    >
+                      <Info className="w-3.5 h-3.5 text-[#FC5200]" />
+                      How to enable
+                    </button>
                   </div>
                 )}
               </div>
@@ -1078,6 +1089,51 @@ export function ProfileView({
           </div>
         )}
       </div>
+      {/* Notification Permission Help Modal */}
+      <AnimatePresence>
+        {isEnableModalOpen && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-stone-900 border border-stone-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative"
+            >
+              <button
+                onClick={() => setIsEnableModalOpen(false)}
+                className="absolute top-4 right-4 text-stone-400 hover:text-white p-1 rounded-lg hover:bg-stone-800 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-2 mb-3 text-white">
+                <Bell className="w-5 h-5 text-[#FC5200]" />
+                <h3 className="text-sm font-semibold">How to Enable Notifications</h3>
+              </div>
+
+              <div className="bg-stone-950/70 border border-stone-800 rounded-xl p-4 mb-4">
+                <p className="text-xs text-stone-300 leading-relaxed">
+                  {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream ? (
+                    "Notifications for installed apps are managed in Settings, not the browser. Go to: Settings app → Notifications → Forkcast → Allow Notifications. (If Forkcast isn't listed, open the app once first, then check again.)"
+                  ) : typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent) ? (
+                    "Tap the lock/info icon next to the address bar → Permissions → Notifications → Allow. Or: Chrome menu (⋮) → Settings → Site settings → Notifications → find Forkcast → Allow."
+                  ) : (
+                    "Click the lock/info icon in the address bar → Notifications → Allow, then refresh the page."
+                  )}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsEnableModalOpen(false)}
+                className="w-full py-2.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98]"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
