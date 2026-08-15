@@ -23,6 +23,7 @@ interface InventoryViewProps {
 
 export function InventoryView({ inventory, setInventory, pantryLogs, favorites, setActiveTab, setIsShareModalOpen }: InventoryViewProps) {
   const [scanningState, setScanningState] = useState<'fridge' | 'pantry' | 'receipt' | null>(null);
+  const [scanningCount, setScanningCount] = useState<number>(0);
   const [scannedItemsPreview, setScannedItemsPreview] = useState<{ id: string; name: string; quantity: number, location: 'fridge' | 'pantry', category: string }[] | null>(null);
   const [newIngredientName, setNewIngredientName] = useState('');
   const [newIngredientExpiresAt, setNewIngredientExpiresAt] = useState('');
@@ -177,77 +178,112 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
+  const processSingleImage = async (file: File): Promise<Array<{ name: string; quantity: number; location: 'fridge' | 'pantry'; category: string }>> => {
+    try {
+      const rawDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+      });
+
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = (err) => reject(err);
+        img.src = rawDataUrl;
+      });
+
+      // Resize so longest side is at most 1600px preserving aspect ratio
+      const maxDim = 1600;
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Failed to get canvas 2D context');
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const base64Data = jpegDataUrl.split(',')[1];
+      const mimeType = 'image/jpeg';
+
+      const items = await analyzePantryImage(base64Data, mimeType);
+      return Array.isArray(items) ? items : [];
+    } catch (error) {
+      console.error(`Failed to process image ${file.name}:`, error);
+      return [];
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length === 0) return;
 
     setScanningState('pantry'); // We use "pantry" just to show the loading state
+    setScanningCount(files.length);
     
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const rawDataUrl = reader.result as string;
-        
-        try {
-          // Load into an HTMLImageElement to resize via off-screen canvas
-          const img = new Image();
-          await new Promise<void>((resolve, reject) => {
-            img.onload = () => resolve();
-            img.onerror = (err) => reject(err);
-            img.src = rawDataUrl;
-          });
+      const allResults: Array<{ name: string; quantity: number; location: 'fridge' | 'pantry'; category: string }> = [];
+      const BATCH_SIZE = 3;
 
-          // Resize so longest side is at most 1600px preserving aspect ratio
-          const maxDim = 1600;
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
+      for (let i = 0; i < files.length; i += BATCH_SIZE) {
+        const batch = files.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.all(batch.map((file) => processSingleImage(file)));
+        for (const res of batchResults) {
+          allResults.push(...res);
+        }
+      }
 
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            throw new Error('Failed to get canvas 2D context');
-          }
-          ctx.drawImage(img, 0, 0, width, height);
+      if (allResults.length === 0) {
+        alert("No items could be recognized from the image(s). Please try again with clear photos.");
+      } else {
+        // Merge the combined results: group by item name (case-insensitive, trimmed), summing quantity
+        const mergedMap = new Map<string, { id: string; name: string; quantity: number; location: 'fridge' | 'pantry'; category: string }>();
 
-          const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-          const base64Data = jpegDataUrl.split(',')[1];
-          const mimeType = 'image/jpeg';
+        for (let idx = 0; idx < allResults.length; idx++) {
+          const item = allResults[idx];
+          const rawName = (item.name || '').trim();
+          if (!rawName) continue;
+          const key = rawName.toLowerCase();
 
-          const items = await analyzePantryImage(base64Data, mimeType);
-          
-          setScannedItemsPreview(items.map((item, idx) => ({
-             id: `scanned-${Date.now()}-${idx}`,
-             name: item.name,
-             quantity: item.quantity,
-             location: item.location || 'pantry',
-             category: item.category || 'Other'
-          })));
-
-        } catch (error) {
-          alert("Failed to analyze image. Please try again.");
-          console.error(error);
-        } finally {
-          setScanningState(null);
-          // reset the input
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
+          if (mergedMap.has(key)) {
+            const existing = mergedMap.get(key)!;
+            existing.quantity = Math.round(((existing.quantity || 1) + (item.quantity || 1)) * 100) / 100;
+          } else {
+            mergedMap.set(key, {
+              id: `scanned-${Date.now()}-${idx}`,
+              name: rawName,
+              quantity: item.quantity || 1,
+              location: item.location || 'pantry',
+              category: item.category || 'Other'
+            });
           }
         }
-      };
-      reader.readAsDataURL(file);
+
+        setScannedItemsPreview(Array.from(mergedMap.values()));
+      }
     } catch (error) {
-       console.error("Error reading file:", error);
-       setScanningState(null);
+      console.error("Error during image scan process:", error);
+      alert("Failed to analyze images. Please try again.");
+    } finally {
+      setScanningState(null);
+      setScanningCount(0);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -332,7 +368,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                     className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full mr-2"
                   />
                   <span className="text-xs font-medium text-[#FC5200]">
-                    Scanning...
+                    {scanningCount > 1 ? `Analyzing ${scanningCount} photos...` : 'Scanning...'}
                   </span>
                 </div>
               )}
@@ -347,7 +383,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
               <input 
                 type="file" 
                 accept="image/*" 
-                capture="environment" 
+                multiple 
                 ref={fileInputRef} 
                 className="hidden" 
                 onChange={handleImageUpload} 
