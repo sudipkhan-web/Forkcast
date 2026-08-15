@@ -80,6 +80,30 @@ function MainApp() {
 
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState<'home' | 'inventory' | 'shopping' | 'learning' | 'profile' | 'plan' | 'favorites' | 'progress' | 'refine'>('home');
+  const [showIosInstallBanner, setShowIosInstallBanner] = useState(false);
+
+  useEffect(() => {
+    try {
+      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      const isStandalone = Boolean((window.navigator as any).standalone) || (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches);
+      const isDismissed = localStorage.getItem('forkcast_ios_banner_dismissed') === 'true';
+
+      if (isIos && !isStandalone && !isDismissed) {
+        setShowIosInstallBanner(true);
+      }
+    } catch (e) {
+      console.warn("Could not check iOS banner status:", e);
+    }
+  }, []);
+
+  const handleDismissIosBanner = () => {
+    setShowIosInstallBanner(false);
+    try {
+      localStorage.setItem('forkcast_ios_banner_dismissed', 'true');
+    } catch (e) {
+      console.warn("Could not save banner dismissal:", e);
+    }
+  };
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -1553,6 +1577,27 @@ function MainApp() {
         combinedShoppingList={combinedShoppingList}
         onMoveToPantry={moveItemsToPantry}
       />
+
+      {/* iOS Install Prompt Banner */}
+      {showIosInstallBanner && (
+        <div className="bg-stone-900 border-t border-stone-800 px-4 py-2.5 flex items-center justify-between gap-3 text-xs text-stone-300 shrink-0 z-20 shadow-lg">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="w-6 h-6 rounded-md bg-stone-800 flex items-center justify-center text-[#FC5200] shrink-0">
+              <Share className="w-3.5 h-3.5" />
+            </div>
+            <p className="text-stone-300 text-xs truncate">
+              Install Forkcast: tap the <span className="font-semibold text-white inline-flex items-center gap-0.5"><Share className="w-3 h-3 inline text-[#FC5200] mx-0.5" /> Share</span> icon, then <span className="font-semibold text-white">'Add to Home Screen'</span>
+            </p>
+          </div>
+          <button
+            onClick={handleDismissIosBanner}
+            className="p-1.5 text-stone-400 hover:text-white rounded-md hover:bg-stone-800 active:scale-95 transition-all shrink-0"
+            aria-label="Dismiss banner"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <nav className="bg-[#17181C] border-t border-stone-800 shrink-0 z-10 pb-safe">
