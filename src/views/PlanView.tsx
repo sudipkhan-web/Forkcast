@@ -1,4 +1,6 @@
-import { Droplet, Activity, Plus } from 'lucide-react';
+import { Droplet, Activity, Plus, Camera, Loader2 } from 'lucide-react';
+import { captureMealPhoto } from '../services/mealPhotoAnalyzer';
+import { useToast } from '../components/Toast';
 import { useAppContext } from '../context/AppContext';
 import toast from 'react-hot-toast';
 import { doc, setDoc, arrayUnion } from 'firebase/firestore';
@@ -12,7 +14,6 @@ import { Meal, ALL_MEALS } from '../data/recipes';
 import { NotificationBell } from '../components/NotificationBell';
 
 interface PlanViewProps {
-  trainingLogs?: any;
   household?: any;
   plannedMeals: PlannedMeal[];
   globalRecipes: Meal[];
@@ -32,7 +33,6 @@ interface PlanViewProps {
 export function PlanView({
   plannedMeals,
   globalRecipes,
-  trainingLogs,
   household,
   setPlannedMeals,
   groups,
@@ -46,9 +46,75 @@ export function PlanView({
   setAcceptedSubstitutions,
   selectedGroupId
 }: PlanViewProps) {
+  const { trainingLogs } = useAppContext();
   const [viewMode, setViewMode] = useState<'upcoming' | 'history'>('upcoming');
 
   const [manualMealDate, setManualMealDate] = React.useState<string | null>(null);
+  const [scanningDate, setScanningDate] = React.useState<string | null>(null);
+  const [scannedMealPreview, setScannedMealPreview] = React.useState<any | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [activeDateForUpload, setActiveDateForUpload] = React.useState<string | null>(null);
+  const { showToast } = useToast();
+
+  
+
+  const triggerUpload = (dateKey: string) => {
+    setActiveDateForUpload(dateKey);
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeDateForUpload) return;
+
+    setScanningDate(activeDateForUpload);
+    try {
+      const result = await captureMealPhoto(file);
+      if (result) {
+        setScannedMealPreview(result);
+        setManualMealDate(activeDateForUpload);
+      } else {
+        showToast("Error: Failed to analyze photo.", "error");
+      }
+    } catch (err: any) {
+      showToast(`Error: ${err.message || "Failed to analyze photo."}`, "error");
+    } finally {
+      setScanningDate(null);
+      setActiveDateForUpload(null);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleDeleteLoggedMeal = async (dateKey: string, mealToRemove: any) => {
+    import('../firebase').then(({ auth, db }) => {
+      if (!auth.currentUser) return;
+      import('firebase/firestore').then(({ doc, updateDoc, getDoc }) => {
+        try {
+          const logRef = doc(db, `users/${auth.currentUser!.uid}/trainingLog`, dateKey);
+          getDoc(logRef).then(snap => {
+            if (snap.exists()) {
+              const data = snap.data();
+              const meals = data.acceptedMeals || [];
+              // Remove exactly one matching meal
+              const index = meals.findIndex((m: any) => 
+                m.name === mealToRemove.name && 
+                m.calories === mealToRemove.calories && 
+                m.mealType === mealToRemove.mealType
+              );
+              if (index > -1) {
+                meals.splice(index, 1);
+                updateDoc(logRef, { acceptedMeals: meals }).then(() => {
+                  import('react-hot-toast').then(toast => toast.default.success("Meal removed from log"));
+                });
+              }
+            }
+          });
+        } catch (err: any) {
+          console.error(err);
+        }
+      });
+    });
+  };
 
   const handleConfirmManualMeal = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => {
     import('../firebase').then(({ auth, db }) => {
@@ -64,6 +130,8 @@ export function PlanView({
             proteinGrams: data.proteinGrams,
             fatGrams: data.fatGrams,
             mealType: data.mealType,
+            image: scannedMealPreview?.imageBase64 || null,
+            source: scannedMealPreview ? 'photo-log' : 'manual-log',
             loggedAt: new Date().toISOString()
           };
 
@@ -260,97 +328,14 @@ export function PlanView({
                 transition={{ duration: 0.2 }}
                 className="space-y-6"
               >
-                <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider mb-2">Planned</h3>
-                {sortedPastDates.length === 0 ? (
-                  <div className="text-center py-10 flex flex-col items-center justify-center opacity-60">
-                    <Clock className="w-10 h-10 text-stone-400 mb-3" />
-                    <p className="text-stone-300 font-medium">No past meals</p>
-                    <p className="text-stone-400 text-sm mt-1">Meals you plan will appear here after their date has passed.</p>
-                  </div>
-                ) : (
-                  sortedPastDates.map((dateStr) => {
-                    const [year, month, day] = dateStr.split('-');
-                    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                    const dayMeals = pastMeals.filter(m => m.date === dateStr);
-                    
-                    return (
-                      <div key={dateStr} className={`${CARD} overflow-hidden opacity-90`}>
-                        <div className="bg-stone-900 px-4 py-3 border-b border-stone-800 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-display font-medium text-stone-300">
-                              {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                            </span>
-                            <span className="text-stone-500 text-sm">
-                              {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="p-4">
-                          <div className="space-y-3">
-                            {dayMeals.map(meal => (
-                              <div 
-                                key={meal.id} 
-                                className="flex items-center justify-between group p-2 -mx-2 rounded-lg transition-colors hover:bg-stone-900"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-stone-300" />
-                                  <div>
-                                    <p className="text-sm font-medium text-white">{meal.recipeName}</p>
-                                    <p className="text-xs text-stone-500">
-                                      {meal.mealType} {meal.cookedAt && `• Cooked at ${new Date(meal.cookedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-all">
-                                  {meal.recipeId && (
-                                    <button 
-                                      onClick={() => {
-                                        const originalMeal = [...ALL_MEALS, ...globalRecipes].find(m => m.id === meal.recipeId);
-                                        if (originalMeal) {
-                                          handleSelectMeal(originalMeal);
-                                        }
-                                      }}
-                                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs mr-2 ${PRIMARY_BUTTON} rounded-full`}
-                                      title="Plan Again"
-                                    >
-                                      <RotateCcw className="w-3.5 h-3.5" />
-                                      Plan Again
-                                    </button>
-                                  )}
-                                  <button 
-                                    onClick={async () => {
-                                      setPlannedMeals(prev => prev.filter(m => m.id !== meal.id));
-                                      import('../firebase').then(({ auth, db }) => {
-                                        if (auth.currentUser) {
-                                          import('firebase/firestore').then(({ doc, deleteDoc }) => {
-                                            deleteDoc(doc(db, `users/${auth.currentUser!.uid}/plannedMeals`, meal.id));
-                                          });
-                                        }
-                                      });
-                                    }}
-                                    className={`${ICON_BUTTON} hover:text-red-500 hover:border-red-900/50`}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                  )}
-
-                <div className="mt-8 border-t border-stone-800 pt-6">
-                  <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider mb-4">Actually Logged</h3>
+                <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider mb-4">Actually Logged</h3>
                   
-                  {Object.keys(trainingLogs || {})
-                    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+                  {(trainingLogs || [])
+                    .slice()
+                    .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     .slice(0, 14)
-                    .map(dateKey => {
-                      const log = trainingLogs[dateKey];
+                    .map((log: any) => {
+                      const dateKey = log.date;
                       if (!log) return null;
                       
                       const meals = log.acceptedMeals || [];
@@ -376,12 +361,22 @@ export function PlanView({
                         <div key={'logged-'+dateKey} className={`${CARD} p-5 flex flex-col gap-4 mb-4 opacity-90`}>
                           <div className="flex items-center justify-between">
                             <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider">{dateString}</h3>
-                            <button 
-                              onClick={() => setManualMealDate(dateKey)}
-                              className="p-1 text-stone-400 hover:text-white transition-colors"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
+
+                            <div className="flex items-center gap-1">
+                              <button 
+                                onClick={() => triggerUpload(dateKey)}
+                                className="p-1 text-stone-400 hover:text-[#FC5200] transition-colors disabled:opacity-50"
+                                disabled={scanningDate === dateKey}
+                              >
+                                {scanningDate === dateKey ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                              </button>
+                              <button 
+                                onClick={() => setManualMealDate(dateKey)}
+                                className="p-1 text-stone-400 hover:text-white transition-colors"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                           
                           {['Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => {
@@ -393,11 +388,20 @@ export function PlanView({
                                 <h4 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">{type}</h4>
                                 <div className="flex flex-col gap-2">
                                   {typeMeals.map((meal, idx) => (
-                                    <div key={idx} className="flex flex-col bg-stone-900/50 rounded-lg p-3 border border-stone-800/50">
-                                      <span className="text-sm font-medium text-stone-200 mb-1">{meal.name}</span>
-                                      <span className="text-[10px] font-mono text-stone-500 uppercase tracking-wider">
-                                        {meal.calories}kcal • {meal.proteinGrams}g P • {meal.carbsGrams}g C • {meal.fatGrams}g F
-                                      </span>
+                                    <div key={idx} className="flex items-center justify-between group bg-stone-900/50 rounded-lg p-3 border border-stone-800/50">
+                                      <div className="flex flex-col">
+                                        <span className="text-sm font-medium text-stone-200 mb-1">{meal.name}</span>
+                                        <span className="text-[10px] font-mono text-stone-500 uppercase tracking-wider">
+                                          {meal.calories}kcal • {meal.proteinGrams}g P • {meal.carbsGrams}g C • {meal.fatGrams}g F
+                                        </span>
+                                      </div>
+                                      <button 
+                                        onClick={() => handleDeleteLoggedMeal(dateKey, meal)}
+                                        className={`${ICON_BUTTON} opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 hover:border-red-900/50 shrink-0`}
+                                        title="Remove meal"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
                                     </div>
                                   ))}
                                 </div>
@@ -425,15 +429,19 @@ export function PlanView({
                         </div>
                       );
                     })}
-                </div>
 
       {manualMealDate && (
         <MealPhotoConfirmModal
           isOpen={!!manualMealDate}
-          initialData={null}
+          initialData={scannedMealPreview}
           initialDate={manualMealDate}
           onConfirm={handleConfirmManualMeal}
-          onCancel={() => setManualMealDate(null)}
+          onCancel={() => {
+            setManualMealDate(null);
+            setScannedMealPreview(null);
+          }}
+          globalRecipes={globalRecipes}
+          ALL_MEALS={ALL_MEALS}
         />
       )}
 

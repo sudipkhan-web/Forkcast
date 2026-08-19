@@ -1,50 +1,7 @@
-export async function analyzeMealPhoto(base64Image: string, mimeType: string): Promise<any> {
-  try {
-    const res = await fetch("/api/meals/analyze-photo", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ base64Image, mimeType })
-    });
+const fs = require('fs');
+let code = fs.readFileSync('src/services/mealPhotoAnalyzer.ts', 'utf8');
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `Server returned status ${res.status}`);
-    }
-
-    const result = await res.json();
-    return result;
-  } catch (error) {
-    console.error("Error analyzing meal photo:", error);
-    throw new Error("Failed to analyze meal photo. Please try again.");
-  }
-}
-
-export async function estimateMealFromName(name: string): Promise<any> {
-  try {
-    const res = await fetch("/api/meals/estimate-from-name", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ name })
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `Server returned status ${res.status}`);
-    }
-
-    const result = await res.json();
-    return result;
-  } catch (error) {
-    console.error("Error estimating meal macros from name:", error);
-    throw new Error("Failed to estimate meal macros. Please try again.");
-  }
-}
-
-
+const newFunc = `
 export async function captureMealPhoto(file: File): Promise<{ name: string, calories: number, carbsGrams: number, proteinGrams: number, fatGrams: number, confidence: number, imageBase64: string } | null> {
   try {
     const rawDataUrl = await new Promise<string>((resolve, reject) => {
@@ -102,3 +59,7 @@ export async function captureMealPhoto(file: File): Promise<{ name: string, calo
     return null;
   }
 }
+`;
+
+code += "\n" + newFunc;
+fs.writeFileSync('src/services/mealPhotoAnalyzer.ts', code);

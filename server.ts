@@ -1,12 +1,13 @@
-import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
+import express from "express";
 import { 
   serverAnalyzePantryImage, 
   serverGenerateSmartStaples, 
   serverGenerateRecipes, 
   serverGenerateRecipeImage,
   serverAnalyzeMealPhoto,
+  serverEstimateMealFromName,
   getCuratedFallbackRecipes, serverClassifyMealType
 } from "./src/services/geminiServer";
 
@@ -29,6 +30,21 @@ async function startServer() {
     } catch (error: any) {
       console.warn("[SERVER] Notice during inventory scanning / image analysis:", error?.message || error);
       res.json([]);
+    }
+  });
+
+  
+  app.post("/api/meals/estimate-from-name", async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Missing name in request body." });
+      }
+      const result = await serverEstimateMealFromName(name);
+      res.json(result);
+    } catch (error: any) {
+      console.warn("[SERVER] Notice during meal estimation:", error?.message || error);
+      res.json(null);
     }
   });
 

@@ -5,10 +5,11 @@ import { Bell, Check, X } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 export const NotificationBell = () => {
-  const { appNotifications, markNotificationAsRead, markAllNotificationsAsRead } = useAppContext();
+  const { appNotifications, markNotificationAsRead, markAllNotificationsAsRead, clearReadNotifications } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
 
   const unreadCount = appNotifications.filter(n => !n.read).length;
+  const hasRead = appNotifications.some(n => n.read);
 
   return (
     <div className="relative">
@@ -42,6 +43,14 @@ export const NotificationBell = () => {
               <div className="p-4 border-b border-stone-800 flex items-center justify-between">
                 <h3 className="font-semibold text-white">Notifications</h3>
                 <div className="flex items-center gap-2">
+                  {hasRead && (
+                    <button 
+                      onClick={clearReadNotifications}
+                      className="text-xs text-stone-400 hover:text-white font-medium"
+                    >
+                      Clear read
+                    </button>
+                  )}
                   {unreadCount > 0 && (
                     <button 
                       onClick={markAllNotificationsAsRead}
@@ -66,7 +75,7 @@ export const NotificationBell = () => {
                     {appNotifications.map(notification => (
                       <div 
                         key={notification.id} 
-                        className={`p-4 border-b border-stone-800 last:border-0 transition-colors ${notification.read ? 'opacity-70 bg-stone-900' : 'bg-emerald-50/30'}`}
+                        className={`p-4 border-b border-stone-800 last:border-0 transition-colors ${notification.read ? 'opacity-70 bg-stone-900' : 'bg-[#FC5200]/10'}`}
                       >
                         <div className="flex gap-3">
                           <div className="flex-1">

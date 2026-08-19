@@ -1,9 +1,9 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/views/ProfileView.tsx', 'utf8');
+let code = fs.readFileSync('src/views/PlanView.tsx', 'utf8');
 
-// I need to import ChevronUp and ChevronDown if they aren't imported.
-if (!code.includes('ChevronUp') || !code.includes('ChevronDown')) {
-  code = code.replace(/import \{ (.*?) \} from 'lucide-react';/, "import { $1, ChevronUp, ChevronDown } from 'lucide-react';");
-}
+code = code.replace(
+  "import { Droplet, Activity, Plus } from 'lucide-react';",
+  "import { Droplet, Activity, Plus, Camera, Loader2 } from 'lucide-react';\nimport { captureMealPhoto } from '../services/mealPhotoAnalyzer';\nimport { useToast } from '../components/Toast';"
+);
 
-fs.writeFileSync('src/views/ProfileView.tsx', code);
+fs.writeFileSync('src/views/PlanView.tsx', code);

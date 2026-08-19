@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, AlertTriangle } from 'lucide-react';
 import { CARD, PRIMARY_BUTTON, SECONDARY_BUTTON, PILL } from '../styles/designTokens';
+import { Meal } from '../data/recipes';
+import { estimateMealFromName } from '../services/mealPhotoAnalyzer';
+import { Loader2 } from 'lucide-react';
 
 interface MealPhotoConfirmModalProps {
   isOpen: boolean;
@@ -17,6 +20,8 @@ interface MealPhotoConfirmModalProps {
   } | null;
   onConfirm: (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => void;
   onCancel: () => void;
+  globalRecipes?: Meal[];
+  ALL_MEALS?: Meal[];
 }
 
 
@@ -28,7 +33,7 @@ function getDefaultMealType(): 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' {
   return 'Dinner';
 }
 
-export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConfirm, onCancel }: MealPhotoConfirmModalProps) {
+export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConfirm, onCancel, globalRecipes = [], ALL_MEALS = [] }: MealPhotoConfirmModalProps) {
   const [name, setName] = useState('');
   const [calories, setCalories] = useState<number | ''>('');
   const [carbsGrams, setCarbsGrams] = useState<number | ''>('');
@@ -36,6 +41,26 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
   const [fatGrams, setFatGrams] = useState<number | ''>('');
   const [mealType, setMealType] = useState<'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'>(getDefaultMealType());
   const [date, setDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<Meal[]>([]);
+  const [isEstimating, setIsEstimating] = useState(false);
+  const [confidenceNote, setConfidenceNote] = useState<'high' | 'medium' | 'low' | null>(initialData?.confidence || null);
+
+  useEffect(() => {
+    if (name.trim().length > 0 && showSuggestions) {
+      const timer = setTimeout(() => {
+        const query = name.toLowerCase();
+        const allAvailable = [...ALL_MEALS, ...globalRecipes];
+        const matches = allAvailable.filter(m => m.name.toLowerCase().includes(query)).slice(0, 5);
+        setSuggestions(matches);
+      }, 200);
+      return () => clearTimeout(timer);
+    } else {
+      setSuggestions([]);
+    }
+  }, [name, showSuggestions, ALL_MEALS, globalRecipes]);
+
 
   
   useEffect(() => {
@@ -47,8 +72,10 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
         setProteinGrams(initialData.proteinGrams ?? '');
         setFatGrams(initialData.fatGrams ?? '');
         setMealType(getDefaultMealType());
+        setConfidenceNote(initialData.confidence || null);
       } else {
         setName('');
+        setConfidenceNote(null);
         setCalories('');
         setCarbsGrams('');
         setProteinGrams('');
@@ -127,14 +154,81 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
                 </div>
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">Meal Name</label>
                 <input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
                 />
+                
+                <AnimatePresence>
+                  {showSuggestions && suggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className={`absolute top-full left-0 right-0 mt-1 z-50 ${CARD} overflow-hidden max-h-[200px] overflow-y-auto`}
+                    >
+                      <ul>
+                        {suggestions.map(meal => (
+                          <li
+                            key={meal.id}
+                            className="px-3 py-2 text-sm text-stone-300 hover:bg-stone-800 cursor-pointer border-b border-stone-800/50 last:border-0"
+                            onClick={() => {
+                              setName(meal.name);
+                              if (meal.calories !== undefined) setCalories(meal.calories);
+                              if (meal.carbsGrams !== undefined) setCarbsGrams(meal.carbsGrams);
+                              if (meal.proteinGrams !== undefined) setProteinGrams(meal.proteinGrams);
+                              if (meal.fatGrams !== undefined) setFatGrams(meal.fatGrams);
+                              setShowSuggestions(false);
+                            }}
+                          >
+                            <div className="font-medium">{meal.name}</div>
+                            <div className="text-[10px] text-stone-500 font-mono mt-0.5">
+                              {meal.calories || 0}kcal • {meal.proteinGrams || 0}g P • {meal.carbsGrams || 0}g C • {meal.fatGrams || 0}g F
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Estimate Button */}
+                {name.trim().length > 0 && suggestions.length === 0 && !showSuggestions && 
+                 calories === '' && carbsGrams === '' && proteinGrams === '' && fatGrams === '' && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        setIsEstimating(true);
+                        const result = await estimateMealFromName(name);
+                        if (result) {
+                          setCalories(result.calories);
+                          setCarbsGrams(result.carbsGrams);
+                          setProteinGrams(result.proteinGrams);
+                          setFatGrams(result.fatGrams);
+                          setConfidenceNote(result.confidence);
+                        }
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setIsEstimating(false);
+                      }
+                    }}
+                    disabled={isEstimating}
+                    className="mt-2 w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-stone-800 text-stone-300 text-xs font-medium hover:bg-stone-700 transition-colors border border-stone-700/50 disabled:opacity-50"
+                  >
+                    {isEstimating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Estimate macros with AI"}
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">

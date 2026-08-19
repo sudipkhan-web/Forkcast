@@ -1,19 +1,4 @@
 
-// Polyfill wrapper to prevent "Cannot set property fetch of #<Window> which has only a getter"
-if (typeof window !== 'undefined') {
-  const originalFetch = window.fetch;
-  try {
-    Object.defineProperty(window, 'fetch', {
-      get: () => originalFetch,
-      set: () => {
-        // Ignore attempts to overwrite window.fetch
-      },
-      configurable: true
-    });
-  } catch (e) {
-    // Ignore if not configurable
-  }
-}
 
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';

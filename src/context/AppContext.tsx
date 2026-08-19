@@ -2,7 +2,7 @@ import { useToast } from '../components/Toast';
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../firebaseUtils';
 import { initNotifications } from '../services/notificationService';
 import { runNotificationTriggers } from '../services/notificationTriggers';
@@ -46,6 +46,7 @@ interface AppContextType {
   setAppNotifications: React.Dispatch<React.SetStateAction<AppNotification[]>>;
   markNotificationAsRead: (notificationId: string) => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
+  clearReadNotifications: () => Promise<void>;
   queuedSuggestions: any[] | null;
   setQueuedSuggestions: React.Dispatch<React.SetStateAction<any[] | null>>;
   trainingLogs: any[];
@@ -279,6 +280,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+
+  const clearReadNotifications = async () => {
+    if (!userId) return;
+    try {
+      const readNotifs = appNotifications.filter(n => n.read);
+      await Promise.all(readNotifs.map(n => 
+        deleteDoc(doc(db, `users/${userId}/notifications`, n.id))
+      ));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, "notifications", showToast);
+    }
+  };
+
   const markAllNotificationsAsRead = async () => {
     if (!userId) return;
     try {
@@ -331,6 +345,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setAppNotifications,
       markNotificationAsRead,
       markAllNotificationsAsRead,
+      clearReadNotifications,
       trainingLogs,
       setTrainingLogs
     }}>

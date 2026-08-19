@@ -12,7 +12,7 @@ import { useToast } from '../components/Toast';
 import { getTodayMacros } from '../utils/progressUtils';
 import { arrayUnion } from 'firebase/firestore';
 import { MealPhotoConfirmModal } from '../components/MealPhotoConfirmModal';
-import { analyzeMealPhoto } from '../services/mealPhotoAnalyzer';
+import { captureMealPhoto } from '../services/mealPhotoAnalyzer';
 import { NotificationBell } from '../components/NotificationBell';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, STEPPER } from '../styles/designTokens';
 import { TRAINING_DAY_OPTIONS } from '../constants';
@@ -115,55 +115,11 @@ export function HomeView({
 
     setIsScanningMeal(true);
     try {
-      const rawDataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = (err) => reject(err);
-        reader.readAsDataURL(file);
-      });
-
-      const img = new Image();
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = (err) => reject(err);
-        img.src = rawDataUrl;
-      });
-
-      const maxDim = 1600;
-      let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
-      }
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, width, height);
-      }
-      
-      const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      const parts = resizedDataUrl.split(',');
-      const mimeMatch = parts[0].match(/:(.*?);/);
-      const finalMime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-      const base64Data = parts[1];
-
-      const result = await analyzeMealPhoto(base64Data, finalMime);
-      
-      if (result && result.name) {
-        setScannedMealPreview({
-          ...result,
-          imageBase64: resizedDataUrl
-        });
+      const result = await captureMealPhoto(file);
+      if (result) {
+        setScannedMealPreview(result);
       } else {
-        throw new Error("Could not identify meal");
+        showToast("Error: Failed to analyze photo.", "error");
       }
     } catch (err: any) {
       console.error(err);
@@ -616,6 +572,8 @@ export function HomeView({
           initialData={scannedMealPreview || null}
           onConfirm={handleConfirmMealPhoto}
           onCancel={() => { setScannedMealPreview(null); setShowManualMealModal(false); }}
+          globalRecipes={globalRecipes}
+          ALL_MEALS={ALL_MEALS}
         />
       )}
 
