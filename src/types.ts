@@ -37,6 +37,7 @@ export type PersonProfile = {
   heightCm?: number;
   weightKg?: number;
   biologicalSex?: 'male' | 'female';
+  trackedSupplements?: string[];
 };
 
 export type Group = {

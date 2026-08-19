@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, RefreshCw, Sparkles, Share, Target, User, ChevronDown, Flame } from 'lucide-react';
+import { Star, RefreshCw, Sparkles, Share, Target, User, ChevronDown, Flame, Droplet, Plus, Minus, CheckCircle2, Circle } from 'lucide-react';
 import { Group, PersonProfile, InventoryItem, UserProfile } from '../types';
 import { Meal, ALL_MEALS } from '../data/recipes';
 import { MealCard } from '../components/MealCard';
@@ -11,7 +11,7 @@ import { useAppContext } from '../context/AppContext';
 import { useToast } from '../components/Toast';
 import { getTodayMacros } from '../utils/progressUtils';
 import { NotificationBell } from '../components/NotificationBell';
-import { CARD, ICON_BUTTON, PRIMARY_BUTTON } from '../styles/designTokens';
+import { CARD, ICON_BUTTON, PRIMARY_BUTTON, STEPPER } from '../styles/designTokens';
 import { TRAINING_DAY_OPTIONS } from '../constants';
 import { auth, db } from '../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -73,6 +73,9 @@ export function HomeView({
   const { showToast } = useToast();
   const [mealTypeFilter, setMealTypeFilter] = React.useState<string>('All');
   const [trainingDayType, setTrainingDayType] = React.useState<string | null>(null);
+  const [trainingFeeling, setTrainingFeeling] = React.useState<'strong' | 'ok' | 'rough' | 'dnf' | null>(null);
+  const [waterMl, setWaterMl] = React.useState<number>(0);
+  const [supplementsTaken, setSupplementsTaken] = React.useState<string[]>([]);
   const { trainingLogs } = useAppContext();
 
   const today = new Date().toISOString().split('T')[0];
@@ -83,6 +86,39 @@ export function HomeView({
   const remainingProteinGrams = Math.max(0, todayMacros.protein.target[1] - todayMacros.protein.current);
   const remainingFatGrams = Math.max(0, todayMacros.fat.target[1] - todayMacros.fat.current);
 
+
+
+  const handleToggleSupplement = async (supp: string) => {
+    const isTaken = supplementsTaken.includes(supp);
+    const nextTaken = isTaken ? supplementsTaken.filter(s => s !== supp) : [...supplementsTaken, supp];
+    setSupplementsTaken(nextTaken);
+    if (auth.currentUser) {
+      const today = new Date().toISOString().split('T')[0];
+      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+      setDoc(logRef, { supplementsTaken: nextTaken }, { merge: true });
+    }
+  };
+
+
+  const handleUpdateFeeling = async (feeling: 'strong' | 'ok' | 'rough' | 'dnf') => {
+    setTrainingFeeling(feeling);
+    if (auth.currentUser) {
+      const today = new Date().toISOString().split('T')[0];
+      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+      setDoc(logRef, { trainingFeeling: feeling }, { merge: true });
+    }
+  };
+
+  const handleUpdateWater = async (delta: number) => {
+    const nextWater = Math.max(0, Math.min(10000, waterMl + delta));
+    setWaterMl(nextWater);
+    if (auth.currentUser) {
+      const today = new Date().toISOString().split('T')[0];
+      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+      setDoc(logRef, { waterMl: nextWater }, { merge: true });
+    }
+  };
+
   React.useEffect(() => {
     if (auth.currentUser) {
       const today = new Date().toISOString().split('T')[0];
@@ -90,6 +126,9 @@ export function HomeView({
       getDoc(logRef).then(docSnap => {
         if (docSnap.exists()) {
           setTrainingDayType(docSnap.data().dayType);
+          setTrainingFeeling(docSnap.data().trainingFeeling || null);
+          setWaterMl(docSnap.data().waterMl || 0);
+          setSupplementsTaken(docSnap.data().supplementsTaken || []);
         }
       });
     }
@@ -211,6 +250,62 @@ export function HomeView({
             <Flame className="w-4 h-4 text-[#FC5200] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
+
+          {trainingDayType && trainingDayType !== 'Rest' && !trainingFeeling && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-3 p-3 bg-stone-800/50 border border-stone-700 rounded-xl flex flex-col gap-2"
+            >
+              <span className="text-xs font-semibold text-stone-300">How did that session feel?</span>
+              <div className="flex gap-2">
+                {[
+                  { value: 'strong', label: 'Strong' },
+                  { value: 'ok', label: 'OK' },
+                  { value: 'rough', label: 'Rough' },
+                  { value: 'dnf', label: 'Didn\'t finish' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleUpdateFeeling(opt.value as any)}
+                    className="flex-1 py-1.5 px-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-[10px] font-medium text-stone-300 hover:text-white transition-colors active:scale-95"
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+          {trainingDayType && trainingDayType !== 'Rest' && trainingFeeling && (
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] font-medium text-stone-400">
+              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+              Session marked as: <span className="text-stone-300 capitalize">{trainingFeeling === 'dnf' ? "Didn't finish" : trainingFeeling}</span>
+            </div>
+          )}
+        </div>
+
+        
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <Droplet className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-semibold text-stone-300">Water</span>
+            <span className="text-xs font-medium text-stone-500 ml-1">{waterMl} ml</span>
+          </div>
+          <div className={STEPPER}>
+            <button
+              onClick={() => handleUpdateWater(-250)}
+              className="w-[26px] h-[26px] flex items-center justify-center rounded-[8px] hover:bg-[#303136] text-stone-400 hover:text-white transition-colors active:scale-95"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <div className="w-px h-3 bg-[#303136]" />
+            <button
+              onClick={() => handleUpdateWater(250)}
+              className="w-[26px] h-[26px] flex items-center justify-center rounded-[8px] hover:bg-[#303136] text-stone-400 hover:text-white transition-colors active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-[14px] w-full">
@@ -241,7 +336,33 @@ export function HomeView({
           );
         })}
         </div>
+
+        {primaryPerson?.trackedSupplements && primaryPerson.trackedSupplements.length > 0 && (
+          <div className="pt-3 mt-1 border-t border-stone-800 flex flex-col gap-2">
+            <span className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-0.5">Supplements</span>
+            {primaryPerson.trackedSupplements.map(supp => {
+              const isTaken = supplementsTaken.includes(supp);
+              return (
+                <button
+                  key={supp}
+                  onClick={() => handleToggleSupplement(supp)}
+                  className="flex items-center gap-2 text-left active:scale-[0.98] transition-transform"
+                >
+                  {isTaken ? (
+                    <CheckCircle2 className="w-4 h-4 text-[#FC5200]" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-stone-600" />
+                  )}
+                  <span className={`text-xs font-medium transition-colors ${isTaken ? 'text-stone-300' : 'text-stone-500'}`}>
+                    {supp}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
+
 
       <div className="px-6 mt-3 flex gap-2 w-full pb-2 shrink-0">
         <div className="flex flex-col w-full">

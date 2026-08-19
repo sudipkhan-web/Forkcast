@@ -212,6 +212,7 @@ service cloud.firestore {
              (!('age' in request.resource.data) || (request.resource.data.age is number && request.resource.data.age >= 10 && request.resource.data.age <= 100)) &&
              (!('heightCm' in request.resource.data) || (request.resource.data.heightCm is number && request.resource.data.heightCm >= 100 && request.resource.data.heightCm <= 250)) &&
              (!('weightKg' in request.resource.data) || (request.resource.data.weightKg is number && request.resource.data.weightKg >= 30 && request.resource.data.weightKg <= 200)) &&
+             (!('trackedSupplements' in request.resource.data) || (request.resource.data.trackedSupplements is list && request.resource.data.trackedSupplements.size() <= 50)) &&
              (!('biologicalSex' in request.resource.data) || request.resource.data.biologicalSex in ['male', 'female']) &&
              request.resource.data.uid == request.auth.uid;
     }
@@ -361,10 +362,13 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
       }
       
-      match /trainingLog/{logId} {
+            match /trainingLog/{logId} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId) &&
-             (!('dayType' in request.resource.data) || request.resource.data.dayType == null || request.resource.data.dayType is string);
+        allow create, update: if isOwner(userId) && 
+            (!('dayType' in request.resource.data) || request.resource.data.dayType == null || request.resource.data.dayType is string) &&
+            (!('waterMl' in request.resource.data) || request.resource.data.waterMl == null || (request.resource.data.waterMl is number && request.resource.data.waterMl >= 0 && request.resource.data.waterMl <= 10000)) &&
+            (!('supplementsTaken' in request.resource.data) || request.resource.data.supplementsTaken == null || (request.resource.data.supplementsTaken is list && request.resource.data.supplementsTaken.size() <= 50)) &&
+            (!('trainingFeeling' in request.resource.data) || request.resource.data.trainingFeeling == null || request.resource.data.trainingFeeling in ['strong', 'ok', 'rough', 'dnf']);
         allow delete: if isOwner(userId);
       }
 

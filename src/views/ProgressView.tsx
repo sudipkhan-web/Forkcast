@@ -3,7 +3,7 @@ import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/desi
 import { motion } from 'motion/react';
 import { Flame, Target } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { getProgressStats } from '../utils/progressUtils';
+import { getProgressStats, getFuelingPerformanceCorrelation } from '../utils/progressUtils';
 import { getPrimaryPerson } from '../utils/mealUtils';
 
 interface ProgressViewProps {
@@ -17,6 +17,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
   const { weeklyCoverage, currentStreak, carbTrend, proteinTrend, fatTrend } = getProgressStats(trainingLogs, primaryPerson?.weightKg);
   const [activeMacro, setActiveMacro] = React.useState<'carbs' | 'protein' | 'fat'>('carbs');
   const activeTrend = activeMacro === 'carbs' ? carbTrend : activeMacro === 'protein' ? proteinTrend : fatTrend;
+  const correlation = getFuelingPerformanceCorrelation(trainingLogs, primaryPerson?.weightKg);
   
   let daysRemaining: number | null = null;
   if (primaryPerson?.raceDate) {
@@ -76,6 +77,22 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
             ))}
           </div>
         </div>
+
+        <div className={`${CARD} p-6`}>
+          <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider mb-4">Fueling & Performance</h3>
+          <p className="text-xs text-stone-400 mb-4">How hitting your carb targets correlates with how strong you feel during training.</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-center bg-stone-800/30 p-3 rounded-lg border border-stone-800">
+              <span className="text-sm font-medium text-stone-300">Days you hit carb target:</span>
+              <span className="text-sm font-bold text-emerald-400">{correlation.hitCarbTotal > 0 ? `${correlation.hitCarbStrong}/${correlation.hitCarbTotal} Strong` : 'No data'}</span>
+            </div>
+            <div className="flex justify-between items-center bg-stone-800/30 p-3 rounded-lg border border-stone-800">
+              <span className="text-sm font-medium text-stone-300">Days you didn't:</span>
+              <span className="text-sm font-bold text-rose-400">{correlation.missCarbTotal > 0 ? `${correlation.missCarbStrong}/${correlation.missCarbTotal} Strong` : 'No data'}</span>
+            </div>
+          </div>
+        </div>
+
 
         {/* Streak */}
         <div className={`${CARD} p-6 flex items-center gap-4`}>
