@@ -78,6 +78,7 @@ export function HomeView({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isScanningMeal, setIsScanningMeal] = React.useState(false);
   const [scannedMealPreview, setScannedMealPreview] = React.useState<any | null>(null);
+  const [showManualMealModal, setShowManualMealModal] = React.useState(false);
   const [isWaterModalOpen, setIsWaterModalOpen] = React.useState(false);
   const [isSupplementsModalOpen, setIsSupplementsModalOpen] = React.useState(false);
   const [trainingDayType, setTrainingDayType] = React.useState<string | null>(null);
@@ -101,8 +102,7 @@ export function HomeView({
     const nextTaken = isTaken ? supplementsTaken.filter(s => s !== supp) : [...supplementsTaken, supp];
     setSupplementsTaken(nextTaken);
     if (auth.currentUser) {
-      const today = new Date().toISOString().split('T')[0];
-      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+      const logRef = doc(db, `users/${auth.currentUser?.uid}/trainingLog`, today);
       setDoc(logRef, { supplementsTaken: nextTaken }, { merge: true });
     }
   };
@@ -174,12 +174,15 @@ export function HomeView({
     }
   };
 
-    const handleConfirmMealPhoto = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number }) => {
-    if (!auth.currentUser || !scannedMealPreview) return;
+    
+  const handleConfirmMealPhoto = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => {
+    if (!auth.currentUser) return;
+    // Allow either scanned photo OR manual entry
+    if (!scannedMealPreview && !showManualMealModal) return;
         
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+      // Use data.date instead of hardcoded today
+      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, data.date);
             
       const newMeal = {
         id: crypto.randomUUID(),
@@ -188,9 +191,10 @@ export function HomeView({
         carbsGrams: data.carbsGrams,
         proteinGrams: data.proteinGrams,
         fatGrams: data.fatGrams,
-        mealType: 'Snack', // Default to snack
-        image: scannedMealPreview.imageBase64,
-        source: 'photo-log'
+        mealType: data.mealType,
+        image: scannedMealPreview?.imageBase64 || null, // Optional chaining here
+        source: scannedMealPreview ? 'photo-log' : 'manual-log',
+        loggedAt: new Date().toISOString()
       };
             
       await setDoc(logRef, {
@@ -199,11 +203,13 @@ export function HomeView({
             
       showToast(`Meal logged! Added ${data.name} (${data.calories} kcal)`, "success");
       setScannedMealPreview(null);
+      setShowManualMealModal(false);
     } catch (err: any) {
       console.error(err);
       showToast("Failed to save meal log.", "error");
     }
   };
+
 
   const handleUpdateFeeling = async (feeling: 'strong' | 'ok' | 'rough' | 'dnf') => {
     setTrainingFeeling(feeling);
@@ -604,12 +610,12 @@ export function HomeView({
         </p>
       </div>
 
-      {scannedMealPreview && (
+      {(scannedMealPreview || showManualMealModal) && (
         <MealPhotoConfirmModal
-          isOpen={!!scannedMealPreview}
-          initialData={scannedMealPreview}
+          isOpen={!!scannedMealPreview || showManualMealModal}
+          initialData={scannedMealPreview || null}
           onConfirm={handleConfirmMealPhoto}
-          onCancel={() => setScannedMealPreview(null)}
+          onCancel={() => { setScannedMealPreview(null); setShowManualMealModal(false); }}
         />
       )}
 

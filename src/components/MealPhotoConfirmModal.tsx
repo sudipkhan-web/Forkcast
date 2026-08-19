@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, AlertTriangle } from 'lucide-react';
-import { CARD, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../styles/designTokens';
+import { CARD, PRIMARY_BUTTON, SECONDARY_BUTTON, PILL } from '../styles/designTokens';
 
 interface MealPhotoConfirmModalProps {
   isOpen: boolean;
+  initialDate?: string;
   initialData: {
     name: string;
     calories: number;
@@ -14,28 +15,52 @@ interface MealPhotoConfirmModalProps {
     confidence: 'high' | 'medium' | 'low';
     imageBase64: string;
   } | null;
-  onConfirm: (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number }) => void;
+  onConfirm: (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => void;
   onCancel: () => void;
 }
 
-export function MealPhotoConfirmModal({ isOpen, initialData, onConfirm, onCancel }: MealPhotoConfirmModalProps) {
+
+function getDefaultMealType(): 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' {
+  const hour = new Date().getHours();
+  if (hour < 11) return 'Breakfast';
+  if (hour < 15) return 'Lunch';
+  if (hour < 17) return 'Snack';
+  return 'Dinner';
+}
+
+export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConfirm, onCancel }: MealPhotoConfirmModalProps) {
   const [name, setName] = useState('');
   const [calories, setCalories] = useState<number | ''>('');
   const [carbsGrams, setCarbsGrams] = useState<number | ''>('');
   const [proteinGrams, setProteinGrams] = useState<number | ''>('');
   const [fatGrams, setFatGrams] = useState<number | ''>('');
+  const [mealType, setMealType] = useState<'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'>(getDefaultMealType());
+  const [date, setDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
 
+  
   useEffect(() => {
-    if (initialData) {
-      setName(initialData.name || '');
-      setCalories(initialData.calories ?? '');
-      setCarbsGrams(initialData.carbsGrams ?? '');
-      setProteinGrams(initialData.proteinGrams ?? '');
-      setFatGrams(initialData.fatGrams ?? '');
+    if (isOpen) {
+      if (initialData) {
+        setName(initialData.name || '');
+        setCalories(initialData.calories ?? '');
+        setCarbsGrams(initialData.carbsGrams ?? '');
+        setProteinGrams(initialData.proteinGrams ?? '');
+        setFatGrams(initialData.fatGrams ?? '');
+        setMealType(getDefaultMealType());
+      } else {
+        setName('');
+        setCalories('');
+        setCarbsGrams('');
+        setProteinGrams('');
+        setFatGrams('');
+        setMealType(getDefaultMealType());
+      }
+      setDate(initialDate || new Date().toISOString().split('T')[0]);
     }
-  }, [initialData]);
+  }, [isOpen, initialData, initialDate]);
 
-  if (!isOpen || !initialData) return null;
+
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -61,20 +86,47 @@ export function MealPhotoConfirmModal({ isOpen, initialData, onConfirm, onCancel
           </div>
 
           <div className="p-4 flex flex-col gap-4">
-            {initialData.imageBase64 && (
+            {initialData?.imageBase64 && (
               <div className="w-full h-40 rounded-xl overflow-hidden bg-stone-900 border border-stone-800">
                 <img src={initialData.imageBase64} alt="Scanned Meal" className="w-full h-full object-cover" />
               </div>
             )}
 
-            {initialData.confidence === 'low' && (
+            {initialData?.confidence === 'low' && (
               <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-orange-300 font-medium">This estimate might be rough — feel free to adjust the numbers.</p>
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-4">
+
+              <div>
+                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">Date</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                />
+              </div>
+
+
+              <div>
+                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2">Meal Type</label>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0 w-full">
+                  {(['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const).map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setMealType(type)}
+                      className={`${PILL} ${mealType === type ? 'bg-[#FC5200] text-white border-[#FC5200]' : 'bg-stone-900 text-stone-400 border-stone-800'}`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">Meal Name</label>
                 <input
@@ -136,7 +188,9 @@ export function MealPhotoConfirmModal({ isOpen, initialData, onConfirm, onCancel
                 calories: Number(calories) || 0, 
                 carbsGrams: Number(carbsGrams) || 0, 
                 proteinGrams: Number(proteinGrams) || 0, 
-                fatGrams: Number(fatGrams) || 0 
+                fatGrams: Number(fatGrams) || 0,
+                mealType,
+                date
               })}
               className={`${PRIMARY_BUTTON} flex-1`}
               disabled={!name.trim()}

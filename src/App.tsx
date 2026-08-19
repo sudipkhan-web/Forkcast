@@ -1,3 +1,4 @@
+import { Toaster } from 'react-hot-toast';
 import { useToast } from './components/Toast';
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } from 'motion/react';
@@ -307,6 +308,7 @@ function MainApp() {
               carbsGrams: meal.carbsGrams || 0,
               proteinGrams: meal.proteinGrams || 0,
               fatGrams: meal.fatGrams || 0,
+              mealType: meal.mealType || 'Snack',
               loggedAt: new Date().toISOString()
             })
           }, { merge: true });
@@ -1676,6 +1678,7 @@ export default function App() {
   return (
     <ToastProvider>
       <AppProvider>
+      <Toaster position="top-center" toastOptions={{ style: { background: '#1C1C1E', color: '#fff' } }} />
         <MainApp />
       </AppProvider>
     </ToastProvider>

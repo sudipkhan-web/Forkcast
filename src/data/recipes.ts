@@ -29,7 +29,7 @@ export type Meal = {
 
 export const ALL_MEALS: Meal[] = [
   { 
-    id: '1', name: 'Garlic Butter Pasta', image: 'https://image.pollinations.ai/prompt/professional%20food%20photo%20of%20creamy%20garlic%20butter%20pasta%2C%20garnish%20with%20parsley%2C%20high%20quality%2C%20studio%20lighting?width=800&height=800&nologo=true', time: '15 min', timeMinutes: 15, difficulty: 'Beginner', cuisine: 'Italian', reason: 'Uses ingredients you already have', details: 'A quick and easy pasta dish with garlic, butter, and parmesan.',
+    id: '1', name: 'Garlic Butter Pasta', image: 'https://image.pollinations.ai/prompt/professional%20food%20photo%20of%20creamy%20garlic%20butter%20pasta%2C%20garnish%20with%20parsley%2C%20high%20quality%2C%20studio%20lighting?width=800&height=800&nologo=true', time: '15 min', timeMinutes: 15, difficulty: 'Beginner', cuisine: 'Italian', reason: 'Uses ingredients you already have', mealType: 'Dinner', details: 'A quick and easy pasta dish with garlic, butter, and parmesan.',
     ingredients: [
       { name: 'Pasta', amount: '200g' },
       { name: 'Garlic', amount: '3 cloves' },
@@ -48,7 +48,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['pasta', 'garlic', 'quick', 'vegetarian']
   },
   { 
-    id: '2', name: 'Chicken Stir Fry', image: 'https://image.pollinations.ai/prompt/professional%20food%20photo%20of%20chicken%20and%20broccoli%20stir%20fry%20in%20a%20wok%2C%20soy%20sauce%2C%20high%20quality%2C%20studio%20lighting?width=800&height=800&nologo=true', time: '25 min', timeMinutes: 25, difficulty: 'Beginner', cuisine: 'Asian', reason: 'Quick option for tonight', details: 'Healthy chicken breast with broccoli and soy sauce.',
+    id: '2', name: 'Chicken Stir Fry', image: 'https://image.pollinations.ai/prompt/professional%20food%20photo%20of%20chicken%20and%20broccoli%20stir%20fry%20in%20a%20wok%2C%20soy%20sauce%2C%20high%20quality%2C%20studio%20lighting?width=800&height=800&nologo=true', time: '25 min', timeMinutes: 25, difficulty: 'Beginner', cuisine: 'Asian', reason: 'Quick option for tonight', mealType: 'Dinner', details: 'Healthy chicken breast with broccoli and soy sauce.',
     ingredients: [
       { name: 'Chicken Breast', amount: '2' },
       { name: 'Broccoli', amount: '1 head' },
@@ -67,7 +67,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['chicken', 'asian', 'healthy', 'quick']
   },
   { 
-    id: '3', name: 'Avocado Toast & Egg', image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'American', reason: 'Based on meals you liked before', details: 'Sourdough bread topped with mashed avocado and a fried egg.',
+    id: '3', name: 'Avocado Toast & Egg', image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'American', reason: 'Based on meals you liked before', mealType: 'Breakfast', details: 'Sourdough bread topped with mashed avocado and a fried egg.',
     ingredients: [
       { name: 'Sourdough Bread', amount: '2 slices' },
       { name: 'Avocado', amount: '1' },
@@ -86,7 +86,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['breakfast', 'vegetarian', 'healthy', 'quick']
   },
   { 
-    id: '4', name: 'Margherita Pizza', image: 'https://images.unsplash.com/photo-1604068549290-dea0e4a30536?auto=format&fit=crop&q=80&w=800&h=800', time: '30 min', timeMinutes: 30, difficulty: 'Intermediate', cuisine: 'Italian', reason: 'Comfort food for a Friday', details: 'Classic pizza with tomato sauce, fresh mozzarella, and basil.',
+    id: '4', name: 'Margherita Pizza', image: 'https://images.unsplash.com/photo-1604068549290-dea0e4a30536?auto=format&fit=crop&q=80&w=800&h=800', time: '30 min', timeMinutes: 30, difficulty: 'Intermediate', cuisine: 'Italian', reason: 'Comfort food for a Friday', mealType: 'Dinner', details: 'Classic pizza with tomato sauce, fresh mozzarella, and basil.',
     ingredients: [
       { name: 'Pizza Dough', amount: '1' },
       { name: 'Tomato Sauce', amount: '1/2 cup' },
@@ -106,7 +106,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['pizza', 'vegetarian', 'comfort']
   },
   { 
-    id: '5', name: 'Beef Tacos', image: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Beginner', cuisine: 'Mexican', reason: 'Taco Tuesday!', details: 'Ground beef tacos with fresh salsa and cheese.',
+    id: '5', name: 'Beef Tacos', image: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Beginner', cuisine: 'Mexican', reason: 'Taco Tuesday!', mealType: 'Dinner', details: 'Ground beef tacos with fresh salsa and cheese.',
     ingredients: [
       { name: 'Ground Beef', amount: '1 lb' },
       { name: 'Taco Shells', amount: '8' },
@@ -126,7 +126,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['beef', 'mexican', 'quick', 'family']
   },
   {
-    id: '6', name: 'Vegetable Curry', image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80&w=800&h=800', time: '35 min', timeMinutes: 35, difficulty: 'Intermediate', cuisine: 'Indian', reason: 'Healthy and warming', details: 'A rich and creamy coconut curry loaded with mixed vegetables.',
+    id: '6', name: 'Vegetable Curry', image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80&w=800&h=800', time: '35 min', timeMinutes: 35, difficulty: 'Intermediate', cuisine: 'Indian', reason: 'Healthy and warming', mealType: 'Dinner', details: 'A rich and creamy coconut curry loaded with mixed vegetables.',
     ingredients: [
       { name: 'Mixed Vegetables', amount: '3 cups' },
       { name: 'Coconut Milk', amount: '1 can' },
@@ -147,7 +147,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['vegan', 'curry', 'indian', 'healthy']
   },
   {
-    id: '7', name: 'Grilled Salmon', image: 'https://images.unsplash.com/photo-1485921325833-c519f76c4927?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Intermediate', cuisine: 'American', reason: 'High in Omega-3', details: 'Perfectly grilled salmon fillets with lemon and herbs.',
+    id: '7', name: 'Grilled Salmon', image: 'https://images.unsplash.com/photo-1485921325833-c519f76c4927?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Intermediate', cuisine: 'American', reason: 'High in Omega-3', mealType: 'Dinner', details: 'Perfectly grilled salmon fillets with lemon and herbs.',
     ingredients: [
       { name: 'Salmon Fillets', amount: '2' },
       { name: 'Lemon', amount: '1' },
@@ -167,7 +167,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['seafood', 'healthy', 'quick', 'keto']
   },
   {
-    id: '8', name: 'Mushroom Risotto', image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&q=80&w=800&h=800', time: '45 min', timeMinutes: 45, difficulty: 'Advanced', cuisine: 'Italian', reason: 'Impress your guests', details: 'Creamy Arborio rice cooked slowly with savory mushrooms and parmesan.',
+    id: '8', name: 'Mushroom Risotto', image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&q=80&w=800&h=800', time: '45 min', timeMinutes: 45, difficulty: 'Advanced', cuisine: 'Italian', reason: 'Impress your guests', mealType: 'Dinner', details: 'Creamy Arborio rice cooked slowly with savory mushrooms and parmesan.',
     ingredients: [
       { name: 'Arborio Rice', amount: '1 cup' },
       { name: 'Mushrooms', amount: '8 oz' },
@@ -189,7 +189,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['vegetarian', 'italian', 'comfort']
   },
   {
-    id: '9', name: 'Greek Salad', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'Mediterranean', reason: 'Fresh and light', details: 'Crisp cucumbers, tomatoes, feta, and olives in a light vinaigrette.',
+    id: '9', name: 'Greek Salad', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'Mediterranean', reason: 'Fresh and light', mealType: 'Lunch', details: 'Crisp cucumbers, tomatoes, feta, and olives in a light vinaigrette.',
     ingredients: [
       { name: 'Cucumber', amount: '1' },
       { name: 'Tomatoes', amount: '2' },
@@ -209,7 +209,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['salad', 'vegetarian', 'healthy', 'quick', 'mediterranean']
   },
   {
-    id: '10', name: 'Pancakes', image: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Beginner', cuisine: 'American', reason: 'Weekend breakfast', details: 'Fluffy buttermilk pancakes served with maple syrup.',
+    id: '10', name: 'Pancakes', image: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Beginner', cuisine: 'American', reason: 'Weekend breakfast', mealType: 'Breakfast', details: 'Fluffy buttermilk pancakes served with maple syrup.',
     ingredients: [
       { name: 'Flour', amount: '1.5 cups' },
       { name: 'Milk', amount: '1.25 cups' },
@@ -231,7 +231,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['breakfast', 'sweet', 'comfort']
   },
   {
-    id: '11', name: 'Caprese Sandwich', image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'Italian', reason: 'Quick lunch', details: 'Fresh mozzarella, tomatoes, and basil pesto on ciabatta bread.',
+    id: '11', name: 'Caprese Sandwich', image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'Italian', reason: 'Quick lunch', mealType: 'Lunch', details: 'Fresh mozzarella, tomatoes, and basil pesto on ciabatta bread.',
     ingredients: [
       { name: 'Ciabatta Bread', amount: '1 roll' },
       { name: 'Fresh Mozzarella', amount: '3 oz' },
@@ -250,7 +250,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['lunch', 'vegetarian', 'quick', 'italian']
   },
   {
-    id: '12', name: 'Lentil Soup', image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800&h=800', time: '40 min', timeMinutes: 40, difficulty: 'Beginner', cuisine: 'Mediterranean', reason: 'Hearty and nutritious', details: 'A warm, comforting soup packed with protein-rich lentils and veggies.',
+    id: '12', name: 'Lentil Soup', image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800&h=800', time: '40 min', timeMinutes: 40, difficulty: 'Beginner', cuisine: 'Mediterranean', reason: 'Hearty and nutritious', mealType: 'Dinner', details: 'A warm, comforting soup packed with protein-rich lentils and veggies.',
     ingredients: [
       { name: 'Brown Lentils', amount: '1 cup' },
       { name: 'Carrots', amount: '2' },
@@ -271,7 +271,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['soup', 'vegan', 'healthy', 'comfort']
   },
   {
-    id: '13', name: 'Shrimp Scampi', image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Intermediate', cuisine: 'Italian', reason: 'Elegant yet fast', details: 'Juicy shrimp cooked in a garlic, butter, and white wine sauce over linguine.',
+    id: '13', name: 'Shrimp Scampi', image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Intermediate', cuisine: 'Italian', reason: 'Elegant yet fast', mealType: 'Dinner', details: 'Juicy shrimp cooked in a garlic, butter, and white wine sauce over linguine.',
     ingredients: [
       { name: 'Linguine', amount: '8 oz' },
       { name: 'Shrimp', amount: '1 lb' },
@@ -292,7 +292,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['seafood', 'pasta', 'italian', 'quick']
   },
   {
-    id: '14', name: 'Oatmeal with Berries', image: 'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'American', reason: 'Healthy start', details: 'Warm rolled oats topped with fresh mixed berries and honey.',
+    id: '14', name: 'Oatmeal with Berries', image: 'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'American', reason: 'Healthy start', mealType: 'Breakfast', details: 'Warm rolled oats topped with fresh mixed berries and honey.',
     ingredients: [
       { name: 'Rolled Oats', amount: '1/2 cup' },
       { name: 'Milk or Water', amount: '1 cup' },
@@ -312,7 +312,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['breakfast', 'healthy', 'quick', 'vegetarian']
   },
   {
-    id: '15', name: 'BBQ Chicken Pizza', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=800&h=800', time: '25 min', timeMinutes: 25, difficulty: 'Intermediate', cuisine: 'American', reason: 'Fun dinner', details: 'Pizza topped with BBQ sauce, chicken, red onion, and cilantro.',
+    id: '15', name: 'BBQ Chicken Pizza', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=800&h=800', time: '25 min', timeMinutes: 25, difficulty: 'Intermediate', cuisine: 'American', reason: 'Fun dinner', mealType: 'Dinner', details: 'Pizza topped with BBQ sauce, chicken, red onion, and cilantro.',
     ingredients: [
       { name: 'Pizza Dough', amount: '1' },
       { name: 'BBQ Sauce', amount: '1/2 cup' },
@@ -334,7 +334,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['pizza', 'chicken', 'comfort']
   },
   {
-    id: '16', name: 'Tofu Stir Fry', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800&h=800', time: '25 min', timeMinutes: 25, difficulty: 'Beginner', cuisine: 'Asian', reason: 'Plant-based protein', details: 'Crispy tofu cubes with mixed vegetables in a savory sauce.',
+    id: '16', name: 'Tofu Stir Fry', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800&h=800', time: '25 min', timeMinutes: 25, difficulty: 'Beginner', cuisine: 'Asian', reason: 'Plant-based protein', mealType: 'Dinner', details: 'Crispy tofu cubes with mixed vegetables in a savory sauce.',
     ingredients: [
       { name: 'Firm Tofu', amount: '1 block' },
       { name: 'Bell Pepper', amount: '1' },
@@ -354,7 +354,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['vegan', 'asian', 'healthy', 'quick']
   },
   {
-    id: '17', name: 'Steak Fajitas', image: 'https://images.unsplash.com/photo-1574781330855-d0db8ce60179?auto=format&fit=crop&q=80&w=800&h=800', time: '30 min', timeMinutes: 30, difficulty: 'Intermediate', cuisine: 'Mexican', reason: 'Sizzling dinner', details: 'Marinated flank steak strips with sautéed peppers and onions.',
+    id: '17', name: 'Steak Fajitas', image: 'https://images.unsplash.com/photo-1574781330855-d0db8ce60179?auto=format&fit=crop&q=80&w=800&h=800', time: '30 min', timeMinutes: 30, difficulty: 'Intermediate', cuisine: 'Mexican', reason: 'Sizzling dinner', mealType: 'Dinner', details: 'Marinated flank steak strips with sautéed peppers and onions.',
     ingredients: [
       { name: 'Flank Steak', amount: '1 lb' },
       { name: 'Bell Peppers', amount: '2' },
@@ -375,7 +375,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['beef', 'mexican', 'family']
   },
   {
-    id: '18', name: 'Quinoa Salad', image: 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Beginner', cuisine: 'Mediterranean', reason: 'Meal prep friendly', details: 'Fluffy quinoa mixed with cucumber, tomatoes, feta, and a lemon dressing.',
+    id: '18', name: 'Quinoa Salad', image: 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Beginner', cuisine: 'Mediterranean', reason: 'Meal prep friendly', mealType: 'Lunch', details: 'Fluffy quinoa mixed with cucumber, tomatoes, feta, and a lemon dressing.',
     ingredients: [
       { name: 'Quinoa', amount: '1 cup' },
       { name: 'Cucumber', amount: '1' },
@@ -395,7 +395,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['salad', 'vegetarian', 'healthy', 'meal-prep']
   },
   {
-    id: '19', name: 'Chicken Parmesan', image: 'https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?auto=format&fit=crop&q=80&w=800&h=800', time: '40 min', timeMinutes: 40, difficulty: 'Intermediate', cuisine: 'Italian', reason: 'Classic comfort', details: 'Breaded chicken breast topped with marinara and melted mozzarella.',
+    id: '19', name: 'Chicken Parmesan', image: 'https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?auto=format&fit=crop&q=80&w=800&h=800', time: '40 min', timeMinutes: 40, difficulty: 'Intermediate', cuisine: 'Italian', reason: 'Classic comfort', mealType: 'Dinner', details: 'Breaded chicken breast topped with marinara and melted mozzarella.',
     ingredients: [
       { name: 'Chicken Breast', amount: '2' },
       { name: 'Breadcrumbs', amount: '1 cup' },
@@ -416,7 +416,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['chicken', 'italian', 'comfort']
   },
   {
-    id: '20', name: 'Smoothie Bowl', image: 'https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'American', reason: 'Refreshing breakfast', details: 'Thick berry smoothie topped with granola, chia seeds, and fresh fruit.',
+    id: '20', name: 'Smoothie Bowl', image: 'https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'American', reason: 'Refreshing breakfast', mealType: 'Breakfast', details: 'Thick berry smoothie topped with granola, chia seeds, and fresh fruit.',
     ingredients: [
       { name: 'Frozen Berries', amount: '1 cup' },
       { name: 'Banana', amount: '1' },
@@ -435,7 +435,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['breakfast', 'vegan', 'healthy', 'quick']
   },
   {
-    id: '21', name: 'Salmon Avocado Roll', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=800&h=800', time: '40 min', timeMinutes: 40, difficulty: 'Intermediate', cuisine: 'Japanese', reason: 'Fresh and healthy', details: 'Homemade sushi rolls with fresh salmon and creamy avocado.',
+    id: '21', name: 'Salmon Avocado Roll', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=800&h=800', time: '40 min', timeMinutes: 40, difficulty: 'Intermediate', cuisine: 'Japanese', reason: 'Fresh and healthy', mealType: 'Dinner', details: 'Homemade sushi rolls with fresh salmon and creamy avocado.',
     ingredients: [
       { name: 'Sushi Rice', amount: '1 cup' },
       { name: 'Nori Seaweed', amount: '2 sheets' },
@@ -454,7 +454,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['seafood', 'japanese', 'healthy', 'pescatarian']
   },
   {
-    id: '22', name: 'Greek Chicken Souvlaki', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=800&h=800', time: '35 min', timeMinutes: 35, difficulty: 'Intermediate', cuisine: 'Greek', reason: 'Mediterranean flavors', details: 'Grilled chicken skewers marinated in lemon, garlic, and oregano.',
+    id: '22', name: 'Greek Chicken Souvlaki', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=800&h=800', time: '35 min', timeMinutes: 35, difficulty: 'Intermediate', cuisine: 'Greek', reason: 'Mediterranean flavors', mealType: 'Dinner', details: 'Grilled chicken skewers marinated in lemon, garlic, and oregano.',
     ingredients: [
       { name: 'Chicken Breast', amount: '2' },
       { name: 'Lemon', amount: '1' },
@@ -473,7 +473,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['chicken', 'greek', 'healthy', 'high-protein', 'mediterranean']
   },
   {
-    id: '23', name: 'Mushroom Risotto', image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db378?auto=format&fit=crop&q=80&w=800&h=800', time: '45 min', timeMinutes: 45, difficulty: 'Advanced', cuisine: 'Italian', reason: 'Rich and comforting', details: 'Creamy Arborio rice slowly cooked with earthy mushrooms and parmesan.',
+    id: '23', name: 'Mushroom Risotto', image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db378?auto=format&fit=crop&q=80&w=800&h=800', time: '45 min', timeMinutes: 45, difficulty: 'Advanced', cuisine: 'Italian', reason: 'Rich and comforting', mealType: 'Dinner', details: 'Creamy Arborio rice slowly cooked with earthy mushrooms and parmesan.',
     ingredients: [
       { name: 'Arborio Rice', amount: '1 cup' },
       { name: 'Mushrooms', amount: '200g' },
@@ -492,7 +492,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['vegetarian', 'italian', 'comfort', 'rice']
   },
   {
-    id: '24', name: 'Spicy Tofu Curry', image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80&w=800&h=800', time: '30 min', timeMinutes: 30, difficulty: 'Intermediate', cuisine: 'Indian', reason: 'Flavorful plant-based meal', details: 'Crispy tofu cubes simmered in a rich, spicy coconut curry sauce.',
+    id: '24', name: 'Spicy Tofu Curry', image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80&w=800&h=800', time: '30 min', timeMinutes: 30, difficulty: 'Intermediate', cuisine: 'Indian', reason: 'Flavorful plant-based meal', mealType: 'Dinner', details: 'Crispy tofu cubes simmered in a rich, spicy coconut curry sauce.',
     ingredients: [
       { name: 'Firm Tofu', amount: '1 block' },
       { name: 'Coconut Milk', amount: '1 can' },
@@ -511,7 +511,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['vegan', 'indian', 'curry', 'spicy', 'healthy']
   },
   {
-    id: '25', name: 'Classic Cheeseburger', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Beginner', cuisine: 'American', reason: 'Ultimate comfort food', details: 'Juicy beef patty topped with melted cheese, lettuce, and tomato on a toasted bun.',
+    id: '25', name: 'Classic Cheeseburger', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Beginner', cuisine: 'American', reason: 'Ultimate comfort food', mealType: 'Dinner', details: 'Juicy beef patty topped with melted cheese, lettuce, and tomato on a toasted bun.',
     ingredients: [
       { name: 'Ground Beef', amount: '400g' },
       { name: 'Burger Buns', amount: '2' },
@@ -530,7 +530,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['beef', 'american', 'comfort', 'quick']
   },
   {
-    id: '26', name: 'Quinoa Salad Bowl', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800&h=800', time: '25 min', timeMinutes: 25, difficulty: 'Beginner', cuisine: 'Mediterranean', reason: 'Nutrient-dense lunch', details: 'A healthy bowl packed with protein-rich quinoa, fresh veggies, and a lemon vinaigrette.',
+    id: '26', name: 'Quinoa Salad Bowl', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800&h=800', time: '25 min', timeMinutes: 25, difficulty: 'Beginner', cuisine: 'Mediterranean', reason: 'Nutrient-dense lunch', mealType: 'Lunch', details: 'A healthy bowl packed with protein-rich quinoa, fresh veggies, and a lemon vinaigrette.',
     ingredients: [
       { name: 'Quinoa', amount: '1 cup' },
       { name: 'Cucumber', amount: '1' },
@@ -549,7 +549,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['vegetarian', 'healthy', 'salad', 'meal-prep', 'mediterranean']
   },
   {
-    id: '27', name: 'Shrimp Scampi', image: 'https://images.unsplash.com/photo-1633504581786-316c8002b1b9?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Intermediate', cuisine: 'Italian', reason: 'Elegant but quick', details: 'Plump shrimp sautéed in a garlic, butter, and white wine sauce over linguine.',
+    id: '27', name: 'Shrimp Scampi', image: 'https://images.unsplash.com/photo-1633504581786-316c8002b1b9?auto=format&fit=crop&q=80&w=800&h=800', time: '20 min', timeMinutes: 20, difficulty: 'Intermediate', cuisine: 'Italian', reason: 'Elegant but quick', mealType: 'Dinner', details: 'Plump shrimp sautéed in a garlic, butter, and white wine sauce over linguine.',
     ingredients: [
       { name: 'Shrimp', amount: '300g' },
       { name: 'Linguine', amount: '200g' },
@@ -568,7 +568,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['seafood', 'pasta', 'italian', 'quick', 'pescatarian']
   },
   {
-    id: '28', name: 'Beef and Broccoli', image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&q=80&w=800&h=800', time: '25 min', timeMinutes: 25, difficulty: 'Intermediate', cuisine: 'Asian', reason: 'Better than takeout', details: 'Tender slices of beef and crisp broccoli in a savory soy-ginger sauce.',
+    id: '28', name: 'Beef and Broccoli', image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&q=80&w=800&h=800', time: '25 min', timeMinutes: 25, difficulty: 'Intermediate', cuisine: 'Asian', reason: 'Better than takeout', mealType: 'Dinner', details: 'Tender slices of beef and crisp broccoli in a savory soy-ginger sauce.',
     ingredients: [
       { name: 'Flank Steak', amount: '300g' },
       { name: 'Broccoli', amount: '1 head' },
@@ -587,7 +587,7 @@ export const ALL_MEALS: Meal[] = [
     tags: ['beef', 'asian', 'quick', 'high-protein']
   },
   {
-    id: '29', name: 'Caprese Sandwich', image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'Italian', reason: 'No-cook lunch', details: 'Fresh mozzarella, ripe tomatoes, and basil on crusty bread with balsamic glaze.',
+    id: '29', name: 'Caprese Sandwich', image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&q=80&w=800&h=800', time: '10 min', timeMinutes: 10, difficulty: 'Beginner', cuisine: 'Italian', reason: 'No-cook lunch', mealType: 'Lunch', details: 'Fresh mozzarella, ripe tomatoes, and basil on crusty bread with balsamic glaze.',
     ingredients: [
       { name: 'Ciabatta Bread', amount: '1 loaf' },
       { name: 'Fresh Mozzarella', amount: '1 ball' },

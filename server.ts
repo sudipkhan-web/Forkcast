@@ -7,7 +7,7 @@ import {
   serverGenerateRecipes, 
   serverGenerateRecipeImage,
   serverAnalyzeMealPhoto,
-  getCuratedFallbackRecipes
+  getCuratedFallbackRecipes, serverClassifyMealType
 } from "./src/services/geminiServer";
 
 async function startServer() {
@@ -171,6 +171,22 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
+
+  
+app.post('/api/recipes/classify-mealtype', async (req, res) => {
+  try {
+    const { name, ingredients, details } = req.body;
+    if (!name || !ingredients || !details) {
+      return res.status(400).json({ error: 'Missing required fields: name, ingredients, details' });
+    }
+
+    const mealType = await serverClassifyMealType(name, ingredients, details);
+    res.json({ mealType });
+  } catch (error: any) {
+    console.error('Error classifying meal type:', error);
+    res.status(500).json({ error: 'Failed to classify meal type', details: error.message });
+  }
+});
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);

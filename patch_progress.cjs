@@ -1,69 +1,100 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/views/ProgressView.tsx', 'utf8');
 
-const targetStr = `{/* Race Countdown */}
-        {daysRemaining !== null ? (
-          <div className={\`\${CARD} flex flex-col items-center justify-center py-6\`}>
-            <span className="text-6xl font-mono font-bold text-[#FC5200]">{daysRemaining}</span>
-            <span className="text-sm font-display font-bold text-stone-400 uppercase tracking-widest mt-2">Days to Race</span>
-            {primaryPerson?.raceType && (
-              <span className="text-xs text-stone-500 mt-1">{primaryPerson?.raceType}</span>
-            )}
-          </div>
-        ) : (
-          <div className={\`\${CARD} flex flex-col items-center justify-center py-10 text-center px-6\`}>
-            <Target className="w-12 h-12 text-stone-600 mb-4" />
-            <h2 className="text-lg font-bold text-white mb-2">No Race Date Set</h2>
-            <p className="text-sm text-stone-400 mb-6">Complete your profile to track your countdown and daily fueling goals.</p>
-            <button 
-              onClick={() => setActiveTab('profile')}
-              className="bg-[#FC5200] text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-[#FC5200]/20 hover:bg-orange-600 transition-all active:scale-95"
-            >
-              Update Profile
-            </button>
-          </div>
-        )}`;
-
-const replacementStr = `{/* Race Countdown */}
-        {primaryPerson?.raceType && primaryPerson.raceType !== 'Not training for a race' && (
-          <>
-            {daysRemaining !== null ? (
-              <div className={\`\${CARD} flex flex-col items-center justify-center py-6\`}>
-                <span className="text-6xl font-mono font-bold text-[#FC5200]">{daysRemaining}</span>
-                <span className="text-sm font-display font-bold text-stone-400 uppercase tracking-widest mt-2">Days to Race</span>
-                {primaryPerson?.raceType && (
-                  <span className="text-xs text-stone-500 mt-1">{primaryPerson?.raceType}</span>
-                )}
-              </div>
-            ) : (
-              <div className={\`\${CARD} flex flex-col items-center justify-center py-10 text-center px-6\`}>
-                <Target className="w-12 h-12 text-stone-600 mb-4" />
-                <h2 className="text-lg font-bold text-white mb-2">No Race Date Set</h2>
-                <p className="text-sm text-stone-400 mb-6">Complete your profile to track your countdown and daily fueling goals.</p>
-                <button 
-                  onClick={() => setActiveTab('profile')}
-                  className="bg-[#FC5200] text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-[#FC5200]/20 hover:bg-orange-600 transition-all active:scale-95"
-                >
-                  Update Profile
-                </button>
-              </div>
-            )}
-          </>
-        )}`;
-
-if (code.includes(targetStr)) {
-  code = code.replace(targetStr, replacementStr);
-  fs.writeFileSync('src/views/ProgressView.tsx', code);
-  console.log("Success");
-} else {
-  console.log("Could not find string. Using regex fallback.");
-  const blockRegex = /\{\/\* Race Countdown \*\/\}[\s\S]*?<\/div>\s*\)\}/m;
-  const match = code.match(blockRegex);
-  if (match) {
-    code = code.replace(match[0], replacementStr);
-    fs.writeFileSync('src/views/ProgressView.tsx', code);
-    console.log("Regex replacement success");
-  } else {
-    console.log("Regex fallback failed");
-  }
+// Ensure MealPhotoConfirmModal is imported
+if (!code.includes("MealPhotoConfirmModal")) {
+  code = "import { MealPhotoConfirmModal } from '../components/MealPhotoConfirmModal';\n" + code;
 }
+
+if (!code.includes("import { doc, setDoc, arrayUnion } from 'firebase/firestore';")) {
+  code = "import { doc, setDoc, arrayUnion } from 'firebase/firestore';\n" + code;
+}
+
+if (!code.includes("import { auth, db } from '../firebase';")) {
+  code = "import { auth, db } from '../firebase';\n" + code;
+}
+
+if (!code.includes("import toast from 'react-hot-toast';")) {
+  code = "import toast from 'react-hot-toast';\n" + code;
+}
+if (!code.includes("import { Plus } from 'lucide-react';")) {
+  code = code.replace(/import \{ Flame, Target, User, Droplet, Activity \} from 'lucide-react';/, "import { Flame, Target, User, Droplet, Activity, Plus } from 'lucide-react';");
+}
+
+// Add state for manualMealDate
+if (!code.includes("manualMealDate")) {
+  code = code.replace(
+    /const \[activeMacro, setActiveMacro\] = React\.useState<'carbs' \| 'protein' \| 'fat'>\('carbs'\);/,
+    "const [activeMacro, setActiveMacro] = React.useState<'carbs' | 'protein' | 'fat'>('carbs');\n  const [manualMealDate, setManualMealDate] = React.useState<string | null>(null);"
+  );
+}
+
+// Add the manual entry handler
+const handlerCode = `
+  const handleConfirmManualMeal = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => {
+    if (!auth.currentUser) return;
+    
+    try {
+      const logRef = doc(db, \`users/\${auth.currentUser.uid}/trainingLog\`, data.date);
+      
+      const newMeal = {
+        recipeId: crypto.randomUUID(),
+        name: data.name,
+        calories: data.calories,
+        carbsGrams: data.carbsGrams,
+        proteinGrams: data.proteinGrams,
+        fatGrams: data.fatGrams,
+        mealType: data.mealType,
+        loggedAt: new Date().toISOString()
+      };
+
+      await setDoc(logRef, {
+        acceptedMeals: arrayUnion(newMeal)
+      }, { merge: true });
+      
+      toast.success("Meal logged successfully!");
+      setManualMealDate(null);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(\`Error: \${err.message || "Failed to log meal."}\`);
+    }
+  };
+`;
+if (!code.includes("handleConfirmManualMeal")) {
+  code = code.replace(/let daysRemaining:/, handlerCode + "\n  let daysRemaining:");
+}
+
+// Update the History card rendering to include the + button
+code = code.replace(
+  /<h3 className="text-sm font-display font-bold text-white uppercase tracking-wider">\{dateString\}<\/h3>/g,
+  `<div className="flex items-center justify-between">
+    <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider">{dateString}</h3>
+    <button 
+      onClick={() => setManualMealDate(dateKey)}
+      className="p-1 text-stone-400 hover:text-white transition-colors"
+    >
+      <Plus className="w-4 h-4" />
+    </button>
+  </div>`
+);
+
+// Add the modal at the end before </motion.div>
+const modalHTML = `
+      {manualMealDate && (
+        <MealPhotoConfirmModal
+          isOpen={!!manualMealDate}
+          initialData={null}
+          initialDate={manualMealDate}
+          onConfirm={handleConfirmManualMeal}
+          onCancel={() => setManualMealDate(null)}
+        />
+      )}
+`;
+
+code = code.replace(
+  /<\/div>\n\s*<\/motion\.div>/,
+  "</div>\n" + modalHTML + "\n      </motion.div>"
+);
+
+fs.writeFileSync('src/views/ProgressView.tsx', code);
+console.log("Updated ProgressView.tsx");

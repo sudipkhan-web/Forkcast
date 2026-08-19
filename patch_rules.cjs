@@ -1,13 +1,10 @@
 const fs = require('fs');
 let code = fs.readFileSync('firestore.rules', 'utf8');
 
-const target = "(!('supplementsTaken' in request.resource.data) || request.resource.data.supplementsTaken == null || (request.resource.data.supplementsTaken is list && request.resource.data.supplementsTaken.size() <= 50));";
-const replacement = "(!('supplementsTaken' in request.resource.data) || request.resource.data.supplementsTaken == null || (request.resource.data.supplementsTaken is list && request.resource.data.supplementsTaken.size() <= 50)) &&\n            (!('trainingFeeling' in request.resource.data) || request.resource.data.trainingFeeling == null || request.resource.data.trainingFeeling in ['strong', 'ok', 'rough', 'dnf']);";
+code = code.replace(
+  /allow update: if isAuthenticated\(\) && request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasOnly\(\['image'\]\);/,
+  "allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['image', 'mealType']); // TEMP: remove 'mealType' here after the one-time data cleanup is confirmed complete."
+);
 
-if (code.includes(target)) {
-  code = code.replace(target, replacement);
-  fs.writeFileSync('firestore.rules', code);
-  console.log("Updated firestore.rules");
-} else {
-  console.log("Target string not found in firestore.rules!");
-}
+fs.writeFileSync('firestore.rules', code);
+console.log("Updated firestore.rules");

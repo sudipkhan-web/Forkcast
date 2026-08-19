@@ -1,21 +1,17 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/views/HomeView.tsx', 'utf8');
 
-// The file has random syntax at the top: "if (result && result.name) { ... } catch ... } finally {"
-// Let's remove everything before "import React from 'react';"
-const importIndex = code.indexOf("import React from 'react';");
-if (importIndex > -1) {
-  code = code.substring(importIndex);
-}
+// The first fix script unintentionally altered handleToggleSupplement 
+// because I matched \`users/\${auth.currentUser?.uid}/trainingLog\`, data.date
+// and replaced it blindly somewhere earlier maybe? Oh, in the previous regex replace:
+// code = code.replace(/const today = new Date().toISOString().split('T')[0];\n\s*const logRef = doc(db, \`users\/\$\{auth\.currentUser\.uid\}\/trainingLog\`, today);/,
+//  "const logRef = doc(db, \`users/\${auth.currentUser?.uid}/trainingLog\`, data.date);");
+// It might have caught another function. Let's fix line 105:
 
-// Ensure the handleMealPhotoUpload has the right closing bracket
-const handleMealRegex = /const handleMealPhotoUpload[\s\S]*?if \(e\.target\) e\.target\.value = '';\s*}/;
-const handleMealMatch = code.match(handleMealRegex);
-
-if (handleMealMatch) {
-  // Let's just make sure it's closed correctly. The corrupted block might have duplicated it.
-  code = code.replace(handleMealMatch[0], handleMealMatch[0] + "\n  };");
-}
+code = code.replace(
+  /const logRef = doc\(db, `users\/\$\{auth\.currentUser\?\.uid\}\/trainingLog`, data\.date\);/,
+  "const logRef = doc(db, `users/${auth.currentUser?.uid}/trainingLog`, today);"
+);
 
 fs.writeFileSync('src/views/HomeView.tsx', code);
-console.log("Cleaned up top syntax");
+console.log("Fixed stray data.date in HomeView");

@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp, Settings, Info } from 'lucide-react';
+import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp, Settings, Info , ChevronRight} from 'lucide-react';
 import { PersonProfile, Group, UserProfile, AppNotification } from '../types';
 import { Meal } from '../data/recipes';
 import { DIETARY_OPTIONS, CUISINE_OPTIONS, HEALTH_CONDITIONS, SKILL_OPTIONS, TIME_OPTIONS, COMMON_DISLIKED_INGREDIENTS, BIOLOGICAL_SEX_OPTIONS, RACE_TYPE_OPTIONS } from '../constants';
 import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDocs, collection, query, where, updateDoc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 import { NotificationBell } from '../components/NotificationBell';
 import { initNotifications } from '../services/notificationService';
 

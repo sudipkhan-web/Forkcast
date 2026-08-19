@@ -1,30 +1,32 @@
 const fs = require('fs');
 let code = fs.readFileSync('server.ts', 'utf8');
 
-// Update import
+// Update imports
 code = code.replace(
-  "import { serverAnalyzePantryImage, serverGenerateStapleRecommendations, serverGenerateRecipes, getCuratedFallbackRecipes } from './src/services/geminiServer';",
-  "import { serverAnalyzePantryImage, serverGenerateStapleRecommendations, serverGenerateRecipes, getCuratedFallbackRecipes, serverAnalyzeMealPhoto } from './src/services/geminiServer';"
+  /getCuratedFallbackRecipes/,
+  "getCuratedFallbackRecipes, serverClassifyMealType"
 );
 
 // Add route
-const analyzeRoute = `  app.post("/api/meals/analyze-photo", async (req, res) => {
-    try {
-      const { base64Image, mimeType } = req.body;
-      if (!base64Image || !mimeType) {
-        return res.status(400).json({ error: "Missing base64Image or mimeType in request body." });
-      }
-      const result = await serverAnalyzeMealPhoto(base64Image, mimeType);
-      res.json(result);
-    } catch (error: any) {
-      console.warn("[SERVER] Notice during meal photo analysis:", error?.message || error);
-      res.json(null);
+const newRoute = `
+app.post('/api/recipes/classify-mealtype', async (req, res) => {
+  try {
+    const { name, ingredients, details } = req.body;
+    if (!name || !ingredients || !details) {
+      return res.status(400).json({ error: 'Missing required fields: name, ingredients, details' });
     }
-  });
 
-  app.post("/api/recipes/generate-staples", async (req, res) => {`;
+    const mealType = await serverClassifyMealType(name, ingredients, details);
+    res.json({ mealType });
+  } catch (error: any) {
+    console.error('Error classifying meal type:', error);
+    res.status(500).json({ error: 'Failed to classify meal type', details: error.message });
+  }
+});
+`;
 
-code = code.replace('  app.post("/api/recipes/generate-staples", async (req, res) => {', analyzeRoute);
+// Insert the new route before app.listen or similar
+code = code.replace(/app\.listen\(/, newRoute + '\n  app.listen(');
 
 fs.writeFileSync('server.ts', code);
-console.log("Updated server.ts");
+console.log("Updated server.ts with route");
