@@ -1,0 +1,518 @@
+<section className={`${CARD} p-6`}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Leaf className="w-4 h-4 text-[#FC5200]" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Dietary Preferences</h2>
+                    </div>
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newDietary.trim()) return;
+                        if (!person.dietary.includes(newDietary.trim())) {
+                          updateHouseholdMember({
+                            ...person,
+                            dietary: [...person.dietary, newDietary.trim()]
+                          });
+                        }
+                        setNewDietary('');
+                      }}
+                      className="flex gap-2 mb-3"
+                    >
+                      <input 
+                        type="text" 
+                        value={newDietary}
+                        onChange={e => setNewDietary(e.target.value)}
+                        placeholder="Add other preference..."
+                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
+                      />
+                      <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
+                    </form>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set([...DIETARY_OPTIONS, ...person.dietary])).map(diet => (
+                        <button
+                          key={diet}
+                          onClick={() => {
+                            updateHouseholdMember({
+                              ...person,
+                              dietary: person.dietary.includes(diet) 
+                                ? person.dietary.filter(d => d !== diet)
+                                : [...person.dietary, diet]
+                            });
+                          }}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
+                            person.dietary.includes(diet)
+                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                          }`}
+                        >
+                          {diet}
+                          {person.dietary.includes(diet) && !DIETARY_OPTIONS.includes(diet) && (
+                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className={`${CARD} p-6`}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Ban className="w-4 h-4 text-red-500" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Disliked Ingredients</h2>
+                    </div>
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newDislikedIngredient.trim()) return;
+                        if (!person.dislikedIngredients.includes(newDislikedIngredient.trim())) {
+                          updateHouseholdMember({
+                            ...person,
+                            dislikedIngredients: [...person.dislikedIngredients, newDislikedIngredient.trim()]
+                          });
+                        }
+                        setNewDislikedIngredient('');
+                      }}
+                      className="flex gap-2 mb-3"
+                    >
+                      <input 
+                        type="text" 
+                        value={newDislikedIngredient}
+                        onChange={e => setNewDislikedIngredient(e.target.value)}
+                        placeholder="Add other ingredient..."
+                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
+                      />
+                      <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
+                    </form>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...person.dislikedIngredients])).map(ing => (
+                        <button
+                          key={ing}
+                          onClick={() => {
+                            updateHouseholdMember({
+                              ...person,
+                              dislikedIngredients: person.dislikedIngredients.includes(ing) 
+                                ? person.dislikedIngredients.filter(i => i !== ing)
+                                : [...person.dislikedIngredients, ing]
+                            });
+                          }}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
+                            person.dislikedIngredients.includes(ing)
+                              ? 'bg-red-500 border-red-500 text-white shadow-sm'
+                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-red-500 hover:text-red-600'
+                          }`}
+                        >
+                          {ing}
+                          {person.dislikedIngredients.includes(ing) && !COMMON_DISLIKED_INGREDIENTS.includes(ing) && (
+                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+{/* Training Profile */}
+            <section className={`${CARD} p-6`}>
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="w-4 h-4 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Race & Training Profile</h2>
+              </div>
+              <p className="text-xs text-stone-500 mb-4 leading-relaxed">
+                Configure your race details. You'll set your daily training goal on the Home tab to get targeted recipes.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-stone-300 mb-1 block">Upcoming Race Type</label>
+                  <select 
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    value={person.raceType || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateHouseholdMember({ ...person, raceType: value });
+                      
+                    }}
+                  >
+                    <option value="">Select a race type...</option>
+                    {['5K', '10K', 'Half Marathon', 'Marathon', 'Sprint Triathlon', 'Olympic Triathlon', 'Half Ironman (70.3)', 'Ironman', 'Not training for a race'].map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-stone-300 mb-1 block">Race Date</label>
+                  <input 
+                    type="date"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    value={person.raceDate || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateHouseholdMember({ ...person, raceDate: value });
+                      
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-stone-300 mb-1 block">Weekly Training Days</label>
+                  <select 
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    value={person.weeklyTrainingDays || 0}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      updateHouseholdMember({ ...person, weeklyTrainingDays: value });
+                      
+                    }}
+                  >
+                    <option value={0}>Not training</option>
+                    {[1,2,3,4,5,6,7].map(d => (
+                      <option key={d} value={d}>{d} {d === 1 ? 'day' : 'days'} / week</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </section>\n
+                        {/* Supplements */}
+            <section className="pt-6 border-t border-stone-800">
+              <div className="flex items-center gap-2 mb-2"> 
+                <Activity className="w-4 h-4 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Supplements</h2>
+              </div>
+              <p className="text-xs text-stone-500 mb-4 leading-relaxed">
+                Track your daily supplements.
+              </p>
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {['Vitamin D', 'Magnesium', 'Creatine', 'Omega-3'].map(supp => (
+                    <button
+                      key={supp}
+                      onClick={() => {
+                        const current = person.trackedSupplements || [];
+                        if (current.includes(supp)) {
+                          updateHouseholdMember({ ...person, trackedSupplements: current.filter(s => s !== supp) });
+                        } else {
+                          updateHouseholdMember({ ...person, trackedSupplements: [...current, supp] });
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        (person.trackedSupplements || []).includes(supp)
+                          ? 'bg-[#FC5200]/20 text-[#FC5200] border border-[#FC5200]/50'
+                          : 'bg-stone-900 text-stone-400 border border-stone-800 hover:border-stone-700'
+                      }`}
+                    >
+                      {supp}
+                    </button>
+                  ))}
+                  {(person.trackedSupplements || []).filter(s => !['Vitamin D', 'Magnesium', 'Creatine', 'Omega-3'].includes(s)).map(supp => (
+                    <span
+                      key={supp}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#FC5200]/20 text-[#FC5200] border border-[#FC5200]/50 flex items-center gap-1"
+                    >
+                      {supp}
+                      <button
+                        onClick={() => {
+                          updateHouseholdMember({
+                            ...person,
+                            trackedSupplements: (person.trackedSupplements || []).filter(s => s !== supp)
+                          });
+                        }}
+                        className="text-[#FC5200] hover:text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSupplement}
+                    onChange={(e) => setNewSupplement(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newSupplement.trim()) {
+                        e.preventDefault();
+                        const val = newSupplement.trim();
+                        if (!(person.trackedSupplements || []).includes(val)) {
+                          updateHouseholdMember({
+                            ...person,
+                            trackedSupplements: [...(person.trackedSupplements || []), val]
+                          });
+                        }
+                        setNewSupplement('');
+                      }
+                    }}
+                    placeholder="Add other supplement..."
+                    className="flex-1 bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                  />
+                  <button
+                    onClick={() => {
+                      if (newSupplement.trim()) {
+                        const val = newSupplement.trim();
+                        if (!(person.trackedSupplements || []).includes(val)) {
+                          updateHouseholdMember({
+                            ...person,
+                            trackedSupplements: [...(person.trackedSupplements || []), val]
+                          });
+                        }
+                        setNewSupplement('');
+                      }
+                    }}
+                    className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </section>
+            
+{/* Biometrics */}
+            <section className={`${CARD} overflow-hidden`}>
+              <button 
+                onClick={() => setIsBiometricsOpen(!isBiometricsOpen)}
+                className="w-full flex items-center justify-between p-6 text-left active:bg-stone-800/50 transition-colors"
+              >
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Fine-tune your fueling</h3>
+                  <p className="text-xs text-stone-400 mt-1 font-medium">Optional — helps us personalize carb and calorie targets to your body.</p>
+                </div>
+                {isBiometricsOpen ? (
+                  <ChevronUp className="w-5 h-5 text-stone-400 shrink-0" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-stone-400 shrink-0" />
+                )}
+              </button>
+              
+              {isBiometricsOpen && (
+                <div className="px-6 pb-6 pt-2 border-t border-stone-800/50">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-stone-300 mb-1 block">Age</label>
+                      <input 
+                        type="number"
+                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                        value={person.age || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? Number(e.target.value) : undefined;
+                          updateHouseholdMember({ ...person, age: value });
+                          
+                        }}
+                        placeholder="e.g. 30"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-stone-300 mb-1 block">Biological Sex</label>
+                      <div className="flex gap-2">
+                        {BIOLOGICAL_SEX_OPTIONS.map(sex => (
+                          <button
+                            key={sex}
+                            onClick={() => {
+                              updateHouseholdMember({ ...person, biologicalSex: sex });
+                              
+                            }}
+                            className={`flex-1 py-2 rounded-lg text-xs font-medium capitalize transition-all active:scale-[0.98] border ${
+                              person.biologicalSex === sex
+                                ? 'bg-orange-500/10 border-[#FC5200] text-[#FC5200]'
+                                : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700 hover:text-white'
+                            }`}
+                          >
+                            {sex}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-stone-300 mb-1 block">Height (cm)</label>
+                      <input 
+                        type="number"
+                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                        value={person.heightCm || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? Number(e.target.value) : undefined;
+                          updateHouseholdMember({ ...person, heightCm: value });
+                          
+                        }}
+                        placeholder="e.g. 175"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-stone-300 mb-1 block">Weight (kg)</label>
+                      <input 
+                        type="number"
+                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                        value={person.weightKg || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? Number(e.target.value) : undefined;
+                          updateHouseholdMember({ ...person, weightKg: value });
+                          
+                        }}
+                        placeholder="e.g. 70"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* Skill Level */}
+            <section className={`${CARD} p-6`}>
+              <div className="flex items-center gap-2 mb-4">
+                <ChefHat className="w-4 h-4 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Cooking Skill Level</h2>
+              </div>
+              <div className="flex gap-2">
+                {SKILL_OPTIONS.map(skill => (
+                  <button
+                    key={skill}
+                    onClick={() => {
+                      updateHouseholdMember({ ...person, skillLevel: skill });
+                      
+                    }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
+                      person.skillLevel === skill
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Max Cooking Time */}
+            <section className={`${CARD} p-6`}>
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-4 h-4 text-[#FC5200]" />
+                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Max Cooking Time</h2>
+              </div>
+              <div className="flex gap-2">
+                {TIME_OPTIONS.map(time => (
+                  <button
+                    key={time}
+                    onClick={() => {
+                      updateHouseholdMember({ ...person, maxCookingTime: time });
+                      
+                    }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
+                      person.maxCookingTime === time
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                    }`}
+                  >
+                    {time} min
+                  </button>
+                ))}
+              </div>
+            </section>
+
+
+                  <section className={`${CARD} p-6`}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Heart className="w-4 h-4 text-rose-500" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Favorite Cuisines</h2>
+                    </div>
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newFavoriteCuisine.trim()) return;
+                        if (!person.favoriteCuisines.includes(newFavoriteCuisine.trim())) {
+                          updateHouseholdMember({
+                            ...person,
+                            favoriteCuisines: [...person.favoriteCuisines, newFavoriteCuisine.trim()]
+                          });
+                        }
+                        setNewFavoriteCuisine('');
+                      }}
+                      className="flex gap-2 mb-3"
+                    >
+                      <input 
+                        type="text" 
+                        value={newFavoriteCuisine}
+                        onChange={e => setNewFavoriteCuisine(e.target.value)}
+                        placeholder="Add other cuisine..."
+                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
+                      />
+                      <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
+                    </form>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set([...CUISINE_OPTIONS, ...person.favoriteCuisines])).map(cuisine => (
+                        <button
+                          key={cuisine}
+                          onClick={() => {
+                            updateHouseholdMember({
+                              ...person,
+                              favoriteCuisines: person.favoriteCuisines.includes(cuisine) 
+                                ? person.favoriteCuisines.filter(c => c !== cuisine)
+                                : [...person.favoriteCuisines, cuisine]
+                            });
+                          }}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
+                            person.favoriteCuisines.includes(cuisine)
+                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                          }`}
+                        >
+                          {cuisine}
+                          {person.favoriteCuisines.includes(cuisine) && !CUISINE_OPTIONS.includes(cuisine) && (
+                            <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className={`${CARD} p-6 relative overflow-hidden`}>
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <div className="flex items-center gap-2 mb-4 pl-2">
+                      <Activity className="w-4 h-4 text-blue-500" />
+                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Medical & Health Conditions</h2>
+                    </div>
+                    <p className="text-xs text-stone-500 mb-4 pl-2">Tap to select any conditions you have. We'll strict-filter recipes to accommodate your needs.</p>
+                    <div className="pl-2">
+                      <form 
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (!newHealthCondition.trim()) return;
+                          if (!(person.healthConditions || []).includes(newHealthCondition.trim())) {
+                            updateHouseholdMember({
+                              ...person,
+                              healthConditions: [...(person.healthConditions || []), newHealthCondition.trim()]
+                            });
+                          }
+                          setNewHealthCondition('');
+                        }}
+                        className="flex gap-2 mb-3"
+                      >
+                        <input 
+                          type="text" 
+                          value={newHealthCondition}
+                          onChange={e => setNewHealthCondition(e.target.value)}
+                          placeholder="Add other condition..."
+                          className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-white placeholder:text-stone-400"
+                        />
+                        <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
+                      </form>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(new Set([...HEALTH_CONDITIONS, ...(person.healthConditions || [])])).map(condition => (
+                          <button
+                            key={condition}
+                            onClick={() => {
+                              updateHouseholdMember({
+                                ...person,
+                                healthConditions: (person.healthConditions || []).includes(condition) 
+                                  ? (person.healthConditions || []).filter(c => c !== condition)
+                                  : [...(person.healthConditions || []), condition]
+                              });
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
+                              (person.healthConditions || []).includes(condition)
+                                ? 'bg-blue-500 border-blue-500 text-white shadow-sm'
+                                : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-blue-500 hover:text-blue-600'
+                            }`}
+                          >
+                            {condition}
+                            {(person.healthConditions || []).includes(condition) && !HEALTH_CONDITIONS.includes(condition) && (
+                              <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+
+                  
