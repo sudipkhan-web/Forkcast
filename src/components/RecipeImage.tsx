@@ -16,7 +16,7 @@ export const RecipeImage: React.FC<RecipeImageProps> = ({ meal, className = '' }
     setIsLoading(true);
 
     const loadImage = async () => {
-      // If we see it's a pollinations URL, we'll override it with gemini-2.5-flash-image
+      // If we see it's a pollinations URL, we'll override it with gemini-3.6-flash-image
       // to ensure fast parallel generation and local caching.
       // If it's a completely static non-pollinations external image we could use it directly,
       // but ALL_MEALS uses pollinations too.

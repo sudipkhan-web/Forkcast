@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, RefreshCw, Sparkles, Share, Target, User, ChevronDown, Flame, Droplet, Plus, Minus, CheckCircle2, Circle } from 'lucide-react';
+import { Star, RefreshCw, Sparkles, Share, Target, User, ChevronDown, Flame, Droplet, Plus, Minus, CheckCircle2, Circle, Camera, Loader2 } from 'lucide-react';
 import { Group, PersonProfile, InventoryItem, UserProfile } from '../types';
 import { Meal, ALL_MEALS } from '../data/recipes';
 import { MealCard } from '../components/MealCard';
@@ -10,6 +10,9 @@ import { getPrimaryPerson } from '../utils/mealUtils';
 import { useAppContext } from '../context/AppContext';
 import { useToast } from '../components/Toast';
 import { getTodayMacros } from '../utils/progressUtils';
+import { arrayUnion } from 'firebase/firestore';
+import { MealPhotoConfirmModal } from '../components/MealPhotoConfirmModal';
+import { analyzeMealPhoto } from '../services/mealPhotoAnalyzer';
 import { NotificationBell } from '../components/NotificationBell';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, STEPPER } from '../styles/designTokens';
 import { TRAINING_DAY_OPTIONS } from '../constants';
@@ -72,6 +75,9 @@ export function HomeView({
 }: HomeViewProps) {
   const { showToast } = useToast();
   const [mealTypeFilter, setMealTypeFilter] = React.useState<string>('All');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isScanningMeal, setIsScanningMeal] = React.useState(false);
+  const [scannedMealPreview, setScannedMealPreview] = React.useState<any | null>(null);
   const [trainingDayType, setTrainingDayType] = React.useState<string | null>(null);
   const [trainingFeeling, setTrainingFeeling] = React.useState<'strong' | 'ok' | 'rough' | 'dnf' | null>(null);
   const [waterMl, setWaterMl] = React.useState<number>(0);
@@ -99,6 +105,103 @@ export function HomeView({
     }
   };
 
+
+
+  const handleMealPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanningMeal(true);
+    try {
+      const rawDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+      });
+
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = (err) => reject(err);
+        img.src = rawDataUrl;
+      });
+
+      const maxDim = 1600;
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+      }
+      
+      const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const parts = resizedDataUrl.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const finalMime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      const base64Data = parts[1];
+
+      const result = await analyzeMealPhoto(base64Data, finalMime);
+      
+      if (result && result.name) {
+        setScannedMealPreview({
+          ...result,
+          imageBase64: resizedDataUrl
+        });
+      } else {
+        throw new Error("Could not identify meal");
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(`Error: ${err.message || "Failed to analyze photo."}`, "error");
+    } finally {
+      setIsScanningMeal(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+    const handleConfirmMealPhoto = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number }) => {
+    if (!auth.currentUser || !scannedMealPreview) return;
+        
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, today);
+            
+      const newMeal = {
+        id: crypto.randomUUID(),
+        name: data.name,
+        calories: data.calories,
+        carbsGrams: data.carbsGrams,
+        proteinGrams: data.proteinGrams,
+        fatGrams: data.fatGrams,
+        mealType: 'Snack', // Default to snack
+        image: scannedMealPreview.imageBase64,
+        source: 'photo-log'
+      };
+            
+      await setDoc(logRef, {
+        acceptedMeals: arrayUnion(newMeal)
+      }, { merge: true });
+            
+      showToast(`Meal logged! Added ${data.name} (${data.calories} kcal)`, "success");
+      setScannedMealPreview(null);
+    } catch (err: any) {
+      console.error(err);
+      showToast("Failed to save meal log.", "error");
+    }
+  };
 
   const handleUpdateFeeling = async (feeling: 'strong' | 'ok' | 'rough' | 'dnf') => {
     setTrainingFeeling(feeling);
@@ -285,6 +388,35 @@ export function HomeView({
         </div>
 
         
+        
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <Camera className="w-4 h-4 text-stone-400" />
+            <span className="text-xs font-semibold text-stone-300">Log a meal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment" 
+              ref={fileInputRef} 
+              className="hidden" 
+              onChange={handleMealPhotoUpload} 
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isScanningMeal}
+              className="px-3 py-1.5 bg-[#FC5200] hover:bg-orange-600 rounded-lg text-[10px] font-bold text-white transition-colors active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center gap-1"
+            >
+              {isScanningMeal ? (
+                <><Loader2 className="w-3 h-3 animate-spin" /> Scanning</>
+              ) : (
+                <><Camera className="w-3 h-3" /> Scan</>
+              )}
+            </button>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
             <Droplet className="w-4 h-4 text-blue-400" />
@@ -495,6 +627,19 @@ export function HomeView({
           Generating recipes tailored to your precise preferences may take a few minutes running in the background.
         </p>
       </div>
+
+      {scannedMealPreview && (
+        <MealPhotoConfirmModal
+          isOpen={!!scannedMealPreview}
+          initialData={scannedMealPreview}
+          onConfirm={handleConfirmMealPhoto}
+          onCancel={() => setScannedMealPreview(null)}
+        />
+      )}
+
+
+
+
     </motion.div>
   );
 }

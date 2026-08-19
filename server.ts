@@ -6,6 +6,7 @@ import {
   serverGenerateSmartStaples, 
   serverGenerateRecipes, 
   serverGenerateRecipeImage,
+  serverAnalyzeMealPhoto,
   getCuratedFallbackRecipes
 } from "./src/services/geminiServer";
 
@@ -28,6 +29,20 @@ async function startServer() {
     } catch (error: any) {
       console.warn("[SERVER] Notice during inventory scanning / image analysis:", error?.message || error);
       res.json([]);
+    }
+  });
+
+  app.post("/api/meals/analyze-photo", async (req, res) => {
+    try {
+      const { base64Image, mimeType } = req.body;
+      if (!base64Image || !mimeType) {
+        return res.status(400).json({ error: "Missing base64Image or mimeType in request body." });
+      }
+      const result = await serverAnalyzeMealPhoto(base64Image, mimeType);
+      res.json(result);
+    } catch (error: any) {
+      console.warn("[SERVER] Notice during meal photo analysis:", error?.message || error);
+      res.json(null);
     }
   });
 
