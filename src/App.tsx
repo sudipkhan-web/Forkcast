@@ -1487,6 +1487,8 @@ function MainApp() {
       <AnimatePresence>
         {activeTab === 'plan' && (
           <PlanView
+            
+            household={household}
             plannedMeals={plannedMeals}
             globalRecipes={globalRecipes}
             setPlannedMeals={setPlannedMeals}

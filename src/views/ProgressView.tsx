@@ -1,11 +1,7 @@
-import toast from 'react-hot-toast';
-import { auth, db } from '../firebase';
-import { doc, setDoc, arrayUnion } from 'firebase/firestore';
-import { MealPhotoConfirmModal } from '../components/MealPhotoConfirmModal';
 import React from 'react';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
 import { motion } from 'motion/react';
-import { Flame, Target, User, Droplet, Activity, Plus } from 'lucide-react';
+import { Flame, Target, User } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { getProgressStats, getFuelingPerformanceCorrelation } from '../utils/progressUtils';
 import { getPrimaryPerson } from '../utils/mealUtils';
@@ -21,40 +17,11 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
   
   const { weeklyCoverage, currentStreak, carbTrend, proteinTrend, fatTrend } = getProgressStats(trainingLogs, primaryPerson?.weightKg);
   const [activeMacro, setActiveMacro] = React.useState<'carbs' | 'protein' | 'fat'>('carbs');
-  const [manualMealDate, setManualMealDate] = React.useState<string | null>(null);
   const activeTrend = activeMacro === 'carbs' ? carbTrend : activeMacro === 'protein' ? proteinTrend : fatTrend;
   const correlation = getFuelingPerformanceCorrelation(trainingLogs, primaryPerson?.weightKg);
   
   
-  const handleConfirmManualMeal = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => {
-    if (!auth.currentUser) return;
-    
-    try {
-      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, data.date);
-      
-      const newMeal = {
-        recipeId: crypto.randomUUID(),
-        name: data.name,
-        calories: data.calories,
-        carbsGrams: data.carbsGrams,
-        proteinGrams: data.proteinGrams,
-        fatGrams: data.fatGrams,
-        mealType: data.mealType,
-        loggedAt: new Date().toISOString()
-      };
-
-      await setDoc(logRef, {
-        acceptedMeals: arrayUnion(newMeal)
-      }, { merge: true });
-      
-      toast.success("Meal logged successfully!");
-      setManualMealDate(null);
-    } catch (err: any) {
-      console.error(err);
-      toast.error(`Error: ${err.message || "Failed to log meal."}`);
-    }
-  };
-
+  
   let daysRemaining: number | null = null;
   if (primaryPerson?.raceDate) {
     const timeDiff = new Date(primaryPerson?.raceDate).getTime() - new Date().getTime();
@@ -241,108 +208,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
             </div>
           </div>
         </div>
-
       </div>
-
-        {/* History Section */}
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-4 px-6">
-            <h2 className="text-lg font-display font-bold text-white tracking-tight">History</h2>
-          </div>
-          
-          <div className="px-6 flex flex-col gap-4">
-            {Object.keys(trainingLogs || {})
-              .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-              .slice(0, 14)
-              .map(dateKey => {
-                const log = trainingLogs[dateKey];
-                if (!log) return null;
-                
-                const meals = log.acceptedMeals || [];
-                const water = log.waterMl;
-                const supplements = log.supplementsTaken || [];
-                
-                if (meals.length === 0 && !water && supplements.length === 0) {
-                  return null;
-                }
-                
-                const groupedMeals = meals.reduce((acc, meal) => {
-                  const type = meal.mealType || 'Snack';
-                  if (!acc[type]) acc[type] = [];
-                  acc[type].push(meal);
-                  return acc;
-                }, {} as Record<string, typeof meals>);
-                
-                const dateObj = new Date(dateKey + 'T12:00:00');
-                const isToday = dateKey === new Date().toISOString().split('T')[0];
-                const dateString = isToday ? 'Today' : dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-
-                return (
-                  <div key={dateKey} className={`${CARD} p-5 flex flex-col gap-4`}>
-                    <div className="flex items-center justify-between">
-    <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider">{dateString}</h3>
-    <button 
-      onClick={() => setManualMealDate(dateKey)}
-      className="p-1 text-stone-400 hover:text-white transition-colors"
-    >
-      <Plus className="w-4 h-4" />
-    </button>
-  </div>
-                    
-                    {['Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => {
-                      const typeMeals = groupedMeals[type];
-                      if (!typeMeals || typeMeals.length === 0) return null;
-                      
-                      return (
-                        <div key={type} className="flex flex-col gap-2">
-                          <h4 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">{type}</h4>
-                          <div className="flex flex-col gap-2">
-                            {typeMeals.map((meal, idx) => (
-                              <div key={idx} className="flex flex-col bg-stone-900/50 rounded-lg p-3 border border-stone-800/50">
-                                <span className="text-sm font-medium text-stone-200 mb-1">{meal.name}</span>
-                                <span className="text-[10px] font-mono text-stone-500 uppercase tracking-wider">
-                                  {meal.calories}kcal • {meal.proteinGrams}g P • {meal.carbsGrams}g C • {meal.fatGrams}g F
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    
-                    {(water || supplements.length > 0) && (
-                      <div className="pt-3 border-t border-stone-800/50 flex flex-col gap-2">
-                        {water ? (
-                          <div className="flex items-center gap-2">
-                            <Droplet className="w-3.5 h-3.5 text-blue-400" />
-                            <span className="text-xs text-stone-300">{water} ml logged</span>
-                          </div>
-                        ) : null}
-                        
-                        {supplements.length > 0 ? (
-                          <div className="flex items-start gap-2">
-                            <Activity className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                            <span className="text-xs text-stone-300">{supplements.join(', ')}</span>
-                          </div>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-
-      {manualMealDate && (
-        <MealPhotoConfirmModal
-          isOpen={!!manualMealDate}
-          initialData={null}
-          initialDate={manualMealDate}
-          onConfirm={handleConfirmManualMeal}
-          onCancel={() => setManualMealDate(null)}
-        />
-      )}
-
-      </motion.div>
+    </motion.div>
   );
 }

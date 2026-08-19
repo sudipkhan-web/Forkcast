@@ -1,16 +1,12 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-if (!code.includes('Toaster')) {
-  code = code.replace(
-    /import \{ AppProvider \} from '\.\/context\/AppContext';/,
-    "import { AppProvider } from './context/AppContext';\nimport { Toaster } from 'react-hot-toast';"
-  );
-  
-  code = code.replace(
-    /<AppProvider>/,
-    "<AppProvider>\n      <Toaster position=\"top-center\" toastOptions={{ style: { background: '#1C1C1E', color: '#fff' } }} />"
-  );
-  fs.writeFileSync('src/App.tsx', code);
-  console.log("Added Toaster to App.tsx");
-}
+// I might have referenced trainingLogs before it was defined or destructured in App.tsx! 
+// Let's use the context that App.tsx doesn't have `trainingLogs` locally, it's inside `AppContext`.
+// Let's remove passing it from App.tsx entirely because PlanView is ALREADY calling `useAppContext()` inside itself!
+code = code.replace(
+  /<PlanView\n\s*trainingLogs=\{trainingLogs\?\.\w+.*\} \|\| \{\}\}\n\s*household=\{household\}\n\s*plannedMeals=\{plannedMeals\}/,
+  "<PlanView\n            plannedMeals={plannedMeals}"
+);
+
+fs.writeFileSync('src/App.tsx', code);
