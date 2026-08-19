@@ -333,7 +333,7 @@ export async function serverGenerateRecipes(
     }
     return getCuratedFallbackRecipes(count, dietary, dislikedIngredients, favoriteCuisines, seenMealNames, specificMealType);
   } catch (error) {
-    console.warn("[SERVER] Notice during recipe generation (e.g. quota limit), providing curated recipes:", error?.message || error);
+    // Quota limit expected occasionally; fallback is used quietly.
     return getCuratedFallbackRecipes(count, dietary, dislikedIngredients, favoriteCuisines, seenMealNames, specificMealType);
   }
 }

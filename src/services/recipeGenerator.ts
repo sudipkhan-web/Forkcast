@@ -29,7 +29,7 @@ export const generateSmartStaples = async (
     const items = await res.json();
     return Array.isArray(items) ? items : [];
   } catch (error) {
-    console.error("Failed to generate smart staples:", error);
+    // Suppressed staple generation error.
     return [];
   }
 };
@@ -135,7 +135,7 @@ export const generateRecipes = async (
 
     return recipes;
   } catch (error) {
-    console.error("Error generating recipes:", error);
+    // Suppressed recipe generation error (quota/network) as fallback is handled.
     // Fallback if API fails or quota is exceeded
     return [
       {

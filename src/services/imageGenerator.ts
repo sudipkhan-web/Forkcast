@@ -44,7 +44,7 @@ export const getOrGenerateRecipeImage = async (recipeId: string, recipeName: str
     const fallbackPrompt = `Professional food photography of ${recipeName}. ${cuisine ? cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
     return `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?width=800&height=800&nologo=true`;
   } catch (error) {
-    console.error("Failed to generate recipe image:", error);
+    // Image generation failed (e.g. network error, ad blocker, quota). Using fallback quietly.
     // Return a reliable fallback
     const fallbackPrompt = `Professional food photography of ${recipeName}. ${cuisine ? cuisine + ' cuisine. ' : ''}High quality, appetizing, delicious.`;
     return `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?width=800&height=800&nologo=true`;

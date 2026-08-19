@@ -48,14 +48,14 @@ export function ProfileView({
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [newDislikedIngredient, setNewDislikedIngredient] = useState('');
   const [newDietary, setNewDietary] = useState('');
-  const [isTrainingExpanded, setIsTrainingExpanded] = useState(false);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     const person = household.find(p => p.id === editingPersonId);
     if (person && person.raceType && person.raceType !== 'Not training for a race') {
-      setIsTrainingExpanded(true);
+      setExpandedCards(new Set(['race', 'finetune', 'supplements']));
     } else {
-      setIsTrainingExpanded(false);
+      setExpandedCards(new Set());
     }
   }, [editingPersonId, household]);
 
@@ -543,15 +543,27 @@ export function ProfileView({
             </section>
             
             {editingPersonId && (
-              <div className="pt-6 border-t border-stone-800 space-y-8 animate-in fade-in slide-in-from-bottom-4" id="member-settings">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-display font-bold text-white">
-                    Editing Member
-                  </h2>
-                  <button onClick={() => setEditingPersonId(null)} className={`${PRIMARY_BUTTON} px-4 py-2 text-sm`}>
-                    Close
-                  </button>
-                </div>
+          <AnimatePresence>
+            <motion.div 
+              initial={{ opacity: 0, y: "100%" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-0 z-50 bg-[#17181C] overflow-y-auto"
+            >
+              <div className="sticky top-0 z-10 bg-[#17181C]/95 backdrop-blur-xl border-b border-stone-800 px-6 py-4 flex items-center justify-between shrink-0">
+                <h2 className="text-xl font-display font-bold text-white">
+                  Editing Member
+                </h2>
+                <button onClick={() => setEditingPersonId(null)} className={`${PRIMARY_BUTTON} px-4 py-2 text-sm`}>
+                  Close
+                </button>
+              </div>
+              <div className="sticky top-[73px] z-10 bg-[#17181C]/95 backdrop-blur-xl border-b border-stone-800 px-6 py-2 flex items-center gap-4 shrink-0">
+                <button onClick={() => setExpandedCards(new Set(['skill', 'time', 'cuisines', 'dietary', 'disliked', 'medical', 'race', 'finetune', 'supplements']))} className="text-xs font-bold text-stone-400 hover:text-white uppercase tracking-wider">Expand All</button>
+                <button onClick={() => setExpandedCards(new Set())} className="text-xs font-bold text-stone-400 hover:text-white uppercase tracking-wider">Collapse All</button>
+              </div>
+              <div className="p-6 space-y-8">
                 {(() => {
               const person = household.find(p => p.id === editingPersonId);
               if (!person) return null;
@@ -572,12 +584,36 @@ export function ProfileView({
                     <h2 className="text-xs text-[#FC5200] uppercase tracking-widest font-bold">Cooking Preferences</h2>
                   </div>
                   <div className="flex flex-col gap-4">
-                    <section className={`${CARD} p-6`}>
-              <div className="flex items-center gap-2 mb-4">
-                <ChefHat className="w-4 h-4 text-[#FC5200]" />
-                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Cooking Skill Level</h2>
-              </div>
-              <div className="flex gap-2">
+                                <div className={`${CARD} overflow-hidden`}>
+              <button
+                onClick={() => {
+                  const newSet = new Set(expandedCards);
+                  if (newSet.has('skill')) newSet.delete('skill');
+                  else newSet.add('skill');
+                  setExpandedCards(newSet);
+                }}
+                className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <ChefHat className="w-4 h-4 text-[#FC5200]" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Cooking Skill Level</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-stone-400">{person.skillLevel}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('skill') ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              <AnimatePresence>
+                {expandedCards.has('skill') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                      <div className="flex gap-2">
                 {SKILL_OPTIONS.map(skill => (
                   <button
                     key={skill}
@@ -595,7 +631,11 @@ export function ProfileView({
                   </button>
                 ))}
               </div>
-            </section>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Max Cooking Time */}
             
@@ -688,12 +728,36 @@ export function ProfileView({
                     <h2 className="text-xs text-[#FC5200] uppercase tracking-widest font-bold">Dietary & Health</h2>
                   </div>
                   <div className="flex flex-col gap-4">
-                    <section className={`${CARD} p-6`}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Leaf className="w-4 h-4 text-[#FC5200]" />
-                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Dietary Preferences</h2>
-                    </div>
-                    <form 
+                                <div className={`${CARD} overflow-hidden`}>
+              <button
+                onClick={() => {
+                  const newSet = new Set(expandedCards);
+                  if (newSet.has('dietary')) newSet.delete('dietary');
+                  else newSet.add('dietary');
+                  setExpandedCards(newSet);
+                }}
+                className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Leaf className="w-4 h-4 text-[#FC5200]" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Dietary Preferences</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-stone-400">{person.dietary.length > 0 ? `${person.dietary.length} selected` : "None"}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('dietary') ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              <AnimatePresence>
+                {expandedCards.has('dietary') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                      <form 
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (!newDietary.trim()) return;
@@ -741,7 +805,11 @@ export function ProfileView({
                         </button>
                       ))}
                     </div>
-                  </section>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
                   
                     <section className={`${CARD} p-6`}>
@@ -863,29 +931,40 @@ export function ProfileView({
 
                   </div>
 
-                  <div className="mt-8 mb-4 flex items-center justify-between">
-                    <button 
-                      onClick={() => setIsTrainingExpanded(!isTrainingExpanded)}
-                      className="flex items-center gap-2 text-xs text-[#FC5200] uppercase tracking-widest font-bold focus:outline-none"
-                    >
-                      <span>Training & Fueling</span>
-                      {isTrainingExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
+                  <div className="mt-8 mb-4">
+                    <h2 className="text-xs text-[#FC5200] uppercase tracking-widest font-bold">Training & Fueling</h2>
                   </div>
-                  <AnimatePresence>
-                    {isTrainingExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="flex flex-col gap-4 overflow-hidden"
-                      >
-                        <section className={`${CARD} p-6`}>
-              <div className="flex items-center gap-2 mb-4">
-                <Activity className="w-4 h-4 text-[#FC5200]" />
-                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Race & Training Profile</h2>
-              </div>
-              <p className="text-xs text-stone-500 mb-4 leading-relaxed">
+                  <div className="flex flex-col gap-4">
+                                    <div className={`${CARD} overflow-hidden`}>
+              <button
+                onClick={() => {
+                  const newSet = new Set(expandedCards);
+                  if (newSet.has('race')) newSet.delete('race');
+                  else newSet.add('race');
+                  setExpandedCards(newSet);
+                }}
+                className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#FC5200]" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Race & Training Profile</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-stone-400">{person.raceType || "None"}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('race') ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              <AnimatePresence>
+                {expandedCards.has('race') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                      <p className="text-xs text-stone-500 mb-4 leading-relaxed">
                 Configure your race details. You'll set your daily training goal on the Home tab to get targeted recipes.
               </p>
               <div className="space-y-4">
@@ -937,7 +1016,11 @@ export function ProfileView({
                   </select>
                 </div>
               </div>
-            </section>\n
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>\n
                         {/* Supplements */}
             
                         <section className={`${CARD} overflow-hidden`}>
@@ -1089,9 +1172,7 @@ export function ProfileView({
             </section>\n
                         {/* Supplements */}
             
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                      </div>
 
                                     {household.length > 1 && (
                     <div className="pt-4">
@@ -1110,7 +1191,9 @@ export function ProfileView({
               );
             })()}
               </div>
-            )}
+            </motion.div>
+          </AnimatePresence>
+        )}
 
             <section className={`${CARD} p-6`}>
               <div className="flex items-center justify-between mb-2">
