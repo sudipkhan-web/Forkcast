@@ -1,28 +1,68 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/views/ProfileView.tsx', 'utf8');
 
-// We are going to find all the individual sections inside the `{(() => { const person = ...` block
-// and replace them with the grouped structure.
+const stateVars = `
+  const [newHealthCondition, setNewHealthCondition] = useState('');
+  const [newFavoriteCuisine, setNewFavoriteCuisine] = useState('');
+  const [newSupplement, setNewSupplement] = useState('');
+`;
 
-// We will cut the entire block from `<section className={\`\${CARD} p-6\`}>` (the first one is Dietary Preferences)
-// down to the bottom where `</>` is closed before `})()}`
+const newStateVars = `
+  const [newHealthCondition, setNewHealthCondition] = useState('');
+  const [newFavoriteCuisine, setNewFavoriteCuisine] = useState('');
+  const [newSupplement, setNewSupplement] = useState('');
 
-const startIdx = code.indexOf('<section className={`${CARD} p-6`}>\n                    <div className="flex items-center gap-2 mb-4">\n                      <Leaf className="w-4 h-4 text-[#FC5200]" />\n                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Dietary Preferences</h2>');
+  const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
+  const [dietarySuggestions, setDietarySuggestions] = useState<string[]>([]);
+  const [dislikedSuggestions, setDislikedSuggestions] = useState<string[]>([]);
+  const [healthConditionSuggestions, setHealthConditionSuggestions] = useState<string[]>([]);
+  
+  const cuisineDebounceRef = useRef<NodeJS.Timeout>();
+  const dietaryDebounceRef = useRef<NodeJS.Timeout>();
+  const dislikedDebounceRef = useRef<NodeJS.Timeout>();
+  const healthDebounceRef = useRef<NodeJS.Timeout>();
 
-if (startIdx === -1) {
-    console.error("Start section not found");
-    process.exit(1);
-}
+  useEffect(() => {
+    const term = newFavoriteCuisine.trim().toLowerCase();
+    if (!term) { setCuisineSuggestions([]); return; }
+    if (cuisineDebounceRef.current) clearTimeout(cuisineDebounceRef.current);
+    cuisineDebounceRef.current = setTimeout(() => {
+      setCuisineSuggestions(CUISINE_OPTIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
+    }, 250);
+    return () => { if (cuisineDebounceRef.current) clearTimeout(cuisineDebounceRef.current); };
+  }, [newFavoriteCuisine]);
 
-// Find the end of the block.
-const endBlockString = '            </motion.div>\n          </>\n        ) : (\n          <div className="flex flex-col gap-6">\n';
-const endIdx = code.indexOf(endBlockString);
+  useEffect(() => {
+    const term = newDietary.trim().toLowerCase();
+    if (!term) { setDietarySuggestions([]); return; }
+    if (dietaryDebounceRef.current) clearTimeout(dietaryDebounceRef.current);
+    dietaryDebounceRef.current = setTimeout(() => {
+      setDietarySuggestions(DIETARY_OPTIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
+    }, 250);
+    return () => { if (dietaryDebounceRef.current) clearTimeout(dietaryDebounceRef.current); };
+  }, [newDietary]);
 
-if (endIdx === -1) {
-    console.error("End section not found");
-    process.exit(1);
-}
+  useEffect(() => {
+    const term = newDislikedIngredient.trim().toLowerCase();
+    if (!term) { setDislikedSuggestions([]); return; }
+    if (dislikedDebounceRef.current) clearTimeout(dislikedDebounceRef.current);
+    dislikedDebounceRef.current = setTimeout(() => {
+      const allDisliked = Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...Object.keys(customIngredientRules || {})]));
+      setDislikedSuggestions(allDisliked.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
+    }, 250);
+    return () => { if (dislikedDebounceRef.current) clearTimeout(dislikedDebounceRef.current); };
+  }, [newDislikedIngredient, customIngredientRules]);
 
-const originalBlock = code.substring(startIdx, endIdx);
-fs.writeFileSync('original_block.txt', originalBlock);
-console.log("Extracted original block. Length:", originalBlock.length);
+  useEffect(() => {
+    const term = newHealthCondition.trim().toLowerCase();
+    if (!term) { setHealthConditionSuggestions([]); return; }
+    if (healthDebounceRef.current) clearTimeout(healthDebounceRef.current);
+    healthDebounceRef.current = setTimeout(() => {
+      setHealthConditionSuggestions(HEALTH_CONDITIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
+    }, 250);
+    return () => { if (healthDebounceRef.current) clearTimeout(healthDebounceRef.current); };
+  }, [newHealthCondition]);
+`;
+
+code = code.replace(stateVars, newStateVars);
+fs.writeFileSync('src/views/ProfileView.tsx', code);

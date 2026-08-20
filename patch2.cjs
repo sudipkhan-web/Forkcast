@@ -1,101 +1,19 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/views/ProfileView.tsx', 'utf8');
 
-const targetStr = `              </AnimatePresence>
-            </div>
-                        {/* Supplements */}
-              
-                      </div>
-  
-                                    {household.length > 1 && (
-                    <div className="pt-4">
-                      <button
-                        onClick={() => {
-                          deleteHouseholdMember(person.id);
-                          setEditingPersonId(null);
-                        }}
-                        className="w-full py-4 bg-red-500/10 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-500/20 transition-all active:scale-[0.98] border border-red-500/20"
-                      >
-                        Delete Member
-                      </button>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        )}
-            <div className={\`\${CARD} overflow-hidden\`}>
-              <button
-                onClick={() => {
-                  const newSet = new Set(expandedCards);
-                  if (newSet.has('fueling')) newSet.delete('fueling');
-                  else newSet.add('fueling');
-                  setExpandedCards(newSet);
-                }}
-                className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-500" />
-                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Fine-tune your fueling</h2>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-stone-400">{person.finetuneFueling?.length > 0 ? \`\${person.finetuneFueling.length} selected\` : "None"}</span>
-                  <ChevronRight className={\`w-4 h-4 text-stone-500 transition-transform duration-200 \${expandedCards.has('fueling') ? 'rotate-90' : ''}\`} />
-                </div>
-              </button>
-              <AnimatePresence>
-                {expandedCards.has('fueling') && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
-                      <button 
-                  onClick={() => {
-                    const newId = \`g\${Date.now()}\`;
-                    const newGroup: Group = { id: newId, name: 'New Group', memberIds: [] };
-                    updateGroup(newGroup);
-                    setEditingGroupId(newId);
-                  }}
-                  className="text-[#FC5200] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
-                >
-                  <Plus className="w-4 h-4" /> Add
-                </button>
-              </div>
-              <p className="text-sm text-stone-500 mb-4">
-                Create groups like "Family" or "Friends" to quickly select who you are cooking for.
-              </p>
-              <div className="space-y-4">
-                {groups.map(group => (
-                  <div key={group.id} className={\`\${CARD} p-5 flex items-center justify-between\`}>
-                    <div>
-                      <h3 className="font-display font-bold text-white">{group.name}</h3>
-                      <p className="text-xs text-stone-500 mt-1">
-                        {group.memberIds.length} member{group.memberIds.length !== 1 ? 's' : ''}
-                        {group.memberIds.length > 0 && \` • \${group.memberIds.map(id => household.find(h => h.id === id)?.name).filter(Boolean).join(', ')}\`}
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => setEditingGroupId(group.id)}
-                      className={\`\${ICON_BUTTON}\`}>
-                      <Settings className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>`;
+// Find the start of the broken block (after Race card)
+const startMatch = `              </AnimatePresence>\n            </div>\n                        {/* Supplements */}`;
+const endMatch = `              </AnimatePresence>\n            </div>\n            <section className="pt-4 border-t border-stone-800 mt-8">`;
 
-const replacementStr = `              </AnimatePresence>
+const startIdx = code.indexOf(startMatch);
+const endIdx = code.indexOf(endMatch);
+
+if (startIdx !== -1 && endIdx !== -1) {
+  const finalEnd = endIdx + `              </AnimatePresence>\n            </div>`.length;
+  
+  // Create our replacement
+  // We'll just define the string literal here:
+  const rep = `              </AnimatePresence>
             </div>
 
             <div className={\`\${CARD} overflow-hidden\`}>
@@ -332,10 +250,9 @@ const replacementStr = `              </AnimatePresence>
     ))}
   </div>`;
 
-if (code.includes(targetStr)) {
-  fs.writeFileSync('src/views/ProfileView.tsx', code.replace(targetStr, replacementStr));
-  console.log("Successfully replaced block.");
+  const newCode = code.substring(0, startIdx) + rep + code.substring(finalEnd);
+  fs.writeFileSync('src/views/ProfileView.tsx', newCode);
+  console.log("Successfully replaced block using start/end markers.");
 } else {
-  console.log("Could not find target block! Writing debug files.");
-  fs.writeFileSync('/tmp/targetStr.txt', targetStr);
+  console.log("Failed to find start or end marker");
 }

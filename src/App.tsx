@@ -1392,6 +1392,7 @@ function MainApp() {
             handleSelectGroup={handleSelectGroup}
             profile={profile}
             setProfile={setProfile}
+            customIngredientRules={customIngredientRules}
           />
         )}
       </AnimatePresence>

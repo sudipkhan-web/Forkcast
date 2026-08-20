@@ -1,37 +1,24 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/views/ProfileView.tsx', 'utf8');
 
-// Update imports
+// Update Interface
 code = code.replace(
-  "import { Meal } from '../data/recipes';",
-  "import { Meal, ALL_MEALS } from '../data/recipes';"
+  "  setProfile: React.Dispatch<React.SetStateAction<UserProfile>>;\n}",
+  "  setProfile: React.Dispatch<React.SetStateAction<UserProfile>>;\n  customIngredientRules?: Record<string, any>;\n}"
+);
+code = code.replace(
+  "  setProfile: React.Dispatch<React.SetStateAction<UserProfile>>;\r\n}",
+  "  setProfile: React.Dispatch<React.SetStateAction<UserProfile>>;\r\n  customIngredientRules?: Record<string, any>;\r\n}"
 );
 
-if (!code.includes("import { getOrGenerateRecipeImage }")) {
-  code = code.replace(
-    "import { initNotifications } from '../services/notificationService';",
-    "import { initNotifications } from '../services/notificationService';\nimport { getOrGenerateRecipeImage } from '../services/imageGenerator';"
-  );
-}
-
-// Update the inline pre-populate handler
-const oldInline = `              <button
-                onClick={async () => {
-                  try {
-                    const { doc, setDoc } = await import('firebase/firestore');
-                    const { db } = await import('../firebase');
-                    const { ALL_MEALS } = await import('../data/recipes');
-                    const { getOrGenerateRecipeImage } = await import('../services/imageGenerator');
-                    
-                    alert('Starting database pre-population. This will take a moment.');
-                    for (const meal of ALL_MEALS) {`;
-
-const newInline = `              <button
-                onClick={async () => {
-                  try {
-                    alert('Starting database pre-population. This will take a moment.');
-                    for (const meal of ALL_MEALS) {`;
-
-code = code.replace(oldInline, newInline);
+// Update destructuring
+code = code.replace(
+  "  handleSelectGroup,\n  profile,\n  setProfile\n}: ProfileViewProps) {",
+  "  handleSelectGroup,\n  profile,\n  setProfile,\n  customIngredientRules\n}: ProfileViewProps) {"
+);
+code = code.replace(
+  "  handleSelectGroup,\r\n  profile,\r\n  setProfile\r\n}: ProfileViewProps) {",
+  "  handleSelectGroup,\r\n  profile,\r\n  setProfile,\r\n  customIngredientRules\r\n}: ProfileViewProps) {"
+);
 
 fs.writeFileSync('src/views/ProfileView.tsx', code);

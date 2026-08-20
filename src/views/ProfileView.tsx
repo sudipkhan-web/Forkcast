@@ -28,6 +28,7 @@ interface ProfileViewProps {
   handleSelectGroup: (id: string) => void;
   profile: UserProfile;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile>>;
+  customIngredientRules?: Record<string, any>;
 }
 
 export function ProfileView({
@@ -44,7 +45,8 @@ export function ProfileView({
   selectedGroupId,
   handleSelectGroup,
   profile,
-  setProfile
+  setProfile,
+  customIngredientRules
 }: ProfileViewProps) {
   const [editingPersonId, setEditingPersonId] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export function ProfileView({
   React.useEffect(() => {
     const person = household.find(p => p.id === editingPersonId);
     if (person && person.raceType && person.raceType !== 'Not training for a race') {
-      setExpandedCards(new Set(['race', 'finetune', 'supplements']));
+      setExpandedCards(new Set(['race', 'fueling', 'supplements']));
     } else {
       setExpandedCards(new Set());
     }
@@ -64,6 +66,57 @@ export function ProfileView({
   const [newHealthCondition, setNewHealthCondition] = useState('');
   const [newFavoriteCuisine, setNewFavoriteCuisine] = useState('');
   const [newSupplement, setNewSupplement] = useState('');
+
+  const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
+  const [dietarySuggestions, setDietarySuggestions] = useState<string[]>([]);
+  const [dislikedSuggestions, setDislikedSuggestions] = useState<string[]>([]);
+  const [healthConditionSuggestions, setHealthConditionSuggestions] = useState<string[]>([]);
+  
+  const cuisineDebounceRef = useRef<NodeJS.Timeout>();
+  const dietaryDebounceRef = useRef<NodeJS.Timeout>();
+  const dislikedDebounceRef = useRef<NodeJS.Timeout>();
+  const healthDebounceRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    const term = newFavoriteCuisine.trim().toLowerCase();
+    if (!term) { setCuisineSuggestions([]); return; }
+    if (cuisineDebounceRef.current) clearTimeout(cuisineDebounceRef.current);
+    cuisineDebounceRef.current = setTimeout(() => {
+      setCuisineSuggestions(CUISINE_OPTIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
+    }, 250);
+    return () => { if (cuisineDebounceRef.current) clearTimeout(cuisineDebounceRef.current); };
+  }, [newFavoriteCuisine]);
+
+  useEffect(() => {
+    const term = newDietary.trim().toLowerCase();
+    if (!term) { setDietarySuggestions([]); return; }
+    if (dietaryDebounceRef.current) clearTimeout(dietaryDebounceRef.current);
+    dietaryDebounceRef.current = setTimeout(() => {
+      setDietarySuggestions(DIETARY_OPTIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
+    }, 250);
+    return () => { if (dietaryDebounceRef.current) clearTimeout(dietaryDebounceRef.current); };
+  }, [newDietary]);
+
+  useEffect(() => {
+    const term = newDislikedIngredient.trim().toLowerCase();
+    if (!term) { setDislikedSuggestions([]); return; }
+    if (dislikedDebounceRef.current) clearTimeout(dislikedDebounceRef.current);
+    dislikedDebounceRef.current = setTimeout(() => {
+      const allDisliked = Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...Object.keys(customIngredientRules || {})]));
+      setDislikedSuggestions(allDisliked.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
+    }, 250);
+    return () => { if (dislikedDebounceRef.current) clearTimeout(dislikedDebounceRef.current); };
+  }, [newDislikedIngredient, customIngredientRules]);
+
+  useEffect(() => {
+    const term = newHealthCondition.trim().toLowerCase();
+    if (!term) { setHealthConditionSuggestions([]); return; }
+    if (healthDebounceRef.current) clearTimeout(healthDebounceRef.current);
+    healthDebounceRef.current = setTimeout(() => {
+      setHealthConditionSuggestions(HEALTH_CONDITIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
+    }, 250);
+    return () => { if (healthDebounceRef.current) clearTimeout(healthDebounceRef.current); };
+  }, [newHealthCondition]);
   const [isConfirmingSignOut, setIsConfirmingSignOut] = useState(false);
   const [isEnableModalOpen, setIsEnableModalOpen] = useState(false);
   const [isBiometricsOpen, setIsBiometricsOpen] = useState(false);
@@ -159,16 +212,40 @@ export function ProfileView({
                       type="text" 
                       value={group.name}
                       onChange={e => updateGroup({ ...group, name: e.target.value })}
-                      className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white transition-all"
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white transition-all"
                     />
                   </div>
 
-                  <section className={`${CARD} p-6`}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Users className="w-4 h-4 text-[#FC5200]" />
-                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Group Members</h2>
-                    </div>
-                    <div className="space-y-2">
+                  <div className={`${CARD} overflow-hidden`}>
+              <button
+                onClick={() => {
+                  const newSet = new Set(expandedCards);
+                  if (newSet.has('disliked')) newSet.delete('disliked');
+                  else newSet.add('disliked');
+                  setExpandedCards(newSet);
+                }}
+                className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <ThumbsDown className="w-4 h-4 text-red-500" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Disliked Ingredients</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-stone-400">{person.dislikedIngredients?.length > 0 ? `${person.dislikedIngredients.length} selected` : "None"}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('disliked') ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              <AnimatePresence>
+                {expandedCards.has('disliked') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                      <div className="space-y-2">
                       {household.map(person => (
                         <label key={person.id} className="flex items-center gap-3 p-3 rounded-xl border border-stone-800 hover:bg-stone-900 cursor-pointer transition-colors">
                           <input
@@ -186,7 +263,11 @@ export function ProfileView({
                         </label>
                       ))}
                     </div>
-                  </section>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
                   <div className="pt-4">
                     <button
@@ -228,7 +309,7 @@ export function ProfileView({
                       setDoc(doc(db, 'users', auth.currentUser.uid), { email }, { merge: true });
                     }
                   }}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white transition-all"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white transition-all"
                 />
               </div>
               <button
@@ -562,7 +643,7 @@ export function ProfileView({
                 </button>
               </div>
               <div className="sticky top-[73px] z-10 bg-[#17181C]/95 backdrop-blur-xl border-b border-stone-800 px-6 py-2 flex items-center gap-4 shrink-0">
-                <button onClick={() => setExpandedCards(new Set(['skill', 'time', 'cuisines', 'dietary', 'disliked', 'medical', 'race', 'finetune', 'supplements']))} className="text-xs font-bold text-stone-400 hover:text-white uppercase tracking-wider">Expand All</button>
+                <button onClick={() => setExpandedCards(new Set(['skill', 'dietary', 'race', 'disliked', 'supplements', 'fueling', 'cookingTime', 'cuisines', 'medical']))} className="text-xs font-bold text-stone-400 hover:text-white uppercase tracking-wider">Expand All</button>
                 <button onClick={() => setExpandedCards(new Set())} className="text-xs font-bold text-stone-400 hover:text-white uppercase tracking-wider">Collapse All</button>
               </div>
               <div className="p-6 space-y-8">
@@ -577,7 +658,7 @@ export function ProfileView({
                       type="text" 
                       value={person.name}
                       onChange={e => updateHouseholdMember({ ...person, name: e.target.value })}
-                      className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white transition-all"
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white transition-all"
                     />
                   </div>
 
@@ -641,12 +722,36 @@ export function ProfileView({
 
             {/* Max Cooking Time */}
             
-                    <section className={`${CARD} p-6`}>
-              <div className="flex items-center gap-2 mb-4">
-                <ChefHat className="w-4 h-4 text-[#FC5200]" />
-                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Cooking Skill Level</h2>
-              </div>
-              <div className="flex gap-2">
+                    <div className={`${CARD} overflow-hidden`}>
+              <button
+                onClick={() => {
+                  const newSet = new Set(expandedCards);
+                  if (newSet.has('cookingTime')) newSet.delete('cookingTime');
+                  else newSet.add('cookingTime');
+                  setExpandedCards(newSet);
+                }}
+                className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#FC5200]" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Max Cooking Time</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-stone-400">{person.maxCookingTime || 'No limit'} min</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('cookingTime') ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              <AnimatePresence>
+                {expandedCards.has('cookingTime') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                      <div className="flex gap-2">
                 {SKILL_OPTIONS.map(skill => (
                   <button
                     key={skill}
@@ -664,7 +769,11 @@ export function ProfileView({
                   </button>
                 ))}
               </div>
-            </section>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Max Cooking Time */}
             
@@ -684,16 +793,36 @@ export function ProfileView({
                           });
                         }
                         setNewFavoriteCuisine('');
+                        setCuisineSuggestions([]);
                       }}
-                      className="flex gap-2 mb-3"
+                      className="flex gap-2 mb-3 relative"
                     >
-                      <input 
-                        type="text" 
-                        value={newFavoriteCuisine}
-                        onChange={e => setNewFavoriteCuisine(e.target.value)}
-                        placeholder="Add other cuisine..."
-                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
-                      />
+                      <div className="flex-1 relative">
+                        <input 
+                          type="text" 
+                          value={newFavoriteCuisine}
+                          onChange={e => setNewFavoriteCuisine(e.target.value)}
+                          placeholder="Add other cuisine..."
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white placeholder:text-stone-400 transition-all"
+                        />
+                        {cuisineSuggestions.length > 0 && newFavoriteCuisine.trim() && (
+                          <div className={`absolute top-full left-0 right-0 mt-2 ${CARD} z-20`}>
+                            {cuisineSuggestions.map(s => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => {
+                                  setNewFavoriteCuisine(s);
+                                  setCuisineSuggestions([]);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-stone-200 hover:bg-stone-700 transition-colors capitalize"
+                              >
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
                     </form>
                     <div className="flex flex-wrap gap-2">
@@ -770,16 +899,36 @@ export function ProfileView({
                           });
                         }
                         setNewDietary('');
+                        setDietarySuggestions([]);
                       }}
-                      className="flex gap-2 mb-3"
+                      className="flex gap-2 mb-3 relative"
                     >
-                      <input 
-                        type="text" 
-                        value={newDietary}
-                        onChange={e => setNewDietary(e.target.value)}
-                        placeholder="Add other preference..."
-                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
-                      />
+                      <div className="flex-1 relative">
+                        <input 
+                          type="text" 
+                          value={newDietary}
+                          onChange={e => setNewDietary(e.target.value)}
+                          placeholder="Add other preference..."
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white placeholder:text-stone-400 transition-all"
+                        />
+                        {dietarySuggestions.length > 0 && newDietary.trim() && (
+                          <div className={`absolute top-full left-0 right-0 mt-2 ${CARD} z-20`}>
+                            {dietarySuggestions.map(s => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => {
+                                  setNewDietary(s);
+                                  setDietarySuggestions([]);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-stone-200 hover:bg-stone-700 transition-colors capitalize"
+                              >
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
                     </form>
                     <div className="flex flex-wrap gap-2">
@@ -814,12 +963,36 @@ export function ProfileView({
             </div>
 
                   
-                    <section className={`${CARD} p-6`}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Ban className="w-4 h-4 text-red-500" />
-                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Disliked Ingredients</h2>
-                    </div>
-                    <form 
+                    <div className={`${CARD} overflow-hidden`}>
+              <button
+                onClick={() => {
+                  const newSet = new Set(expandedCards);
+                  if (newSet.has('cuisines')) newSet.delete('cuisines');
+                  else newSet.add('cuisines');
+                  setExpandedCards(newSet);
+                }}
+                className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-rose-500" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Favorite Cuisines</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-stone-400">{person.favoriteCuisines?.length > 0 ? `${person.favoriteCuisines.length} selected` : "None"}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('cuisines') ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              <AnimatePresence>
+                {expandedCards.has('cuisines') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                      <form 
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (!newDislikedIngredient.trim()) return;
@@ -830,16 +1003,36 @@ export function ProfileView({
                           });
                         }
                         setNewDislikedIngredient('');
+                        setDislikedSuggestions([]);
                       }}
-                      className="flex gap-2 mb-3"
+                      className="flex gap-2 mb-3 relative"
                     >
-                      <input 
-                        type="text" 
-                        value={newDislikedIngredient}
-                        onChange={e => setNewDislikedIngredient(e.target.value)}
-                        placeholder="Add other ingredient..."
-                        className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
-                      />
+                      <div className="flex-1 relative">
+                        <input 
+                          type="text" 
+                          value={newDislikedIngredient}
+                          onChange={e => setNewDislikedIngredient(e.target.value)}
+                          placeholder="Add other ingredient..."
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white placeholder:text-stone-400 transition-all"
+                        />
+                        {dislikedSuggestions.length > 0 && newDislikedIngredient.trim() && (
+                          <div className={`absolute top-full left-0 right-0 mt-2 ${CARD} z-20`}>
+                            {dislikedSuggestions.map(s => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => {
+                                  setNewDislikedIngredient(s);
+                                  setDislikedSuggestions([]);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-stone-200 hover:bg-stone-700 transition-colors capitalize"
+                              >
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
                     </form>
                     <div className="flex flex-wrap gap-2">
@@ -867,7 +1060,11 @@ export function ProfileView({
                         </button>
                       ))}
                     </div>
-                  </section>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
 {/* Training Profile */}
             
@@ -973,7 +1170,7 @@ export function ProfileView({
                 <div>
                   <label className="text-xs font-medium text-stone-300 mb-1 block">Upcoming Race Type</label>
                   <select 
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                     value={person.raceType || ''}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -991,7 +1188,7 @@ export function ProfileView({
                   <label className="text-xs font-medium text-stone-300 mb-1 block">Race Date</label>
                   <input 
                     type="date"
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                     value={person.raceDate || ''}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -1003,7 +1200,7 @@ export function ProfileView({
                 <div>
                   <label className="text-xs font-medium text-stone-300 mb-1 block">Weekly Training Days</label>
                   <select 
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                     value={person.weeklyTrainingDays || 0}
                     onChange={(e) => {
                       const value = Number(e.target.value);
@@ -1024,219 +1221,239 @@ export function ProfileView({
               </AnimatePresence>
             </div>\n
                         {/* Supplements */}
-            
-                        <section className={`${CARD} overflow-hidden`}>
-              <button 
-                onClick={() => setIsBiometricsOpen(!isBiometricsOpen)}
-                className="w-full flex items-center justify-between p-6 text-left active:bg-stone-800/50 transition-colors"
-              >
-                <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Fine-tune your fueling</h3>
-                  <p className="text-xs text-stone-400 mt-1 font-medium">Optional — helps us personalize carb and calorie targets to your body.</p>
-                </div>
-                {isBiometricsOpen ? (
-                  <ChevronUp className="w-5 h-5 text-stone-400 shrink-0" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-stone-400 shrink-0" />
-                )}
-              </button>
-              
-              {isBiometricsOpen && (
-                <div className="px-6 pb-6 pt-2 border-t border-stone-800/50">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-stone-300 mb-1 block">Age</label>
-                      <input 
-                        type="number"
-                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
-                        value={person.age || ''}
-                        onChange={(e) => {
-                          const value = e.target.value ? Number(e.target.value) : undefined;
-                          updateHouseholdMember({ ...person, age: value });
-                          
-                        }}
-                        placeholder="e.g. 30"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-stone-300 mb-1 block">Biological Sex</label>
-                      <div className="flex gap-2">
-                        {BIOLOGICAL_SEX_OPTIONS.map(sex => (
-                          <button
-                            key={sex}
-                            onClick={() => {
-                              updateHouseholdMember({ ...person, biologicalSex: sex });
-                              
-                            }}
-                            className={`flex-1 py-2 rounded-lg text-xs font-medium capitalize transition-all active:scale-[0.98] border ${
-                              person.biologicalSex === sex
-                                ? 'bg-orange-500/10 border-[#FC5200] text-[#FC5200]'
-                                : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700 hover:text-white'
-                            }`}
-                          >
-                            {sex}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-stone-300 mb-1 block">Height (cm)</label>
-                      <input 
-                        type="number"
-                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
-                        value={person.heightCm || ''}
-                        onChange={(e) => {
-                          const value = e.target.value ? Number(e.target.value) : undefined;
-                          updateHouseholdMember({ ...person, heightCm: value });
-                          
-                        }}
-                        placeholder="e.g. 175"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-stone-300 mb-1 block">Weight (kg)</label>
-                      <input 
-                        type="number"
-                        className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
-                        value={person.weightKg || ''}
-                        onChange={(e) => {
-                          const value = e.target.value ? Number(e.target.value) : undefined;
-                          updateHouseholdMember({ ...person, weightKg: value });
-                          
-                        }}
-                        placeholder="e.g. 70"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </section>
-
-            {/* Skill Level */}
-            
-                        <section className={`${CARD} p-6`}>
-              <div className="flex items-center gap-2 mb-4">
-                <Activity className="w-4 h-4 text-[#FC5200]" />
-                <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Race & Training Profile</h2>
-              </div>
-              <p className="text-xs text-stone-500 mb-4 leading-relaxed">
-                Configure your race details. You'll set your daily training goal on the Home tab to get targeted recipes.
-              </p>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-stone-300 mb-1 block">Upcoming Race Type</label>
-                  <select 
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
-                    value={person.raceType || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      updateHouseholdMember({ ...person, raceType: value });
-                      
-                    }}
-                  >
-                    <option value="">Select a race type...</option>
-                    {['5K', '10K', 'Half Marathon', 'Marathon', 'Sprint Triathlon', 'Olympic Triathlon', 'Half Ironman (70.3)', 'Ironman', 'Not training for a race'].map(r => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-stone-300 mb-1 block">Race Date</label>
-                  <input 
-                    type="date"
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
-                    value={person.raceDate || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      updateHouseholdMember({ ...person, raceDate: value });
-                      
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-stone-300 mb-1 block">Weekly Training Days</label>
-                  <select 
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
-                    value={person.weeklyTrainingDays || 0}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      updateHouseholdMember({ ...person, weeklyTrainingDays: value });
-                      
-                    }}
-                  >
-                    <option value={0}>Not training</option>
-                    {[1,2,3,4,5,6,7].map(d => (
-                      <option key={d} value={d}>{d} {d === 1 ? 'day' : 'days'} / week</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </section>\n
-                        {/* Supplements */}
-            
-                      </div>
-
-                                    {household.length > 1 && (
-                    <div className="pt-4">
-                      <button
-                        onClick={() => {
-                          deleteHouseholdMember(person.id);
-                          setEditingPersonId(null);
-                        }}
-                        className="w-full py-4 bg-red-500/10 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-500/20 transition-all active:scale-[0.98] border border-red-500/20"
-                      >
-                        Delete Member
-                      </button>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        )}
-
-            <section className={`${CARD} p-6`}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#FC5200]" />
-                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Groups</h2>
-                </div>
-                <button 
+              <div className={`${CARD} overflow-hidden`}>
+                <button
                   onClick={() => {
-                    const newId = `g${Date.now()}`;
-                    const newGroup: Group = { id: newId, name: 'New Group', memberIds: [] };
-                    updateGroup(newGroup);
-                    setEditingGroupId(newId);
+                    const newSet = new Set(expandedCards);
+                    if (newSet.has('supplements')) newSet.delete('supplements');
+                    else newSet.add('supplements');
+                    setExpandedCards(newSet);
                   }}
-                  className="text-[#FC5200] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
+                  className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
                 >
-                  <Plus className="w-4 h-4" /> Add
+                  <div className="flex items-center gap-2">
+                    <Pill className="w-4 h-4 text-purple-500" />
+                    <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Supplements</h2>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-stone-400">{person.trackedSupplements?.length > 0 ? `${person.trackedSupplements.length} tracked` : "None"}</span>
+                    <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('supplements') ? 'rotate-90' : ''}`} />
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {expandedCards.has('supplements') && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                        <p className="text-xs text-stone-500 mb-2">Track daily supplements on your Home tab.</p>
+                        <form 
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            const el = e.currentTarget.elements.namedItem('supp');
+                            const val = el.value.trim();
+                            if (!val) return;
+                            const current = person.trackedSupplements || [];
+                            if (!current.includes(val)) {
+                              updateHouseholdMember({ ...person, trackedSupplements: [...current, val] });
+                            }
+                            el.value = '';
+                          }}
+                          className="flex gap-2"
+                        >
+                          <input
+                            name="supp"
+                            type="text"
+                            placeholder="Add supplement (e.g. Fish Oil)..."
+                            className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white transition-all"
+                          />
+                          <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
+                        </form>
+                        <div className="flex flex-wrap gap-2">
+                          {(person.trackedSupplements || []).map(supp => (
+                            <button
+                              key={supp}
+                              onClick={() => {
+                                updateHouseholdMember({
+                                  ...person,
+                                  trackedSupplements: person.trackedSupplements.filter(s => s !== supp)
+                                });
+                              }}
+                              type="button"
+                              className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-colors flex items-center gap-1 group"
+                            >
+                              {supp}
+                              <X className="w-3 h-3 opacity-50 group-hover:opacity-100" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className={`${CARD} overflow-hidden`}>
+                <button
+                  onClick={() => {
+                    const newSet = new Set(expandedCards);
+                    if (newSet.has('fueling')) newSet.delete('fueling');
+                    else newSet.add('fueling');
+                    setExpandedCards(newSet);
+                  }}
+                  className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-yellow-500" />
+                    <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Fine-tune your fueling</h2>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-stone-400">{(person.age || person.weightKg || person.heightCm) ? "Configured" : "None"}</span>
+                    <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('fueling') ? 'rotate-90' : ''}`} />
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {expandedCards.has('fueling') && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-6 pt-4 border-t border-stone-800/50 mt-2">
+                        <p className="text-xs text-stone-400 mb-4 font-medium">Optional — helps us personalize carb and calorie targets to your body.</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-medium text-stone-300 mb-1 block">Age</label>
+                            <input 
+                              type="number"
+                              className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                              value={person.age || ''}
+                              onChange={(e) => {
+                                const value = e.target.value ? Number(e.target.value) : undefined;
+                                updateHouseholdMember({ ...person, age: value });
+                              }}
+                              placeholder="e.g. 30"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-stone-300 mb-1 block">Biological Sex</label>
+                            <div className="flex gap-2">
+                              {BIOLOGICAL_SEX_OPTIONS.map(sex => (
+                                <button
+                                  key={sex}
+                                  onClick={() => {
+                                    updateHouseholdMember({ ...person, biologicalSex: sex });
+                                  }}
+                                  className={`flex-1 py-2 rounded-lg text-xs font-medium capitalize transition-all active:scale-[0.98] border ${
+                                    person.biologicalSex === sex
+                                      ? 'bg-orange-500/10 border-[#FC5200] text-[#FC5200]'
+                                      : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700 hover:text-white'
+                                  }`}
+                                >
+                                  {sex}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-stone-300 mb-1 block">Height (cm)</label>
+                            <input 
+                              type="number"
+                              className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                              value={person.heightCm || ''}
+                              onChange={(e) => {
+                                const value = e.target.value ? Number(e.target.value) : undefined;
+                                updateHouseholdMember({ ...person, heightCm: value });
+                              }}
+                              placeholder="e.g. 175"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-stone-300 mb-1 block">Weight (kg)</label>
+                            <input 
+                              type="number"
+                              className="w-full bg-stone-950 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5 outline-none transition-colors"
+                              value={person.weightKg || ''}
+                              onChange={(e) => {
+                                const value = e.target.value ? Number(e.target.value) : undefined;
+                                updateHouseholdMember({ ...person, weightKg: value });
+                              }}
+                              placeholder="e.g. 70"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {household.length > 1 && (
+              <div className="pt-4">
+                <button
+                  onClick={() => {
+                    deleteHouseholdMember(person.id);
+                    setEditingPersonId(null);
+                  }}
+                  className="w-full py-4 bg-red-500/10 text-red-600 rounded-2xl font-semibold text-sm hover:bg-red-500/20 transition-all active:scale-[0.98] border border-red-500/20"
+                >
+                  Delete Member
                 </button>
               </div>
-              <p className="text-sm text-stone-500 mb-4">
-                Create groups like "Family" or "Friends" to quickly select who you are cooking for.
-              </p>
-              <div className="space-y-4">
-                {groups.map(group => (
-                  <div key={group.id} className={`${CARD} p-5 flex items-center justify-between`}>
-                    <div>
-                      <h3 className="font-display font-bold text-white">{group.name}</h3>
-                      <p className="text-xs text-stone-500 mt-1">
-                        {group.memberIds.length} member{group.memberIds.length !== 1 ? 's' : ''}
-                        {group.memberIds.length > 0 && ` • ${group.memberIds.map(id => household.find(h => h.id === id)?.name).filter(Boolean).join(', ')}`}
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => setEditingGroupId(group.id)}
-                      className={`${ICON_BUTTON}`}>
-                      <Settings className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
+            )}
+          </>
+        );
+      })()}
+    </div>
+  </motion.div>
+</AnimatePresence>
+)}
+
+  <div className="flex items-center justify-between mb-4 mt-8">
+    <div className="flex items-center gap-2">
+      <Users className="w-5 h-5 text-[#FC5200]" />
+      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Cooking Groups</h2>
+    </div>
+    <button 
+      onClick={() => {
+        const newId = `g${Date.now()}`;
+        const newGroup: Group = { id: newId, name: 'New Group', memberIds: [] };
+        updateGroup(newGroup);
+        setEditingGroupId(newId);
+      }}
+      className="text-[#FC5200] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
+    >
+      <Plus className="w-4 h-4" /> Add
+    </button>
+  </div>
+  <p className="text-sm text-stone-500 mb-4">
+    Create groups like "Family" or "Friends" to quickly select who you are cooking for.
+  </p>
+  <div className="space-y-4">
+    {groups.map(group => (
+      <div key={group.id} className={`${CARD} p-5 flex items-center justify-between`}>
+        <div>
+          <h3 className="font-display font-bold text-white">{group.name}</h3>
+          <p className="text-xs text-stone-500 mt-1">
+            {group.memberIds.length} member{group.memberIds.length !== 1 ? 's' : ''}
+            {group.memberIds.length > 0 && ` • ${group.memberIds.map(id => household.find(h => h.id === id)?.name).filter(Boolean).join(', ')}`}
+          </p>
+        </div>
+        <button 
+          onClick={() => setEditingGroupId(group.id)}
+          className={`${ICON_BUTTON}`}>
+          <Settings className="w-4 h-4" />
+        </button>
+      </div>
+    ))}
+  </div>
             <section className="pt-4 border-t border-stone-800 mt-8">
               <button
                 onClick={() => setActiveTab('learning')}
