@@ -1,9 +1,9 @@
 import { Droplet, Activity, Plus, Camera, Loader2 } from 'lucide-react';
 import { captureMealPhoto } from '../services/mealPhotoAnalyzer';
 import { useToast } from '../components/Toast';
+import { auth, db } from '../firebase';
 import { useAppContext } from '../context/AppContext';
-import toast from 'react-hot-toast';
-import { doc, setDoc, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, arrayUnion, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { MealPhotoConfirmModal } from '../components/MealPhotoConfirmModal';
 import React, { useState } from 'react';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
@@ -86,66 +86,56 @@ export function PlanView({
   };
 
   const handleDeleteLoggedMeal = async (dateKey: string, mealToRemove: any) => {
-    import('../firebase').then(({ auth, db }) => {
-      if (!auth.currentUser) return;
-      import('firebase/firestore').then(({ doc, updateDoc, getDoc }) => {
-        try {
-          const logRef = doc(db, `users/${auth.currentUser!.uid}/trainingLog`, dateKey);
-          getDoc(logRef).then(snap => {
-            if (snap.exists()) {
-              const data = snap.data();
-              const meals = data.acceptedMeals || [];
-              // Remove exactly one matching meal
-              const index = meals.findIndex((m: any) => 
-                m.name === mealToRemove.name && 
-                m.calories === mealToRemove.calories && 
-                m.mealType === mealToRemove.mealType
-              );
-              if (index > -1) {
-                meals.splice(index, 1);
-                updateDoc(logRef, { acceptedMeals: meals }).then(() => {
-                  import('react-hot-toast').then(toast => toast.default.success("Meal removed from log"));
-                });
-              }
-            }
-          });
-        } catch (err: any) {
-          console.error(err);
+    if (!auth.currentUser) return;
+    try {
+      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, dateKey);
+      const snap = await getDoc(logRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const meals = data.acceptedMeals || [];
+        // Remove exactly one matching meal
+        const index = meals.findIndex((m: any) => 
+          m.name === mealToRemove.name && 
+          m.calories === mealToRemove.calories && 
+          m.mealType === mealToRemove.mealType
+        );
+        if (index > -1) {
+          meals.splice(index, 1);
+          await updateDoc(logRef, { acceptedMeals: meals });
+          showToast("Meal removed from log", "success");
         }
-      });
-    });
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Failed to remove meal", "error");
+    }
   };
 
   const handleConfirmManualMeal = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => {
-    import('../firebase').then(({ auth, db }) => {
-      if (!auth.currentUser) return;
-      import('firebase/firestore').then(({ doc, setDoc, arrayUnion }) => {
-        try {
-          const logRef = doc(db, `users/${auth.currentUser!.uid}/trainingLog`, data.date);
-          const newMeal = {
-            recipeId: crypto.randomUUID(),
-            name: data.name,
-            calories: data.calories,
-            carbsGrams: data.carbsGrams,
-            proteinGrams: data.proteinGrams,
-            fatGrams: data.fatGrams,
-            mealType: data.mealType,
-            image: scannedMealPreview?.imageBase64 || null,
-            source: scannedMealPreview ? 'photo-log' : 'manual-log',
-            loggedAt: new Date().toISOString()
-          };
-
-          setDoc(logRef, {
-            acceptedMeals: arrayUnion(newMeal)
-          }, { merge: true }).then(() => {
-            import('react-hot-toast').then(toast => toast.default.success("Meal logged successfully!"));
-            setManualMealDate(null);
-          });
-        } catch (err: any) {
-          console.error(err);
-        }
-      });
-    });
+    if (!auth.currentUser) return;
+    try {
+      const logRef = doc(db, `users/${auth.currentUser.uid}/trainingLog`, data.date);
+      const newMeal = {
+        recipeId: crypto.randomUUID(),
+        name: data.name,
+        calories: data.calories,
+        carbsGrams: data.carbsGrams,
+        proteinGrams: data.proteinGrams,
+        fatGrams: data.fatGrams,
+        mealType: data.mealType,
+        image: scannedMealPreview?.imageBase64 || null,
+        source: scannedMealPreview ? 'photo-log' : 'manual-log',
+        loggedAt: new Date().toISOString()
+      };
+      await setDoc(logRef, {
+        acceptedMeals: arrayUnion(newMeal)
+      }, { merge: true });
+      showToast("Meal logged successfully!", "success");
+      setManualMealDate(null);
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Failed to log meal", "error");
+    }
   };
 
 
@@ -298,13 +288,14 @@ export function PlanView({
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     setPlannedMeals(prev => prev.filter(m => m.id !== meal.id));
-                                    import('../firebase').then(({ auth, db }) => {
-                                      if (auth.currentUser) {
-                                        import('firebase/firestore').then(({ doc, deleteDoc }) => {
-                                          deleteDoc(doc(db, `users/${auth.currentUser!.uid}/plannedMeals`, meal.id));
-                                        });
+                                    if (auth.currentUser) {
+                                      try {
+                                        await deleteDoc(doc(db, `users/${auth.currentUser.uid}/plannedMeals`, meal.id));
+                                      } catch (err: any) {
+                                        console.error(err);
+                                        showToast(err.message || "Failed to delete meal", "error");
                                       }
-                                    });
+                                    }
                                   }}
                                   className={`opacity-0 group-hover:opacity-100 ${ICON_BUTTON} hover:text-red-500 hover:border-red-900/50`}
                                 >

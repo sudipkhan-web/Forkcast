@@ -388,6 +388,36 @@ function MainApp() {
   const moveItemsToPantry = async (itemsToMove: ShoppingItem[]) => {
     if (!userId) return;
 
+    const resolvedRules: Record<string, { location: 'fridge' | 'pantry', category: string }> = {};
+    for (const item of itemsToMove) {
+      const normalizedName = item.name.toLowerCase();
+      // If we already know the rule, use it
+      if (customIngredientRules[normalizedName]) {
+        resolvedRules[normalizedName] = customIngredientRules[normalizedName] as { location: 'fridge' | 'pantry', category: string };
+      } else {
+        // Classify via API before falling back
+        try {
+          const res = await fetch("/api/inventory/classify-ingredient", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: item.name })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const location = data.location || 'pantry';
+            const category = data.category || 'Other';
+            resolvedRules[normalizedName] = { location, category };
+            updateCustomIngredientRule(normalizedName, location, category);
+          } else {
+            resolvedRules[normalizedName] = { location: 'pantry', category: 'Other' };
+          }
+        } catch (err) {
+          console.error("Error classifying ingredient", err);
+          resolvedRules[normalizedName] = { location: 'pantry', category: 'Other' };
+        }
+      }
+    }
+
     const now = new Date().toISOString();
     const newLogs: PantryLog[] = [];
     const itemsToInventory: InventoryItem[] = [];
@@ -405,12 +435,12 @@ function MainApp() {
           itemsToInventory.push(next[existingIndex]);
         } else {
           const normalizedName = item.name.toLowerCase();
-          const rule = customIngredientRules[normalizedName] || { location: 'pantry', category: 'Other' };
+          const rule = resolvedRules[normalizedName] || { location: 'pantry', category: 'Other' };
           const newItem: InventoryItem = {
             id: Date.now().toString() + Math.random(),
             name: item.name,
             quantity: item.quantity,
-            location: rule.location,
+            location: rule.location as 'fridge' | 'pantry',
             category: rule.category,
             expiresAt: estimateExpirationDate(rule.category, rule.location)
           };
@@ -1532,6 +1562,7 @@ function MainApp() {
             inventory={inventory}
             profile={profile!}
             likedTags={likedTags}
+            customIngredientRules={customIngredientRules}
           />
         )}
       </AnimatePresence>

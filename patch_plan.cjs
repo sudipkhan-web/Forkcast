@@ -1,113 +1,179 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/views/PlanView.tsx', 'utf8');
 
-// Add imports
-code = code.replace(
-  "import { Plus, Trash2 } from 'lucide-react';",
-  "import { Plus, Trash2, Camera, Loader2 } from 'lucide-react';\nimport { captureMealPhoto } from '../services/mealPhotoAnalyzer';\nimport { useToast } from '../components/Toast';"
-);
+// Add static imports for firebase
+if (!code.includes("import { auth, db }")) {
+  code = code.replace(
+    "import { useToast } from '../components/Toast';",
+    "import { useToast } from '../components/Toast';\nimport { auth, db } from '../firebase';"
+  );
+}
 
-// Add hooks
-code = code.replace(
-  "const [manualMealDate, setManualMealDate] = React.useState<string | null>(null);",
-  `const [manualMealDate, setManualMealDate] = React.useState<string | null>(null);
-  const [scanningDate, setScanningDate] = React.useState<string | null>(null);
-  const [scannedMealPreview, setScannedMealPreview] = React.useState<any | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [activeDateForUpload, setActiveDateForUpload] = React.useState<string | null>(null);
-  const { showToast } = useToast();`
-);
+// Ensure updateDoc, getDoc, deleteDoc are imported from firestore
+if (code.includes("import { doc, setDoc, arrayUnion } from 'firebase/firestore';")) {
+  code = code.replace(
+    "import { doc, setDoc, arrayUnion } from 'firebase/firestore';",
+    "import { doc, setDoc, arrayUnion, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';"
+  );
+}
 
-// Add triggerUpload and handlePhotoUpload functions
-const handlePhotoUploadCode = `
-  const triggerUpload = (dateKey: string) => {
-    setActiveDateForUpload(dateKey);
-    fileInputRef.current?.click();
-  };
+// Remove react-hot-toast import
+code = code.replace(/import toast from 'react-hot-toast';\n/g, "");
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !activeDateForUpload) return;
+// Replace handleDeleteLoggedMeal
+const oldHandleDelete = `  const handleDeleteLoggedMeal = async (dateKey: string, mealToRemove: any) => {
+    import('../firebase').then(({ auth, db }) => {
+      if (!auth.currentUser) return;
+      import('firebase/firestore').then(({ doc, updateDoc, getDoc }) => {
+        try {
+          const logRef = doc(db, \`users/\${auth.currentUser!.uid}/trainingLog\`, dateKey);
+          getDoc(logRef).then(snap => {
+            if (snap.exists()) {
+              const data = snap.data();
+              const meals = data.acceptedMeals || [];
+              // Remove exactly one matching meal
+              const index = meals.findIndex((m: any) => 
+                m.name === mealToRemove.name && 
+                m.calories === mealToRemove.calories && 
+                m.mealType === mealToRemove.mealType
+              );
+              if (index > -1) {
+                meals.splice(index, 1);
+                updateDoc(logRef, { acceptedMeals: meals }).then(() => {
+                  import('react-hot-toast').then(toast => toast.default.success("Meal removed from log"));
+                });
+              }
+            }
+          });
+        } catch (err: any) {
+          console.error(err);
+        }
+      });
+    });
+  };`;
 
-    setScanningDate(activeDateForUpload);
+const newHandleDelete = `  const handleDeleteLoggedMeal = async (dateKey: string, mealToRemove: any) => {
+    if (!auth.currentUser) return;
     try {
-      const result = await captureMealPhoto(file);
-      if (result) {
-        setScannedMealPreview(result);
-        setManualMealDate(activeDateForUpload);
-      } else {
-        showToast("Error: Failed to analyze photo.", "error");
+      const logRef = doc(db, \`users/\${auth.currentUser.uid}/trainingLog\`, dateKey);
+      const snap = await getDoc(logRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const meals = data.acceptedMeals || [];
+        // Remove exactly one matching meal
+        const index = meals.findIndex((m: any) => 
+          m.name === mealToRemove.name && 
+          m.calories === mealToRemove.calories && 
+          m.mealType === mealToRemove.mealType
+        );
+        if (index > -1) {
+          meals.splice(index, 1);
+          await updateDoc(logRef, { acceptedMeals: meals });
+          showToast("Meal removed from log", "success");
+        }
       }
     } catch (err: any) {
-      showToast(\`Error: \${err.message || "Failed to analyze photo."}\`, "error");
-    } finally {
-      setScanningDate(null);
-      setActiveDateForUpload(null);
-      if (e.target) e.target.value = '';
+      console.error(err);
+      showToast(err.message || "Failed to remove meal", "error");
     }
-  };
+  };`;
 
-  const handleDeleteLoggedMeal =`;
+code = code.replace(oldHandleDelete, newHandleDelete);
 
-code = code.replace("  const handleDeleteLoggedMeal =", handlePhotoUploadCode);
+// Replace handleConfirmManualMeal
+const oldHandleConfirm = `  const handleConfirmManualMeal = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => {
+    import('../firebase').then(({ auth, db }) => {
+      if (!auth.currentUser) return;
+      import('firebase/firestore').then(({ doc, setDoc, arrayUnion }) => {
+        try {
+          const logRef = doc(db, \`users/\${auth.currentUser!.uid}/trainingLog\`, data.date);
+          const newMeal = {
+            recipeId: crypto.randomUUID(),
+            name: data.name,
+            calories: data.calories,
+            carbsGrams: data.carbsGrams,
+            proteinGrams: data.proteinGrams,
+            fatGrams: data.fatGrams,
+            mealType: data.mealType,
+            image: scannedMealPreview?.imageBase64 || null,
+            source: scannedMealPreview ? 'photo-log' : 'manual-log',
+            loggedAt: new Date().toISOString()
+          };
+          setDoc(logRef, {
+            acceptedMeals: arrayUnion(newMeal)
+          }, { merge: true }).then(() => {
+            import('react-hot-toast').then(toast => toast.default.success("Meal logged successfully!"));
+            setManualMealDate(null);
+          });
+        } catch (err: any) {
+          console.error(err);
+        }
+      });
+    });
+  };`;
 
-// Update handleConfirmManualMeal to include image and source
-code = code.replace(
-  "mealType: data.mealType,",
-  "mealType: data.mealType,\n            image: scannedMealPreview?.imageBase64 || null,\n            source: scannedMealPreview ? 'photo-log' : 'manual-log',"
-);
+const newHandleConfirm = `  const handleConfirmManualMeal = async (data: { name: string; calories: number; carbsGrams: number; proteinGrams: number; fatGrams: number; mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'; date: string }) => {
+    if (!auth.currentUser) return;
+    try {
+      const logRef = doc(db, \`users/\${auth.currentUser.uid}/trainingLog\`, data.date);
+      const newMeal = {
+        recipeId: crypto.randomUUID(),
+        name: data.name,
+        calories: data.calories,
+        carbsGrams: data.carbsGrams,
+        proteinGrams: data.proteinGrams,
+        fatGrams: data.fatGrams,
+        mealType: data.mealType,
+        image: scannedMealPreview?.imageBase64 || null,
+        source: scannedMealPreview ? 'photo-log' : 'manual-log',
+        loggedAt: new Date().toISOString()
+      };
+      await setDoc(logRef, {
+        acceptedMeals: arrayUnion(newMeal)
+      }, { merge: true });
+      showToast("Meal logged successfully!", "success");
+      setManualMealDate(null);
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Failed to log meal", "error");
+    }
+  };`;
 
-// Add hidden file input at the top of History view
-const hiddenInputCode = `
-        <div className="flex flex-col gap-6">
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handlePhotoUpload}
-          />`;
-code = code.replace('<div className="flex flex-col gap-6">', hiddenInputCode);
+code = code.replace(oldHandleConfirm, newHandleConfirm);
 
-// Add Camera button next to Plus button
-const cameraBtnCode = `
-                            <div className="flex items-center gap-1">
-                              <button 
-                                onClick={() => triggerUpload(dateKey)}
-                                className="p-1 text-stone-400 hover:text-[#FC5200] transition-colors disabled:opacity-50"
-                                disabled={scanningDate === dateKey}
-                              >
-                                {scanningDate === dateKey ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-                              </button>
-                              <button 
-                                onClick={() => setManualMealDate(dateKey)}
-                                className="p-1 text-stone-400 hover:text-white transition-colors"
-                              >
-                                <Plus className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>`;
+// Replace the inline trash handler around line 301
+// We can use regex to find and replace that specific onClick handler
+const oldInlineHandler = `                                <button 
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setPlannedMeals(prev => prev.filter(m => m.id !== meal.id));
+                                    import('../firebase').then(({ auth, db }) => {
+                                      if (auth.currentUser) {
+                                        import('firebase/firestore').then(({ doc, deleteDoc }) => {
+                                          deleteDoc(doc(db, \`users/\${auth.currentUser!.uid}/plannedMeals\`, meal.id));
+                                        });
+                                      }
+                                    });
+                                  }}
+                                  className={\`opacity-0 group-hover:opacity-100 \${ICON_BUTTON} hover:text-red-500 hover:border-red-900/50\`}
+                                >`;
 
-code = code.replace(
-  `                            <button 
-                              onClick={() => setManualMealDate(dateKey)}
-                              className="p-1 text-stone-400 hover:text-white transition-colors"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>`,
-  cameraBtnCode
-);
+const newInlineHandler = `                                <button 
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setPlannedMeals(prev => prev.filter(m => m.id !== meal.id));
+                                    if (auth.currentUser) {
+                                      try {
+                                        await deleteDoc(doc(db, \`users/\${auth.currentUser.uid}/plannedMeals\`, meal.id));
+                                      } catch (err: any) {
+                                        console.error(err);
+                                        showToast(err.message || "Failed to delete meal", "error");
+                                      }
+                                    }
+                                  }}
+                                  className={\`opacity-0 group-hover:opacity-100 \${ICON_BUTTON} hover:text-red-500 hover:border-red-900/50\`}
+                                >`;
 
-// Update MealPhotoConfirmModal props
-code = code.replace(
-  "initialData={null}",
-  "initialData={scannedMealPreview}"
-);
-code = code.replace(
-  "onCancel={() => setManualMealDate(null)}",
-  "onCancel={() => {\n            setManualMealDate(null);\n            setScannedMealPreview(null);\n          }}"
-);
+code = code.replace(oldInlineHandler, newInlineHandler);
 
 fs.writeFileSync('src/views/PlanView.tsx', code);

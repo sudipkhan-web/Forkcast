@@ -8,7 +8,8 @@ import {
   serverGenerateRecipeImage,
   serverAnalyzeMealPhoto,
   serverEstimateMealFromName,
-  getCuratedFallbackRecipes, serverClassifyMealType
+  getCuratedFallbackRecipes, serverClassifyMealType,
+  serverClassifyIngredient
 } from "./src/services/geminiServer";
 
 async function startServer() {
@@ -19,6 +20,21 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // API Routes for Gemini Services (Fully Server-Side)
+
+  app.post("/api/inventory/classify-ingredient", async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Missing name in request body." });
+      }
+      const result = await serverClassifyIngredient(name);
+      res.json(result);
+    } catch (error: any) {
+      console.error("[SERVER] Error classifying ingredient:", error);
+      res.status(500).json({ error: "Failed to classify ingredient." });
+    }
+  });
+
   app.post("/api/inventory/scan", async (req, res) => {
     try {
       const { base64Image, mimeType } = req.body;

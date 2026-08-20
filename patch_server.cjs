@@ -1,32 +1,36 @@
 const fs = require('fs');
 let code = fs.readFileSync('server.ts', 'utf8');
 
-// Update imports
+// Add to imports
 code = code.replace(
-  /getCuratedFallbackRecipes/,
-  "getCuratedFallbackRecipes, serverClassifyMealType"
+  "serverClassifyMealType\n} from \"./src/services/geminiServer\";",
+  "serverClassifyMealType,\n  serverClassifyIngredient\n} from \"./src/services/geminiServer\";"
+);
+code = code.replace(
+  "serverClassifyMealType\r\n} from \"./src/services/geminiServer\";",
+  "serverClassifyMealType,\r\n  serverClassifyIngredient\r\n} from \"./src/services/geminiServer\";"
 );
 
 // Add route
 const newRoute = `
-app.post('/api/recipes/classify-mealtype', async (req, res) => {
-  try {
-    const { name, ingredients, details } = req.body;
-    if (!name || !ingredients || !details) {
-      return res.status(400).json({ error: 'Missing required fields: name, ingredients, details' });
+  app.post("/api/inventory/classify-ingredient", async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Missing name in request body." });
+      }
+      const result = await serverClassifyIngredient(name);
+      res.json(result);
+    } catch (error: any) {
+      console.error("[SERVER] Error classifying ingredient:", error);
+      res.status(500).json({ error: "Failed to classify ingredient." });
     }
-
-    const mealType = await serverClassifyMealType(name, ingredients, details);
-    res.json({ mealType });
-  } catch (error: any) {
-    console.error('Error classifying meal type:', error);
-    res.status(500).json({ error: 'Failed to classify meal type', details: error.message });
-  }
-});
+  });
 `;
 
-// Insert the new route before app.listen or similar
-code = code.replace(/app\.listen\(/, newRoute + '\n  app.listen(');
+code = code.replace(
+  "  app.post(\"/api/inventory/scan\", async (req, res) => {",
+  newRoute + "\n  app.post(\"/api/inventory/scan\", async (req, res) => {"
+);
 
 fs.writeFileSync('server.ts', code);
-console.log("Updated server.ts with route");

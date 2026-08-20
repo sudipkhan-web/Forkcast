@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Star, CalendarDays, ClipboardList, Check, Minus, Plus, Clock, Trash2, Package, Sparkles, Loader2 } from 'lucide-react';
 import { Meal } from '../data/recipes';
@@ -18,6 +18,7 @@ interface ShopViewProps {
   inventory: InventoryItem[];
   profile: UserProfile;
   likedTags: Record<string, number>;
+  customIngredientRules: Record<string, any>;
 }
 
 export function ShopView({ 
@@ -28,9 +29,32 @@ export function ShopView({
   onMoveItemToPantry,
   inventory,
   profile,
-  likedTags
+  likedTags,
+  customIngredientRules
 }: ShopViewProps) {
   const { showToast } = useToast();
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const debounceRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    const name = newShoppingItemName.trim();
+    if (!name) {
+      setSuggestions([]);
+      return;
+    }
+    
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const norm = name.toLowerCase();
+      const rules = Object.keys(customIngredientRules || {});
+      const matches = rules.filter(r => r.includes(norm)).slice(0, 5);
+      setSuggestions(matches);
+    }, 250);
+    
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [newShoppingItemName, customIngredientRules]);
   const {
     newShoppingItemName,
     setNewShoppingItemName,
