@@ -53,6 +53,17 @@ export function ProfileView({
   const [newDislikedIngredient, setNewDislikedIngredient] = useState('');
   const [newDietary, setNewDietary] = useState('');
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [overflowVisibleCards, setOverflowVisibleCards] = useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    setOverflowVisibleCards(prev => {
+      const next = new Set(prev);
+      for (const id of next) {
+        if (!expandedCards.has(id)) next.delete(id);
+      }
+      return next;
+    });
+  }, [expandedCards]);
 
   React.useEffect(() => {
     const person = household.find(p => p.id === editingPersonId);
@@ -777,11 +788,40 @@ export function ProfileView({
 
             {/* Max Cooking Time */}
             
-                    <section className={`${CARD} p-6`}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Heart className="w-4 h-4 text-rose-500" />
-                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Favorite Cuisines</h2>
-                    </div>
+              <div className={`${CARD} overflow-hidden`}>
+              <button
+                onClick={() => {
+                  const newSet = new Set(expandedCards);
+                  if (newSet.has('cuisines')) newSet.delete('cuisines');
+                  else newSet.add('cuisines');
+                  setExpandedCards(newSet);
+                }}
+                className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-rose-500" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Favorite Cuisines</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-stone-400">{person.favoriteCuisines?.length > 0 ? `${person.favoriteCuisines.length} selected` : "None"}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('cuisines') ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              <AnimatePresence>
+                {expandedCards.has('cuisines') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onAnimationComplete={() => {
+                      if (expandedCards.has('cuisines')) {
+                        setOverflowVisibleCards(prev => new Set([...prev, 'cuisines']));
+                      }
+                    }}
+                    className={overflowVisibleCards.has('cuisines') ? "overflow-visible" : "overflow-hidden"}
+                  >
+                    <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
                     <form 
                       onSubmit={(e) => {
                         e.preventDefault();
@@ -850,7 +890,11 @@ export function ProfileView({
                         </button>
                       ))}
                     </div>
-                  </section>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
                   
                   </div>
@@ -885,7 +929,12 @@ export function ProfileView({
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
+                    onAnimationComplete={() => {
+                      if (expandedCards.has('dietary')) {
+                        setOverflowVisibleCards(prev => new Set([...prev, 'dietary']));
+                      }
+                    }}
+                    className={overflowVisibleCards.has('dietary') ? "overflow-visible" : "overflow-hidden"}
                   >
                     <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
                       <form 
@@ -989,7 +1038,12 @@ export function ProfileView({
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
+                    onAnimationComplete={() => {
+                      if (expandedCards.has('disliked')) {
+                        setOverflowVisibleCards(prev => new Set([...prev, 'disliked']));
+                      }
+                    }}
+                    className={overflowVisibleCards.has('disliked') ? "overflow-visible" : "overflow-hidden"}
                   >
                     <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
                       <form 
@@ -1068,14 +1122,42 @@ export function ProfileView({
 
 {/* Training Profile */}
             
-                    <section className={`${CARD} p-6 relative overflow-hidden`}>
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                    <div className="flex items-center gap-2 mb-4 pl-2">
-                      <Activity className="w-4 h-4 text-blue-500" />
-                      <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Medical & Health Conditions</h2>
-                    </div>
-                    <p className="text-xs text-stone-500 mb-4 pl-2">Tap to select any conditions you have. We'll strict-filter recipes to accommodate your needs.</p>
-                    <div className="pl-2">
+              <div className={`${CARD} relative overflow-hidden`}>
+              <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+              <button
+                onClick={() => {
+                  const newSet = new Set(expandedCards);
+                  if (newSet.has('medical')) newSet.delete('medical');
+                  else newSet.add('medical');
+                  setExpandedCards(newSet);
+                }}
+                className="w-full flex items-center justify-between p-6 pl-8 focus:outline-none text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-500" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Medical & Health Conditions</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-stone-400">{(person.healthConditions || [])?.length > 0 ? `${person.healthConditions.length} selected` : "None"}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('medical') ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              <AnimatePresence>
+                {expandedCards.has('medical') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onAnimationComplete={() => {
+                      if (expandedCards.has('medical')) {
+                        setOverflowVisibleCards(prev => new Set([...prev, 'medical']));
+                      }
+                    }}
+                    className={overflowVisibleCards.has('medical') ? "overflow-visible" : "overflow-hidden"}
+                  >
+                    <div className="p-6 pl-8 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                      <p className="text-xs text-stone-500 mb-2">Tap to select any conditions you have. We'll strict-filter recipes to accommodate your needs.</p>
                       <form 
                         onSubmit={(e) => {
                           e.preventDefault();
@@ -1145,9 +1227,88 @@ export function ProfileView({
                         ))}
                       </div>
                     </div>
-                  </section>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
 
+              {/* Supplements */}
+              <div className={`${CARD} overflow-hidden`}>
+                <button
+                  onClick={() => {
+                    const newSet = new Set(expandedCards);
+                    if (newSet.has('supplements')) newSet.delete('supplements');
+                    else newSet.add('supplements');
+                    setExpandedCards(newSet);
+                  }}
+                  className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Pill className="w-4 h-4 text-purple-500" />
+                    <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Supplements</h2>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-stone-400">{person.trackedSupplements?.length > 0 ? `${person.trackedSupplements.length} tracked` : "None"}</span>
+                    <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('supplements') ? 'rotate-90' : ''}`} />
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {expandedCards.has('supplements') && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
+                        <p className="text-xs text-stone-500 mb-2">Track daily supplements on your Home tab.</p>
+                        <form 
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            const el = e.currentTarget.elements.namedItem('supp') as HTMLInputElement;
+                            const val = el.value.trim();
+                            if (!val) return;
+                            const current = person.trackedSupplements || [];
+                            if (!current.includes(val)) {
+                              updateHouseholdMember({ ...person, trackedSupplements: [...current, val] });
+                            }
+                            el.value = '';
+                          }}
+                          className="flex gap-2"
+                        >
+                          <input
+                            name="supp"
+                            type="text"
+                            placeholder="Add supplement (e.g. Fish Oil)..."
+                            className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white transition-all"
+                          />
+                          <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
+                        </form>
+                        <div className="flex flex-wrap gap-2">
+                          {(person.trackedSupplements || []).map(supp => (
+                            <button
+                              key={supp}
+                              onClick={() => {
+                                updateHouseholdMember({
+                                  ...person,
+                                  trackedSupplements: person.trackedSupplements.filter(s => s !== supp)
+                                });
+                              }}
+                              type="button"
+                              className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-colors flex items-center gap-1 group"
+                            >
+                              {supp}
+                              <X className="w-3 h-3 opacity-50 group-hover:opacity-100" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
                   </div>
 
                   <div className="mt-8 mb-4">
@@ -1239,84 +1400,7 @@ export function ProfileView({
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>\n
-                        {/* Supplements */}
-              <div className={`${CARD} overflow-hidden`}>
-                <button
-                  onClick={() => {
-                    const newSet = new Set(expandedCards);
-                    if (newSet.has('supplements')) newSet.delete('supplements');
-                    else newSet.add('supplements');
-                    setExpandedCards(newSet);
-                  }}
-                  className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
-                >
-                  <div className="flex items-center gap-2">
-                    <Pill className="w-4 h-4 text-purple-500" />
-                    <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Supplements</h2>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-stone-400">{person.trackedSupplements?.length > 0 ? `${person.trackedSupplements.length} tracked` : "None"}</span>
-                    <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('supplements') ? 'rotate-90' : ''}`} />
-                  </div>
-                </button>
-                <AnimatePresence>
-                  {expandedCards.has('supplements') && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="p-6 pt-0 border-t border-stone-800/50 mt-2 space-y-4">
-                        <p className="text-xs text-stone-500 mb-2">Track daily supplements on your Home tab.</p>
-                        <form 
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            const el = e.currentTarget.elements.namedItem('supp') as HTMLInputElement;
-                            const val = el.value.trim();
-                            if (!val) return;
-                            const current = person.trackedSupplements || [];
-                            if (!current.includes(val)) {
-                              updateHouseholdMember({ ...person, trackedSupplements: [...current, val] });
-                            }
-                            el.value = '';
-                          }}
-                          className="flex gap-2"
-                        >
-                          <input
-                            name="supp"
-                            type="text"
-                            placeholder="Add supplement (e.g. Fish Oil)..."
-                            className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white transition-all"
-                          />
-                          <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
-                        </form>
-                        <div className="flex flex-wrap gap-2">
-                          {(person.trackedSupplements || []).map(supp => (
-                            <button
-                              key={supp}
-                              onClick={() => {
-                                updateHouseholdMember({
-                                  ...person,
-                                  trackedSupplements: person.trackedSupplements.filter(s => s !== supp)
-                                });
-                              }}
-                              type="button"
-                              className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-colors flex items-center gap-1 group"
-                            >
-                              {supp}
-                              <X className="w-3 h-3 opacity-50 group-hover:opacity-100" />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
+            </div>
               <div className={`${CARD} overflow-hidden`}>
                 <button
                   onClick={() => {
