@@ -8,6 +8,7 @@ import { generateSmartStaples } from '../services/recipeGenerator';
 import { InventoryItem, PersonProfile, UserProfile } from '../types';
 import { NotificationBell } from '../components/NotificationBell';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
+import { suggestFreeTextOptions } from '../services/mealPhotoAnalyzer';
 import { useToast } from '../components/Toast';
 
 interface ShopViewProps {
@@ -34,7 +35,7 @@ export function ShopView({
   customIngredientRules
 }: ShopViewProps) {
   const { showToast } = useToast();
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<{text: string, isAi?: boolean}[]>([]);
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const {
@@ -60,12 +61,19 @@ export function ShopView({
     }
     
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    debounceRef.current = setTimeout(async () => {
       const norm = name.toLowerCase();
       const rules = Array.from(new Set([...COMMON_INGREDIENTS.map(i => i.toLowerCase()), ...Object.keys(customIngredientRules || {})]));
       const matches = rules.filter(r => r.includes(norm)).slice(0, 5);
-      setSuggestions(matches);
-    }, 250);
+      if (matches.length > 0) {
+        setSuggestions(matches.map(text => ({ text })));
+      } else if (norm.length >= 3) {
+        const aiOptions = await suggestFreeTextOptions('ingredient', norm);
+        setSuggestions(aiOptions.map(text => ({ text, isAi: true })));
+      } else {
+        setSuggestions([]);
+      }
+    }, 600);
     
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -134,7 +142,7 @@ export function ShopView({
               value={newShoppingItemName}
               onChange={(e) => setNewShoppingItemName(e.target.value)}
               placeholder="Add an item..."
-              className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+              className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] transition-all"
             />
             <button 
               type="submit"
@@ -146,13 +154,14 @@ export function ShopView({
           </form>
           {suggestions.length > 0 && newShoppingItemName.trim() && (
             <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
-              {suggestions.map(s => (
+              {suggestions.map((s, i) => (
                 <button 
-                  key={s} 
-                  onClick={() => { setNewShoppingItemName(s); setSuggestions([]); }} 
-                  className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors"
+                  key={s.text + i} 
+                  onClick={() => { setNewShoppingItemName(s.text); setSuggestions([]); }} 
+                  className="w-full flex items-center justify-between text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
                 >
-                  {s}
+                  <span>{s.text}</span>
+                  {s.isAi && <span className="text-[10px] bg-[#FC5200]/20 text-[#FC5200] px-1.5 py-0.5 rounded ml-2 normal-case font-medium">AI suggested</span>}
                 </button>
               ))}
             </div>
@@ -213,14 +222,14 @@ export function ShopView({
                     <div className="flex items-start gap-3 w-full">
                       <button 
                         onClick={() => toggleShoppingItem(item.id, item.isGenerated, item.name)}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border mt-0.5 transition-all active:scale-[0.98] ${item.checked ? 'bg-emerald-500/100 border-emerald-500 text-white' : 'border-stone-300 text-transparent hover:border-emerald-500'}`}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border mt-0.5 transition-all active:scale-[0.98] ${item.checked ? 'bg-[#FC5200]/100/100 border-[#FC5200] text-white' : 'border-stone-300 text-transparent hover:border-[#FC5200]/40'}`}
                       >
                         <Check className="w-4 h-4" />
                       </button>
                       <div className="flex flex-col flex-1">
                         <span className={`font-medium ${item.checked ? 'text-stone-400 line-through' : 'text-white'}`}>
                           {item.name}
-                          {item.isGenerated && <span className="ml-2 text-[10px] bg-emerald-500/20 text-[#FC5200] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Planned</span>}
+                          {item.isGenerated && <span className="ml-2 text-[10px] bg-[#FC5200]/100/20 text-[#FC5200] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Planned</span>}
                           {item.isStaple && <span className="ml-2 text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-inline items-center gap-1"><Sparkles className="w-3 h-3 inline pb-[1px]"/> Suggested Staple</span>}
                         </span>
                         {item.amounts.length > 0 && (
@@ -286,7 +295,7 @@ export function ShopView({
                         <div className="flex flex-col flex-1">
                           <span className="font-medium text-stone-400">
                             {item.name}
-                            {item.isGenerated && <span className="ml-2 text-[10px] bg-emerald-500/20 text-[#FC5200] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Planned</span>}
+                            {item.isGenerated && <span className="ml-2 text-[10px] bg-[#FC5200]/100/20 text-[#FC5200] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Planned</span>}
                             {item.isStaple && <span className="ml-2 text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-inline items-center gap-1"><Sparkles className="w-3 h-3 inline pb-[1px]"/> Suggested Staple</span>}
                           </span>
                           {item.amounts.length > 0 && (
@@ -337,7 +346,7 @@ export function ShopView({
           <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-emerald-400" />
+                <CalendarDays className="w-5 h-5 text-[#FC5200]" />
                 Smart Defer
               </h3>
               <button onClick={() => setIsDeferModalOpen(false)} className="text-stone-500 hover:text-white">
@@ -352,7 +361,7 @@ export function ShopView({
                 type="date" 
                 value={shoppingEndDate}
                 onChange={(e) => setShoppingEndDate(e.target.value)}
-                className="flex-1 bg-black/20 border border-emerald-500/30 rounded-xl px-3 py-2 text-sm text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="flex-1 bg-black/20 border border-[#FC5200]/30 rounded-xl px-3 py-2 text-sm text-[#FC5200] outline-none focus:ring-2 focus:ring-[#FC5200]/50"
               />
               <button 
                 onClick={() => {

@@ -9,7 +9,8 @@ import {
   serverAnalyzeMealPhoto,
   serverEstimateMealFromName,
   getCuratedFallbackRecipes, serverClassifyMealType,
-  serverClassifyIngredient
+  serverClassifyIngredient,
+  serverSuggestFreeTextOptions
 } from "./src/services/geminiServer";
 
 async function startServer() {
@@ -183,6 +184,21 @@ async function startServer() {
   });
 
   // API Route - Demo Endpoint for Email Notifications
+
+  app.post("/api/suggestions/freetext", async (req, res) => {
+    try {
+      const { category, partialText } = req.body;
+      if (!category || !partialText) {
+        return res.status(400).json({ error: "Missing category or partialText" });
+      }
+      const results = await serverSuggestFreeTextOptions(category, partialText);
+      res.json(results);
+    } catch (error: any) {
+      console.error("[SERVER] Error generating free text suggestions:", error);
+      res.json([]);
+    }
+  });
+
   app.post("/api/settings/notifications", (req, res) => {
     const { emailNotificationEnabled, userId } = req.body;
     console.log(`[SERVER] User ${userId} toggled email notifications to: ${emailNotificationEnabled}`);

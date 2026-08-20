@@ -97,7 +97,7 @@ export function ProgressView({ setActiveTab }: ProgressViewProps) {
           <div className="flex flex-col gap-3">
             <div className="flex justify-between items-center bg-stone-800/30 p-3 rounded-lg border border-stone-800">
               <span className="text-sm font-medium text-stone-300">Days you hit carb target:</span>
-              <span className="text-sm font-bold text-emerald-400">{correlation.hitCarbTotal > 0 ? `${correlation.hitCarbStrong}/${correlation.hitCarbTotal} Strong` : 'No data'}</span>
+              <span className="text-sm font-bold text-[#FC5200]">{correlation.hitCarbTotal > 0 ? `${correlation.hitCarbStrong}/${correlation.hitCarbTotal} Strong` : 'No data'}</span>
             </div>
             <div className="flex justify-between items-center bg-stone-800/30 p-3 rounded-lg border border-stone-800">
               <span className="text-sm font-medium text-stone-300">Days you didn't:</span>

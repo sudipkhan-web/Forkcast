@@ -5,6 +5,7 @@ import { X, Sparkles } from 'lucide-react';
 import { Group, PlannedMeal, PersonProfile, InventoryItem, UserProfile } from '../types';
 import { Meal, RecipeIngredient, ALL_MEALS } from '../data/recipes';
 import { getTopMeals, getSmartSubstitutions } from '../services/recommendationEngine';
+import { suggestFreeTextOptions } from '../services/mealPhotoAnalyzer';
 
 interface PlanModalProps {
   isOpen: boolean;
@@ -57,17 +58,25 @@ export function PlanModal({
   checkIngredient,
   setNewMealIngredients
 }: PlanModalProps) {
-  const [mealSuggestions, setMealSuggestions] = React.useState<string[]>([]);
+  const [mealSuggestions, setMealSuggestions] = React.useState<{text: string, isAi?: boolean}[]>([]);
   const debounceRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
 
   React.useEffect(() => {
     const term = newMealName.trim().toLowerCase();
     if (!term) { setMealSuggestions([]); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    debounceRef.current = setTimeout(async () => {
       const allNames = Array.from(new Set([...ALL_MEALS, ...globalRecipes].map(m => m.name)));
-      setMealSuggestions(allNames.filter(n => n.toLowerCase().includes(term)).slice(0, 5));
-    }, 200);
+      const local = allNames.filter(n => n.toLowerCase().includes(term)).slice(0, 5);
+      if (local.length > 0) {
+        setMealSuggestions(local.map(text => ({ text })));
+      } else if (term.length >= 3) {
+        const aiOptions = await suggestFreeTextOptions('mealName', term);
+        setMealSuggestions(aiOptions.map(text => ({ text, isAi: true })));
+      } else {
+        setMealSuggestions([]);
+      }
+    }, 600);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [newMealName, globalRecipes]);
 
@@ -107,7 +116,7 @@ export function PlanModal({
                 <select
                   value={planningDate}
                   onChange={(e) => setPlanningDate(e.target.value)}
-                  className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-white"
+                  className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] transition-all text-white"
                 >
                   {getNextDays(7).map((date, idx) => {
                     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -130,8 +139,8 @@ export function PlanModal({
                       onClick={() => setNewMealType(type)}
                       className={`py-2 px-4 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
                         newMealType === type 
-                          ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' 
-                          : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                          ? 'bg-[#FC5200]/100 border-[#FC5200] text-white shadow-sm' 
+                          : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-[#FC5200]/40 hover:text-[#FC5200]'
                       }`}
                     >
                       {type}
@@ -181,17 +190,18 @@ export function PlanModal({
                   />
                   {mealSuggestions.length > 0 && newMealName.trim() && (
                     <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
-                      {mealSuggestions.map(s => (
+                      {mealSuggestions.map((s, i) => (
                         <button
-                          key={s}
+                          key={s.text + i}
                           type="button"
                           onClick={() => {
-                            setNewMealName(s);
+                            setNewMealName(s.text);
                             setMealSuggestions([]);
                           }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors"
+                          className="w-full flex items-center justify-between text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
                         >
-                          {s}
+                          <span>{s.text}</span>
+                          {s.isAi && <span className="text-[10px] bg-[#FC5200]/20 text-[#FC5200] px-1.5 py-0.5 rounded ml-2 normal-case font-medium">AI suggested</span>}
                         </button>
                       ))}
                     </div>

@@ -74,7 +74,7 @@ export function OrderModal({
                             setSelectedProvider(provider);
                             setOrderStep('checkout');
                           }}
-                          className="w-full flex items-center justify-between p-4 rounded-2xl border border-stone-800 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all group"
+                          className="w-full flex items-center justify-between p-4 rounded-2xl border border-stone-800 hover:border-[#FC5200]/40 hover:bg-[#FC5200]/10 transition-all group"
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-full ${provider.bgClass} flex items-center justify-center ${provider.textClass}`}>
@@ -85,7 +85,7 @@ export function OrderModal({
                               <p className="text-xs text-stone-500">{provider.time}</p>
                             </div>
                           </div>
-                          <ChevronLeft className="w-5 h-5 text-stone-300 group-hover:text-emerald-500 rotate-180 transition-colors" />
+                          <ChevronLeft className="w-5 h-5 text-stone-300 group-hover:text-[#FC5200] rotate-180 transition-colors" />
                         </button>
                       ))}
                     </div>
@@ -143,7 +143,7 @@ export function OrderModal({
 
               {orderStep === 'success' && (
                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
-                  <div className="w-20 h-20 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center mb-4">
+                  <div className="w-20 h-20 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center mb-4">
                     <Check className="w-10 h-10" />
                   </div>
                   <h3 className="text-2xl font-display font-bold text-white">Order Placed!</h3>

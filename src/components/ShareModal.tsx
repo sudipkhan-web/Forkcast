@@ -41,7 +41,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
             
             <div className="p-6 space-y-6">
               <div>
-                <div className="w-16 h-16 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-4">
                   <Users className="w-8 h-8" />
                 </div>
                 <h3 className="text-center font-display font-bold text-white text-lg mb-2">Invite to Household</h3>

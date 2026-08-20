@@ -84,7 +84,7 @@ export function AuthView() {
     <div className="min-h-screen flex items-center justify-center bg-stone-900 p-4 font-sans">
       <div className={`${CARD} w-full max-w-md p-8 sm:p-10 text-center`}>
         <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center">
             <ChefHat className="w-8 h-8" />
           </div>
         </div>
@@ -116,7 +116,7 @@ export function AuthView() {
             placeholder="Email address"
             value={authEmail}
             onChange={(e) => setAuthEmail(e.target.value)}
-            className="w-full px-4 py-3.5 rounded-xl border border-stone-800 bg-stone-900 focus:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-white placeholder:text-stone-400"
+            className="w-full px-4 py-3.5 rounded-xl border border-stone-800 bg-stone-900 focus:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] transition-all text-white placeholder:text-stone-400"
             required
           />
           <input
@@ -124,7 +124,7 @@ export function AuthView() {
             placeholder="Password"
             value={authPassword}
             onChange={(e) => setAuthPassword(e.target.value)}
-            className="w-full px-4 py-3.5 rounded-xl border border-stone-800 bg-stone-900 focus:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-white placeholder:text-stone-400"
+            className="w-full px-4 py-3.5 rounded-xl border border-stone-800 bg-stone-900 focus:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] transition-all text-white placeholder:text-stone-400"
             required
           />
           

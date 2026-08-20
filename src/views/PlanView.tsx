@@ -271,7 +271,7 @@ export function PlanView({
                                 }}
                               >
                                 <div className="flex items-center gap-3">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  <div className="w-1.5 h-1.5 rounded-full bg-[#FC5200]/100" />
                                   <div>
                                     <p className="text-sm font-medium text-white">{meal.recipeName}</p>
                                     <p className="text-xs text-stone-500">
@@ -411,7 +411,7 @@ export function PlanView({
                               
                               {supplements.length > 0 ? (
                                 <div className="flex items-start gap-2">
-                                  <Activity className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                                  <Activity className="w-3.5 h-3.5 text-[#FC5200] shrink-0 mt-0.5" />
                                   <span className="text-xs text-stone-300">{supplements.join(', ')}</span>
                                 </div>
                               ) : null}

@@ -134,7 +134,7 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                  className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                 />
               </div>
 
@@ -165,7 +165,7 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
                   }}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                  className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                 />
                 
                 <AnimatePresence>
@@ -238,7 +238,7 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
                     type="number"
                     value={calories}
                     onChange={(e) => setCalories(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                   />
                 </div>
                 <div>
@@ -247,7 +247,7 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
                     type="number"
                     value={carbsGrams}
                     onChange={(e) => setCarbsGrams(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                   />
                 </div>
                 <div>
@@ -256,7 +256,7 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
                     type="number"
                     value={proteinGrams}
                     onChange={(e) => setProteinGrams(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                   />
                 </div>
                 <div>
@@ -265,7 +265,7 @@ export function MealPhotoConfirmModal({ isOpen, initialData, initialDate, onConf
                     type="number"
                     value={fatGrams}
                     onChange={(e) => setFatGrams(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5"
+                    className="w-full bg-stone-900 border border-stone-800 text-stone-300 text-sm rounded-lg focus:ring-[#FC5200] focus:border-[#FC5200] block p-2.5"
                   />
                 </div>
               </div>

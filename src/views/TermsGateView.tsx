@@ -13,7 +13,7 @@ export function TermsGateView({ onAccept }: TermsGateViewProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#17181C] p-4 font-sans">
       <div className={`${CARD} w-full max-w-md p-8 sm:p-10 text-center flex flex-col items-center justify-center`}>
-        <div className="w-20 h-20 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-6">
           <FileText className="w-10 h-10" />
         </div>
         <h1 className="text-3xl font-display font-bold text-white mb-4">We've updated our terms</h1>

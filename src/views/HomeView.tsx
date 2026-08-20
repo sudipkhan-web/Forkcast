@@ -347,7 +347,7 @@ export function HomeView({
             )}
             {trainingDayType && trainingDayType !== 'Rest' && trainingFeeling && (
               <div className="mt-2 flex items-center gap-1.5 text-[10px] font-medium text-stone-400">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                <CheckCircle2 className="w-3 h-3 text-[#FC5200]" />
                 Session marked as: <span className="text-stone-300 capitalize">{trainingFeeling === 'dnf' ? "Didn't finish" : trainingFeeling}</span>
               </div>
             )}

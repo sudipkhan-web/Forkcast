@@ -419,11 +419,11 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
           <div>
             <div className="bg-stone-900 border border-stone-800 rounded-xl p-1 flex relative">
               {scanningState && (
-                <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl border border-emerald-500/20">
+                <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl border border-[#FC5200]/20">
                   <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full mr-2"
+                    className="w-4 h-4 border-2 border-[#FC5200] border-t-transparent rounded-full mr-2"
                   />
                   <span className="text-xs font-medium text-[#FC5200]">
                     {scanningCount > 1 ? `Analyzing ${scanningCount} photos...` : 'Scanning...'}
@@ -435,7 +435,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                 disabled={!!scanningState}
                 title="Open camera to scan items"
                 aria-label="Open camera to scan items"
-                className="w-full flex items-center justify-center gap-2 py-3 bg-stone-900 text-stone-300 rounded-lg hover:bg-emerald-50 hover:text-[#FC5200] transition-all font-semibold active:scale-[0.98] shadow-sm"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-stone-900 text-stone-300 rounded-lg hover:bg-[#FC5200]/10 hover:text-[#FC5200] transition-all font-semibold active:scale-[0.98] shadow-sm"
               >
                 <Camera className="w-5 h-5" />
                 Smart Scan
@@ -525,11 +525,11 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                             value={newIngredientName}
                             onChange={e => setNewIngredientName(e.target.value)}
                             placeholder="Add ingredient (e.g. Tomatoes)"
-                            className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-white placeholder:text-stone-400"
+                            className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] transition-all text-white placeholder:text-stone-400"
                           />
                           {isClassifying && (
                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
+                              <Loader2 className="w-4 h-4 text-[#FC5200] animate-spin" />
                             </div>
                           )}
                           {suggestions.length > 0 && newIngredientName.trim() && (!customIngredientRules || !customIngredientRules[newIngredientName.trim().toLowerCase()]) && (
@@ -583,7 +583,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                         <select
                           value={newIngredientCategory}
                           onChange={(e) => setNewIngredientCategory(e.target.value)}
-                          className="bg-stone-900 border border-stone-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 shrink-0"
+                          className="bg-stone-900 border border-stone-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-[#FC5200] shrink-0"
                         >
                           {['Produce', 'Dairy & Eggs', 'Meat & Seafood', 'Pantry Staples', 'Snacks', 'Beverages', 'Frozen', 'Spices & Seasonings', 'Other'].map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
@@ -596,7 +596,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                             type="date"
                             value={newIngredientExpiresAt}
                             onChange={e => setNewIngredientExpiresAt(e.target.value)}
-                            className="bg-stone-900 border border-stone-800 rounded-lg px-2 py-1.5 text-xs text-stone-300 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                            className="bg-stone-900 border border-stone-800 rounded-lg px-2 py-1.5 text-xs text-stone-300 focus:outline-none focus:ring-1 focus:ring-[#FC5200]/50 focus:border-[#FC5200] transition-all"
                           />
                         </div>
                       </div>
@@ -700,7 +700,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                 <div className="flex flex-col">
                                   <span className="font-medium text-white text-sm">{item.name}</span>
                                   {item.expiresAt && (
-                                    <span className={`text-[11px] mt-0.5 ${isExpired ? 'text-red-600 font-bold' : isExpiringSoon ? 'text-emerald-500 font-medium' : 'text-stone-400'}`}>
+                                    <span className={`text-[11px] mt-0.5 ${isExpired ? 'text-red-600 font-bold' : isExpiringSoon ? 'text-amber-500 font-medium' : 'text-stone-400'}`}>
                                       {isExpired ? 'Expired: ' : 'Expires: '} {(() => {
                                         const [year, month, day] = item.expiresAt.split('-').map(Number);
                                         return new Date(year, month - 1, day).toLocaleDateString();
@@ -742,7 +742,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                     updateCustomIngredientRule(item.name, { location: newLoc, category: item.category || 'Other' });
                                     syncInventoryItem(updatedItem);
                                   }}
-                                  className="text-[10px] uppercase font-bold tracking-wider bg-stone-900 border border-stone-800 rounded-md py-1 px-1.5 text-stone-500 focus:outline-none focus:border-emerald-500"
+                                  className="text-[10px] uppercase font-bold tracking-wider bg-stone-900 border border-stone-800 rounded-md py-1 px-1.5 text-stone-500 focus:outline-none focus:border-[#FC5200]"
                                 >
                                   <option value="pantry">Pantry</option>
                                   <option value="fridge">Fridge</option>
@@ -756,7 +756,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
                                     updateCustomIngredientRule(item.name, { location: item.location || 'pantry', category: newCat });
                                     syncInventoryItem(updatedItem);
                                   }}
-                                  className="text-[10px] uppercase font-bold tracking-wider bg-stone-900 border border-stone-800 rounded-md py-1 px-1.5 text-stone-500 focus:outline-none focus:border-emerald-500"
+                                  className="text-[10px] uppercase font-bold tracking-wider bg-stone-900 border border-stone-800 rounded-md py-1 px-1.5 text-stone-500 focus:outline-none focus:border-[#FC5200]"
                                 >
                                   {['Produce', 'Dairy & Eggs', 'Meat & Seafood', 'Pantry Staples', 'Snacks', 'Beverages', 'Frozen', 'Spices & Seasonings', 'Other'].map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>

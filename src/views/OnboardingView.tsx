@@ -61,7 +61,7 @@ export function OnboardingView({
         {step === 1 && (
           <>
             <div className="text-center mt-8">
-              <div className="w-16 h-16 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-4">
                 <ChefHat className="w-8 h-8" />
               </div>
               <h1 className="text-3xl font-display font-bold text-white mb-3">Welcome to Forkcast</h1>
@@ -110,7 +110,7 @@ export function OnboardingView({
         {step === 2 && (
           <>
             <div className="text-center mt-8">
-              <div className="w-16 h-16 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-8 h-8" />
               </div>
               <h1 className="text-2xl font-display font-bold text-white mb-2">Pantry Quick-Start</h1>
@@ -137,7 +137,7 @@ export function OnboardingView({
 
         {step === 3 && (
           <div className="flex flex-col items-center justify-center h-full text-center mt-12">
-            <div className="w-20 h-20 bg-emerald-100 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-6">
               <Check className="w-10 h-10" />
             </div>
             <h1 className="text-3xl font-display font-bold text-white mb-4">You're all set!</h1>

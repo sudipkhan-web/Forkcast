@@ -154,7 +154,7 @@ export function MealDetailsView({
             <div className="mt-4 bg-stone-900 p-5 rounded-2xl border border-stone-800 space-y-3">
               {substitutions.map((sub, idx) => (
                 <div key={idx} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-200 text-[#FC5200] flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-[#FC5200] text-[#FC5200] flex items-center justify-center shrink-0 mt-0.5">
                     <RefreshCw className="w-3 h-3" />
                   </div>
                   <div>
@@ -183,7 +183,7 @@ export function MealDetailsView({
               const isAccepted = sub && acceptedSubstitutions.includes(sub.original);
               return (
                 <li key={idx} className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${has ? 'bg-emerald-100 text-[#FC5200]' : inCart ? 'bg-blue-100 text-blue-600' : isAccepted ? 'bg-emerald-100 text-[#FC5200]' : 'bg-stone-800 text-stone-400 border border-stone-800'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${has ? 'bg-[#FC5200]/15 text-[#FC5200]' : inCart ? 'bg-blue-100 text-blue-600' : isAccepted ? 'bg-[#FC5200]/15 text-[#FC5200]' : 'bg-stone-800 text-stone-400 border border-stone-800'}`}>
                     {has ? <Check className="w-3 h-3" /> : inCart ? <ShoppingCart className="w-3 h-3" /> : isAccepted ? <RefreshCw className="w-3 h-3" /> : <div className="w-1.5 h-1.5 rounded-full bg-stone-300" />}
                   </div>
                   <span className={`text-sm ${has || inCart || isAccepted ? 'text-white' : 'text-stone-500'}`}>
@@ -199,12 +199,12 @@ export function MealDetailsView({
                   {sub && !isAccepted && (
                     <button 
                       onClick={() => setAcceptedSubstitutions(prev => [...prev, sub.original])}
-                      className="text-[10px] font-display font-bold uppercase tracking-wider text-[#FC5200] ml-auto bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-sm hover:bg-emerald-100 transition-colors"
+                      className="text-[10px] font-display font-bold uppercase tracking-wider text-[#FC5200] ml-auto bg-[#FC5200]/10 border border-[#FC5200]/40 px-2 py-0.5 rounded-sm hover:bg-[#FC5200]/15 transition-colors"
                     >
                       Swap: {sub.substitute}
                     </button>
                   )}
-                  {sub && isAccepted && <span className="text-[10px] font-display font-bold uppercase tracking-wider text-[#FC5200] ml-auto bg-emerald-100 px-2 py-0.5 rounded-sm">Swapped</span>}
+                  {sub && isAccepted && <span className="text-[10px] font-display font-bold uppercase tracking-wider text-[#FC5200] ml-auto bg-[#FC5200]/15 px-2 py-0.5 rounded-sm">Swapped</span>}
                 </li>
               );
             })}

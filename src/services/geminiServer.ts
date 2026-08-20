@@ -570,3 +570,40 @@ export async function serverClassifyIngredient(name: string): Promise<{ location
     throw err;
   }
 }
+
+export async function serverSuggestFreeTextOptions(category: 'cuisine' | 'dietary' | 'medical' | 'ingredient' | 'mealName', partialText: string): Promise<string[]> {
+  try {
+    const ai = getGeminiClient();
+    
+    
+    let description = '';
+    if (category === 'cuisine') description = "culinary cuisines (e.g. Italian, Thai, Vietnamese)";
+    if (category === 'dietary') description = "dietary preferences or restrictions (e.g. Vegan, Keto, Gluten-Free)";
+    if (category === 'medical') description = "medical or health conditions relevant to diet (e.g. Iron Deficiency, Celiac Disease, Hypertension)";
+    if (category === 'ingredient') description = "standard grocery ingredients or food items (e.g. Garlic, Chicken Breast, Olive Oil)";
+    if (category === 'mealName') description = "well-formed dish or meal names (e.g. Spaghetti Bolognese, Chicken Salad)";
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.6-flash",
+      contents: `Provide up to 5 standard, correctly-spelled ${description} that match the partial user input: "${partialText}". Return them as a JSON list of strings.`,
+      config: {
+        systemInstruction: "You are an AI assistant helping a user fill out a structured profile. Output only a JSON array of strings containing the suggestions. Keep them concise and standard.",
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING
+          },
+          description: "List of matching suggestions."
+        }
+      }
+    });
+    const text = response.text;
+    if (!text) return [];
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error("Error in serverSuggestFreeTextOptions:", err);
+    return [];
+  }
+}

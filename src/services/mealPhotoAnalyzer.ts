@@ -102,3 +102,21 @@ export async function captureMealPhoto(file: File): Promise<{ name: string, calo
     return null;
   }
 }
+
+export async function suggestFreeTextOptions(category: 'cuisine' | 'dietary' | 'medical' | 'ingredient' | 'mealName', partialText: string): Promise<string[]> {
+  try {
+    const res = await fetch("/api/suggestions/freetext", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category, partialText })
+    });
+    if (!res.ok) {
+      return [];
+    }
+    const result = await res.json();
+    return Array.isArray(result) ? result : [];
+  } catch (error) {
+    console.error("Error fetching AI suggestions:", error);
+    return [];
+  }
+}

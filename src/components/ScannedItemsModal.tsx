@@ -130,7 +130,7 @@ export function ScannedItemsModal({ isOpen, onClose, scannedItems, onConfirm }: 
                         <select
                           value={item.location}
                           onChange={(e) => handleLocationChange(item.id, e.target.value as 'fridge' | 'pantry')}
-                          className="text-xs bg-stone-900 border border-stone-800 rounded-lg py-1 px-2 text-stone-400 focus:outline-none focus:border-emerald-500 flex-1"
+                          className="text-xs bg-stone-900 border border-stone-800 rounded-lg py-1 px-2 text-stone-400 focus:outline-none focus:border-[#FC5200] flex-1"
                         >
                           <option value="pantry">Pantry</option>
                           <option value="fridge">Fridge</option>
@@ -138,7 +138,7 @@ export function ScannedItemsModal({ isOpen, onClose, scannedItems, onConfirm }: 
                         <select
                           value={item.category}
                           onChange={(e) => handleCategoryChange(item.id, e.target.value)}
-                          className="text-xs bg-stone-900 border border-stone-800 rounded-lg py-1 px-2 text-stone-400 focus:outline-none focus:border-emerald-500 flex-1"
+                          className="text-xs bg-stone-900 border border-stone-800 rounded-lg py-1 px-2 text-stone-400 focus:outline-none focus:border-[#FC5200] flex-1"
                         >
                           {CATEGORIES.map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
@@ -157,7 +157,7 @@ export function ScannedItemsModal({ isOpen, onClose, scannedItems, onConfirm }: 
                     value={newItemName}
                     onChange={e => setNewItemName(e.target.value)}
                     placeholder="Missing something? Add it here"
-                    className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-white placeholder:text-stone-400"
+                    className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white placeholder:text-stone-400"
                   />
                   <button 
                     type="submit"

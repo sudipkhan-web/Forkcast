@@ -11,6 +11,7 @@ import { doc, setDoc, getDocs, collection, query, where, updateDoc } from 'fireb
 import toast from 'react-hot-toast';
 import { NotificationBell } from '../components/NotificationBell';
 import { initNotifications } from '../services/notificationService';
+import { suggestFreeTextOptions } from '../services/mealPhotoAnalyzer';
 import { getOrGenerateRecipeImage } from '../services/imageGenerator';
 
 interface ProfileViewProps {
@@ -78,10 +79,10 @@ export function ProfileView({
   const [newFavoriteCuisine, setNewFavoriteCuisine] = useState('');
   const [newSupplement, setNewSupplement] = useState('');
 
-  const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
-  const [dietarySuggestions, setDietarySuggestions] = useState<string[]>([]);
-  const [dislikedSuggestions, setDislikedSuggestions] = useState<string[]>([]);
-  const [healthConditionSuggestions, setHealthConditionSuggestions] = useState<string[]>([]);
+  const [cuisineSuggestions, setCuisineSuggestions] = useState<{text: string, isAi?: boolean}[]>([]);
+  const [dietarySuggestions, setDietarySuggestions] = useState<{text: string, isAi?: boolean}[]>([]);
+  const [dislikedSuggestions, setDislikedSuggestions] = useState<{text: string, isAi?: boolean}[]>([]);
+  const [healthConditionSuggestions, setHealthConditionSuggestions] = useState<{text: string, isAi?: boolean}[]>([]);
   
   const cuisineDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const dietaryDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -92,9 +93,17 @@ export function ProfileView({
     const term = newFavoriteCuisine.trim().toLowerCase();
     if (!term) { setCuisineSuggestions([]); return; }
     if (cuisineDebounceRef.current) clearTimeout(cuisineDebounceRef.current);
-    cuisineDebounceRef.current = setTimeout(() => {
-      setCuisineSuggestions(CUISINE_OPTIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
-    }, 250);
+    cuisineDebounceRef.current = setTimeout(async () => {
+      let local = CUISINE_OPTIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5);
+      if (local.length > 0) {
+        setCuisineSuggestions(local.map(text => ({ text })));
+      } else if (term.length >= 3) {
+        const aiOptions = await suggestFreeTextOptions('cuisine', term);
+        setCuisineSuggestions(aiOptions.map(text => ({ text, isAi: true })));
+      } else {
+        setCuisineSuggestions([]);
+      }
+    }, 600);
     return () => { if (cuisineDebounceRef.current) clearTimeout(cuisineDebounceRef.current); };
   }, [newFavoriteCuisine]);
 
@@ -102,9 +111,17 @@ export function ProfileView({
     const term = newDietary.trim().toLowerCase();
     if (!term) { setDietarySuggestions([]); return; }
     if (dietaryDebounceRef.current) clearTimeout(dietaryDebounceRef.current);
-    dietaryDebounceRef.current = setTimeout(() => {
-      setDietarySuggestions(DIETARY_OPTIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
-    }, 250);
+    dietaryDebounceRef.current = setTimeout(async () => {
+      let local = DIETARY_OPTIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5);
+      if (local.length > 0) {
+        setDietarySuggestions(local.map(text => ({ text })));
+      } else if (term.length >= 3) {
+        const aiOptions = await suggestFreeTextOptions('dietary', term);
+        setDietarySuggestions(aiOptions.map(text => ({ text, isAi: true })));
+      } else {
+        setDietarySuggestions([]);
+      }
+    }, 600);
     return () => { if (dietaryDebounceRef.current) clearTimeout(dietaryDebounceRef.current); };
   }, [newDietary]);
 
@@ -112,10 +129,18 @@ export function ProfileView({
     const term = newDislikedIngredient.trim().toLowerCase();
     if (!term) { setDislikedSuggestions([]); return; }
     if (dislikedDebounceRef.current) clearTimeout(dislikedDebounceRef.current);
-    dislikedDebounceRef.current = setTimeout(() => {
+    dislikedDebounceRef.current = setTimeout(async () => {
       const allDisliked = Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...COMMON_INGREDIENTS, ...Object.keys(customIngredientRules || {})]));
-      setDislikedSuggestions(allDisliked.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
-    }, 250);
+      let local = allDisliked.filter(o => o.toLowerCase().includes(term)).slice(0, 5);
+      if (local.length > 0) {
+        setDislikedSuggestions(local.map(text => ({ text })));
+      } else if (term.length >= 3) {
+        const aiOptions = await suggestFreeTextOptions('ingredient', term);
+        setDislikedSuggestions(aiOptions.map(text => ({ text, isAi: true })));
+      } else {
+        setDislikedSuggestions([]);
+      }
+    }, 600);
     return () => { if (dislikedDebounceRef.current) clearTimeout(dislikedDebounceRef.current); };
   }, [newDislikedIngredient, customIngredientRules]);
 
@@ -123,9 +148,17 @@ export function ProfileView({
     const term = newHealthCondition.trim().toLowerCase();
     if (!term) { setHealthConditionSuggestions([]); return; }
     if (healthDebounceRef.current) clearTimeout(healthDebounceRef.current);
-    healthDebounceRef.current = setTimeout(() => {
-      setHealthConditionSuggestions(HEALTH_CONDITIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
-    }, 250);
+    healthDebounceRef.current = setTimeout(async () => {
+      let local = HEALTH_CONDITIONS.filter(o => o.toLowerCase().includes(term)).slice(0, 5);
+      if (local.length > 0) {
+        setHealthConditionSuggestions(local.map(text => ({ text })));
+      } else if (term.length >= 3) {
+        const aiOptions = await suggestFreeTextOptions('medical', term);
+        setHealthConditionSuggestions(aiOptions.map(text => ({ text, isAi: true })));
+      } else {
+        setHealthConditionSuggestions([]);
+      }
+    }, 600);
     return () => { if (healthDebounceRef.current) clearTimeout(healthDebounceRef.current); };
   }, [newHealthCondition]);
   const [isConfirmingSignOut, setIsConfirmingSignOut] = useState(false);
@@ -204,7 +237,7 @@ export function ProfileView({
           <div className="space-y-8">
             <div className={`flex items-center justify-between ${CARD} p-6`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-[#FC5200]">
+                <div className="w-10 h-10 rounded-full bg-[#FC5200]/15 flex items-center justify-center text-[#FC5200]">
                   <Users className="w-5 h-5" />
                 </div>
                 <h2 className="text-base font-bold text-white">Edit Group</h2>
@@ -238,7 +271,7 @@ export function ProfileView({
                 className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
               >
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-emerald-500" />
+                  <Users className="w-4 h-4 text-[#FC5200]" />
                   <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Members</h2>
                 </div>
                 <div className="flex items-center gap-3">
@@ -268,7 +301,7 @@ export function ProfileView({
                                 : group.memberIds.filter(id => id !== person.id);
                               updateGroup({ ...group, memberIds: newMemberIds });
                             }}
-                            className="w-5 h-5 rounded border-stone-300 text-[#FC5200] focus:ring-emerald-500"
+                            className="w-5 h-5 rounded border-stone-300 text-[#FC5200] focus:ring-[#FC5200]"
                           />
                           <span className="text-sm font-medium text-white">{person.name}</span>
                         </label>
@@ -518,7 +551,7 @@ export function ProfileView({
                       }}
                       className="w-full py-2.5 px-4 bg-stone-800 hover:bg-stone-700 text-stone-400 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
                     >
-                      <Sparkles className="w-4 h-4 text-emerald-500" /> Send Test Notification
+                      <Sparkles className="w-4 h-4 text-[#FC5200]" /> Send Test Notification
                     </button>
                   </div>
                 </div>
@@ -534,7 +567,7 @@ export function ProfileView({
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm font-medium text-stone-300">Permission Status</span>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                    permission === 'granted' ? 'bg-emerald-50 text-[#FC5200] border border-emerald-200' :
+                    permission === 'granted' ? 'bg-[#FC5200]/10 text-[#FC5200] border border-[#FC5200]/40' :
                     permission === 'denied' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                     'bg-amber-50 text-amber-700 border border-amber-200'
                   }`}>
@@ -607,7 +640,7 @@ export function ProfileView({
                     updateHouseholdMember(newMember);
                     setEditingPersonId(newId);
                   }}
-                  className="text-[#FC5200] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
+                  className="text-[#FC5200] bg-[#FC5200]/10 hover:bg-[#FC5200]/15 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
                 >
                   <Plus className="w-4 h-4" /> Add
                 </button>
@@ -717,8 +750,8 @@ export function ProfileView({
                     }}
                     className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
                       person.skillLevel === skill
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                        ? 'bg-[#FC5200]/100 border-[#FC5200] text-white shadow-sm'
+                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-[#FC5200]/40 hover:text-[#FC5200]'
                     }`}
                   >
                     {skill}
@@ -772,8 +805,8 @@ export function ProfileView({
                     }}
                     className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
                       person.skillLevel === skill
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                        ? 'bg-[#FC5200]/100 border-[#FC5200] text-white shadow-sm'
+                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-[#FC5200]/40 hover:text-[#FC5200]'
                     }`}
                   >
                     {skill}
@@ -847,17 +880,18 @@ export function ProfileView({
                         />
                         {cuisineSuggestions.length > 0 && newFavoriteCuisine.trim() && (
                           <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
-                            {cuisineSuggestions.map(s => (
+                            {cuisineSuggestions.map((s, i) => (
                               <button
-                                key={s}
+                                key={s.text + i}
                                 type="button"
                                 onClick={() => {
-                                  setNewFavoriteCuisine(s);
+                                  setNewFavoriteCuisine(s.text);
                                   setCuisineSuggestions([]);
                                 }}
-                                className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
+                                className="w-full flex items-center justify-between text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
                               >
-                                {s}
+                                <span>{s.text}</span>
+                                {s.isAi && <span className="text-[10px] bg-[#FC5200]/20 text-[#FC5200] px-1.5 py-0.5 rounded ml-2 normal-case font-medium">AI suggested</span>}
                               </button>
                             ))}
                           </div>
@@ -879,8 +913,8 @@ export function ProfileView({
                           }}
                           className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
                             person.favoriteCuisines.includes(cuisine)
-                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                              ? 'bg-[#FC5200]/100 border-[#FC5200] text-white shadow-sm'
+                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-[#FC5200]/40 hover:text-[#FC5200]'
                           }`}
                         >
                           {cuisine}
@@ -962,17 +996,18 @@ export function ProfileView({
                         />
                         {dietarySuggestions.length > 0 && newDietary.trim() && (
                           <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
-                            {dietarySuggestions.map(s => (
+                            {dietarySuggestions.map((s, i) => (
                               <button
-                                key={s}
+                                key={s.text + i}
                                 type="button"
                                 onClick={() => {
-                                  setNewDietary(s);
+                                  setNewDietary(s.text);
                                   setDietarySuggestions([]);
                                 }}
-                                className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
+                                className="w-full flex items-center justify-between text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
                               >
-                                {s}
+                                <span>{s.text}</span>
+                                {s.isAi && <span className="text-[10px] bg-[#FC5200]/20 text-[#FC5200] px-1.5 py-0.5 rounded ml-2 normal-case font-medium">AI suggested</span>}
                               </button>
                             ))}
                           </div>
@@ -994,8 +1029,8 @@ export function ProfileView({
                           }}
                           className={`px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.98] border flex items-center gap-1 ${
                             person.dietary.includes(diet)
-                              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-emerald-500 hover:text-[#FC5200]'
+                              ? 'bg-[#FC5200]/100 border-[#FC5200] text-white shadow-sm'
+                              : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-[#FC5200]/40 hover:text-[#FC5200]'
                           }`}
                         >
                           {diet}
@@ -1071,17 +1106,18 @@ export function ProfileView({
                         />
                         {dislikedSuggestions.length > 0 && newDislikedIngredient.trim() && (
                           <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
-                            {dislikedSuggestions.map(s => (
+                            {dislikedSuggestions.map((s, i) => (
                               <button
-                                key={s}
+                                key={s.text + i}
                                 type="button"
                                 onClick={() => {
-                                  setNewDislikedIngredient(s);
+                                  setNewDislikedIngredient(s.text);
                                   setDislikedSuggestions([]);
                                 }}
-                                className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
+                                className="w-full flex items-center justify-between text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
                               >
-                                {s}
+                                <span>{s.text}</span>
+                                {s.isAi && <span className="text-[10px] bg-[#FC5200]/20 text-[#FC5200] px-1.5 py-0.5 rounded ml-2 normal-case font-medium">AI suggested</span>}
                               </button>
                             ))}
                           </div>
@@ -1183,19 +1219,20 @@ export function ProfileView({
                           />
                           {healthConditionSuggestions.length > 0 && newHealthCondition.trim() && (
                             <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
-                              {healthConditionSuggestions.map(s => (
-                                <button
-                                  key={s}
-                                  type="button"
-                                  onClick={() => {
-                                    setNewHealthCondition(s);
-                                    setHealthConditionSuggestions([]);
-                                  }}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
-                                >
-                                  {s}
-                                </button>
-                              ))}
+                              {healthConditionSuggestions.map((s, i) => (
+                              <button
+                                key={s.text + i}
+                                type="button"
+                                onClick={() => {
+                                  setNewHealthCondition(s.text);
+                                  setHealthConditionSuggestions([]);
+                                }}
+                                className="w-full flex items-center justify-between text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
+                              >
+                                <span>{s.text}</span>
+                                {s.isAi && <span className="text-[10px] bg-[#FC5200]/20 text-[#FC5200] px-1.5 py-0.5 rounded ml-2 normal-case font-medium">AI suggested</span>}
+                              </button>
+                            ))}
                             </div>
                           )}
                         </div>
@@ -1532,7 +1569,7 @@ export function ProfileView({
         updateGroup(newGroup);
         setEditingGroupId(newId);
       }}
-      className="text-[#FC5200] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
+      className="text-[#FC5200] bg-[#FC5200]/10 hover:bg-[#FC5200]/15 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 transition-all active:scale-[0.98]"
     >
       <Plus className="w-4 h-4" /> Add
     </button>
