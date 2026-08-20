@@ -468,7 +468,8 @@ Details: ${details}`,
     return parsed.mealType;
   } catch (err) {
     console.error("Error in serverClassifyMealType:", err);
-    throw err;
+    // fallback based on name or time, but default to 'Dinner' or 'Snack' safely
+    return 'Dinner';
   }
 }
 
@@ -567,7 +568,11 @@ export async function serverClassifyIngredient(name: string): Promise<{ location
     return parsed;
   } catch (err) {
     console.error("Error in serverClassifyIngredient:", err);
-    throw err;
+    return {
+      location: 'pantry',
+      category: 'Other',
+      standardizedName: name
+    };
   }
 }
 

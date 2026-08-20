@@ -331,7 +331,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidRecipe();
       // Allow updates only to add the image field if it was missing or a URL update
-      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['image', 'mealType']); // TEMP: remove 'mealType' here after the one-time data cleanup is confirmed complete.
+      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['image']);
       allow delete: if false;
     }
 
