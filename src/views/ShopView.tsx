@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { COMMON_INGREDIENTS } from '../constants';
 import { motion } from 'motion/react';
 import { Star, CalendarDays, ClipboardList, Check, Minus, Plus, Clock, Trash2, Package, Sparkles, Loader2 } from 'lucide-react';
 import { Meal } from '../data/recipes';
@@ -34,7 +35,7 @@ export function ShopView({
 }: ShopViewProps) {
   const { showToast } = useToast();
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const {
     newShoppingItemName,
@@ -61,7 +62,7 @@ export function ShopView({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const norm = name.toLowerCase();
-      const rules = Object.keys(customIngredientRules || {});
+      const rules = Array.from(new Set([...COMMON_INGREDIENTS.map(i => i.toLowerCase()), ...Object.keys(customIngredientRules || {})]));
       const matches = rules.filter(r => r.includes(norm)).slice(0, 5);
       setSuggestions(matches);
     }, 250);

@@ -528,14 +528,14 @@ export async function serverEstimateMealFromName(name: string) {
 }
 
 
-export async function serverClassifyIngredient(name: string): Promise<{ location: 'fridge' | 'pantry', category: 'Produce' | 'Dairy & Eggs' | 'Meat & Seafood' | 'Pantry Staples' | 'Snacks' | 'Beverages' | 'Frozen' | 'Spices & Seasonings' | 'Other' }> {
+export async function serverClassifyIngredient(name: string): Promise<{ location: 'fridge' | 'pantry', category: 'Produce' | 'Dairy & Eggs' | 'Meat & Seafood' | 'Pantry Staples' | 'Snacks' | 'Beverages' | 'Frozen' | 'Spices & Seasonings' | 'Other', standardizedName?: string }> {
   try {
     const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: "gemini-3.6-flash",
-      contents: `Classify the following ingredient: "${name}". Give its most common storage location (fridge or pantry) and category.`,
+      contents: `Classify the following ingredient: "${name}". Give its most common storage location (fridge or pantry), category, and a correct standard grocery-item name for it (standardizedName).`,
       config: {
-        systemInstruction: "You are an AI culinary assistant. Output only a JSON object containing the location and category. Do not output markdown or any other text.",
+        systemInstruction: "You are an AI culinary assistant. Output only a JSON object containing the location, category, and standardizedName. Do not output markdown or any other text.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -549,9 +549,13 @@ export async function serverClassifyIngredient(name: string): Promise<{ location
               type: Type.STRING,
               enum: ['Produce', 'Dairy & Eggs', 'Meat & Seafood', 'Pantry Staples', 'Snacks', 'Beverages', 'Frozen', 'Spices & Seasonings', 'Other'],
               description: "The food category."
+            },
+            standardizedName: {
+              type: Type.STRING,
+              description: "A standard grocery-item name for the input text, fixing typos and phrasing."
             }
           },
-          required: ["location", "category"]
+          required: ["location", "category", "standardizedName"]
         }
       }
     });

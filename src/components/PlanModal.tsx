@@ -3,7 +3,7 @@ import { CARD, ICON_BUTTON, PRIMARY_BUTTON } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles } from 'lucide-react';
 import { Group, PlannedMeal, PersonProfile, InventoryItem, UserProfile } from '../types';
-import { Meal, RecipeIngredient } from '../data/recipes';
+import { Meal, RecipeIngredient, ALL_MEALS } from '../data/recipes';
 import { getTopMeals, getSmartSubstitutions } from '../services/recommendationEngine';
 
 interface PlanModalProps {
@@ -57,6 +57,20 @@ export function PlanModal({
   checkIngredient,
   setNewMealIngredients
 }: PlanModalProps) {
+  const [mealSuggestions, setMealSuggestions] = React.useState<string[]>([]);
+  const debounceRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
+
+  React.useEffect(() => {
+    const term = newMealName.trim().toLowerCase();
+    if (!term) { setMealSuggestions([]); return; }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const allNames = Array.from(new Set([...ALL_MEALS, ...globalRecipes].map(m => m.name)));
+      setMealSuggestions(allNames.filter(n => n.toLowerCase().includes(term)).slice(0, 5));
+    }, 200);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [newMealName, globalRecipes]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -156,14 +170,33 @@ export function PlanModal({
                     Suggest for Group
                   </button>
                 </div>
-                <input
-                  type="text"
-                  value={newMealName}
-                  onChange={(e) => setNewMealName(e.target.value)}
-                  placeholder="e.g. Avocado Toast"
-                  className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-white placeholder:text-stone-400"
-                  autoFocus
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={newMealName}
+                    onChange={(e) => setNewMealName(e.target.value)}
+                    placeholder="e.g. Avocado Toast"
+                    className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] transition-all text-white placeholder:text-stone-400"
+                    autoFocus
+                  />
+                  {mealSuggestions.length > 0 && newMealName.trim() && (
+                    <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
+                      {mealSuggestions.map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => {
+                            setNewMealName(s);
+                            setMealSuggestions([]);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>

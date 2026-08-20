@@ -1,5 +1,6 @@
 import React, { useState, useRef, useContext, useMemo, useEffect } from 'react';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
+import { COMMON_INGREDIENTS } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { Star, Share, Camera, Scan, Receipt, Plus, Minus, Trash2, Archive, ChevronDown, Loader2 } from 'lucide-react';
 import { InventoryItem, PantryLog } from '../types';
@@ -37,7 +38,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
   const [newIngredientCategory, setNewIngredientCategory] = useState<string>('Other');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isClassifying, setIsClassifying] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const { customIngredientRules, updateCustomIngredientRule, userId } = useContext(AppContext)!;
 
@@ -52,7 +53,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
     }
     
     const norm = name.toLowerCase();
-    const rules = Object.keys(customIngredientRules || {});
+    const rules = Array.from(new Set([...COMMON_INGREDIENTS.map(i => i.toLowerCase()), ...Object.keys(customIngredientRules || {})]));
     const matches = rules.filter(r => r.includes(norm)).slice(0, 5);
     setSuggestions(matches);
     
@@ -75,6 +76,9 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
           const data = await res.json();
           setNewIngredientLocation(data.location || 'pantry');
           setNewIngredientCategory(data.category || 'Other');
+          if (data.standardizedName) {
+            setNewIngredientName(data.standardizedName);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -136,7 +140,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
 
     if (updatedItem) await syncInventoryItem(updatedItem!);
     
-    updateCustomIngredientRule(newIngredientName.trim().toLowerCase(), newIngredientLocation, newIngredientCategory);
+    updateCustomIngredientRule(newIngredientName.trim().toLowerCase(), { location: newIngredientLocation, category: newIngredientCategory });
     
     setNewIngredientName('');
     setNewIngredientExpiresAt('');

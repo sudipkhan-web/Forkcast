@@ -29,3 +29,30 @@ export const PROTEIN_TARGET_BAND_FLAT: [number, number] = [90, 130];
 export const FAT_TARGET_BAND_FLAT: [number, number] = [60, 90];
 export const PRIVACY_POLICY_URL = "https://drive.google.com/file/d/1yaUhC29Qbb-tsaUe8DOB-N48mw9gQiWu/view?usp=drivesdk";
 export const TERMS_OF_SERVICE_URL = "https://drive.google.com/file/d/1SdpGPuAr_yABahgN07deE4GofKH849qk/view?usp=drivesdk";
+
+export const COMMON_INGREDIENTS = [
+  // Produce
+  'Apple', 'Avocado', 'Banana', 'Bell Pepper', 'Blackberries', 'Blueberries', 'Broccoli', 'Cabbage',
+  'Carrot', 'Cauliflower', 'Celery', 'Cucumber', 'Garlic', 'Grapes', 'Lemon', 'Lettuce', 'Lime',
+  'Mango', 'Mushroom', 'Onion', 'Orange', 'Peach', 'Pear', 'Pineapple', 'Potato', 'Raspberries',
+  'Spinach', 'Strawberries', 'Sweet Potato', 'Tomato', 'Watermelon', 'Zucchini',
+  
+  // Dairy & Eggs
+  'Butter', 'Cheddar Cheese', 'Cottage Cheese', 'Cream Cheese', 'Eggs', 'Feta Cheese', 'Milk',
+  'Mozzarella Cheese', 'Parmesan Cheese', 'Sour Cream', 'Swiss Cheese', 'Greek Yogurt',
+  
+  // Meat & Seafood
+  'Bacon', 'Beef Roast', 'Chicken Breast', 'Chicken Thighs', 'Ground Beef', 'Ground Turkey',
+  'Pork Chops', 'Salmon', 'Sausage', 'Shrimp', 'Steak', 'Tilapia', 'Tuna', 'Turkey Breast',
+  
+  // Pantry Staples
+  'Almonds', 'Black Beans', 'Brown Rice', 'Canned Corn', 'Canned Tomatoes', 'Canola Oil',
+  'Cashews', 'Cereal', 'Chicken Broth', 'Chickpeas', 'Chocolate Chips', 'Flour', 'Honey',
+  'Kidney Beans', 'Lentils', 'Maple Syrup', 'Oats', 'Olive Oil', 'Pasta', 'Peanut Butter',
+  'Quinoa', 'Soy Sauce', 'Sugar', 'Vegetable Oil', 'Walnuts', 'White Rice',
+  
+  // Snacks, Beverages, Frozen, Spices
+  'Almond Milk', 'Apple Juice', 'Bread', 'Coffee', 'Green Tea', 'Orange Juice',
+  'Frozen Berries', 'Frozen Broccoli', 'Frozen Corn', 'Frozen Peas', 'Ice Cream',
+  'Basil', 'Black Pepper', 'Cinnamon', 'Cumin', 'Garlic Powder', 'Oregano', 'Paprika', 'Salt', 'Vanilla Extract'
+];

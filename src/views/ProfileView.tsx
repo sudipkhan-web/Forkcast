@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp, Settings, Info , ChevronRight} from 'lucide-react';
+import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp, Settings, Info , ChevronRight, Pill , Zap, ThumbsDown } from 'lucide-react';
 import { PersonProfile, Group, UserProfile, AppNotification } from '../types';
 import { Meal, ALL_MEALS } from '../data/recipes';
-import { DIETARY_OPTIONS, CUISINE_OPTIONS, HEALTH_CONDITIONS, SKILL_OPTIONS, TIME_OPTIONS, COMMON_DISLIKED_INGREDIENTS, BIOLOGICAL_SEX_OPTIONS, RACE_TYPE_OPTIONS } from '../constants';
+import { DIETARY_OPTIONS, CUISINE_OPTIONS, HEALTH_CONDITIONS, SKILL_OPTIONS, TIME_OPTIONS, COMMON_DISLIKED_INGREDIENTS, COMMON_INGREDIENTS, BIOLOGICAL_SEX_OPTIONS, RACE_TYPE_OPTIONS } from '../constants';
 import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { doc, setDoc, getDocs, collection, query, where, updateDoc } from 'firebase/firestore';
@@ -72,10 +72,10 @@ export function ProfileView({
   const [dislikedSuggestions, setDislikedSuggestions] = useState<string[]>([]);
   const [healthConditionSuggestions, setHealthConditionSuggestions] = useState<string[]>([]);
   
-  const cuisineDebounceRef = useRef<NodeJS.Timeout>();
-  const dietaryDebounceRef = useRef<NodeJS.Timeout>();
-  const dislikedDebounceRef = useRef<NodeJS.Timeout>();
-  const healthDebounceRef = useRef<NodeJS.Timeout>();
+  const cuisineDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const dietaryDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const dislikedDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const healthDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     const term = newFavoriteCuisine.trim().toLowerCase();
@@ -102,7 +102,7 @@ export function ProfileView({
     if (!term) { setDislikedSuggestions([]); return; }
     if (dislikedDebounceRef.current) clearTimeout(dislikedDebounceRef.current);
     dislikedDebounceRef.current = setTimeout(() => {
-      const allDisliked = Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...Object.keys(customIngredientRules || {})]));
+      const allDisliked = Array.from(new Set([...COMMON_DISLIKED_INGREDIENTS, ...COMMON_INGREDIENTS, ...Object.keys(customIngredientRules || {})]));
       setDislikedSuggestions(allDisliked.filter(o => o.toLowerCase().includes(term)).slice(0, 5));
     }, 250);
     return () => { if (dislikedDebounceRef.current) clearTimeout(dislikedDebounceRef.current); };
@@ -220,23 +220,23 @@ export function ProfileView({
               <button
                 onClick={() => {
                   const newSet = new Set(expandedCards);
-                  if (newSet.has('disliked')) newSet.delete('disliked');
-                  else newSet.add('disliked');
+                  if (newSet.has('members')) newSet.delete('members');
+                  else newSet.add('members');
                   setExpandedCards(newSet);
                 }}
                 className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
               >
                 <div className="flex items-center gap-2">
-                  <ThumbsDown className="w-4 h-4 text-red-500" />
-                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Disliked Ingredients</h2>
+                  <Users className="w-4 h-4 text-emerald-500" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Members</h2>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-stone-400">{person.dislikedIngredients?.length > 0 ? `${person.dislikedIngredients.length} selected` : "None"}</span>
-                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('disliked') ? 'rotate-90' : ''}`} />
+                  <span className="text-sm font-medium text-stone-400">{group.memberIds?.length > 0 ? `${group.memberIds.length} selected` : "None"}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('members') ? 'rotate-90' : ''}`} />
                 </div>
               </button>
               <AnimatePresence>
-                {expandedCards.has('disliked') && (
+                {expandedCards.has('members') && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
@@ -806,7 +806,7 @@ export function ProfileView({
                           className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white placeholder:text-stone-400 transition-all"
                         />
                         {cuisineSuggestions.length > 0 && newFavoriteCuisine.trim() && (
-                          <div className={`absolute top-full left-0 right-0 mt-2 ${CARD} z-20`}>
+                          <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
                             {cuisineSuggestions.map(s => (
                               <button
                                 key={s}
@@ -815,7 +815,7 @@ export function ProfileView({
                                   setNewFavoriteCuisine(s);
                                   setCuisineSuggestions([]);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-stone-200 hover:bg-stone-700 transition-colors capitalize"
+                                className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
                               >
                                 {s}
                               </button>
@@ -912,7 +912,7 @@ export function ProfileView({
                           className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white placeholder:text-stone-400 transition-all"
                         />
                         {dietarySuggestions.length > 0 && newDietary.trim() && (
-                          <div className={`absolute top-full left-0 right-0 mt-2 ${CARD} z-20`}>
+                          <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
                             {dietarySuggestions.map(s => (
                               <button
                                 key={s}
@@ -921,7 +921,7 @@ export function ProfileView({
                                   setNewDietary(s);
                                   setDietarySuggestions([]);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-stone-200 hover:bg-stone-700 transition-colors capitalize"
+                                className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
                               >
                                 {s}
                               </button>
@@ -967,23 +967,23 @@ export function ProfileView({
               <button
                 onClick={() => {
                   const newSet = new Set(expandedCards);
-                  if (newSet.has('cuisines')) newSet.delete('cuisines');
-                  else newSet.add('cuisines');
+                  if (newSet.has('disliked')) newSet.delete('disliked');
+                  else newSet.add('disliked');
                   setExpandedCards(newSet);
                 }}
                 className="w-full flex items-center justify-between p-6 focus:outline-none text-left"
               >
                 <div className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-rose-500" />
-                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Favorite Cuisines</h2>
+                  <ThumbsDown className="w-4 h-4 text-red-500" />
+                  <h2 className="text-sm font-display font-bold text-white uppercase tracking-wider">Disliked Ingredients</h2>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-stone-400">{person.favoriteCuisines?.length > 0 ? `${person.favoriteCuisines.length} selected` : "None"}</span>
-                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('cuisines') ? 'rotate-90' : ''}`} />
+                  <span className="text-sm font-medium text-stone-400">{person.dislikedIngredients?.length > 0 ? `${person.dislikedIngredients.length} selected` : "None"}</span>
+                  <ChevronRight className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${expandedCards.has('disliked') ? 'rotate-90' : ''}`} />
                 </div>
               </button>
               <AnimatePresence>
-                {expandedCards.has('cuisines') && (
+                {expandedCards.has('disliked') && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
@@ -1016,7 +1016,7 @@ export function ProfileView({
                           className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white placeholder:text-stone-400 transition-all"
                         />
                         {dislikedSuggestions.length > 0 && newDislikedIngredient.trim() && (
-                          <div className={`absolute top-full left-0 right-0 mt-2 ${CARD} z-20`}>
+                          <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
                             {dislikedSuggestions.map(s => (
                               <button
                                 key={s}
@@ -1025,7 +1025,7 @@ export function ProfileView({
                                   setNewDislikedIngredient(s);
                                   setDislikedSuggestions([]);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-stone-200 hover:bg-stone-700 transition-colors capitalize"
+                                className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
                               >
                                 {s}
                               </button>
@@ -1087,16 +1087,36 @@ export function ProfileView({
                             });
                           }
                           setNewHealthCondition('');
+                          setHealthConditionSuggestions([]);
                         }}
-                        className="flex gap-2 mb-3"
+                        className="flex gap-2 mb-3 relative"
                       >
-                        <input 
-                          type="text" 
-                          value={newHealthCondition}
-                          onChange={e => setNewHealthCondition(e.target.value)}
-                          placeholder="Add other condition..."
-                          className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-white placeholder:text-stone-400"
-                        />
+                        <div className="flex-1 relative">
+                          <input 
+                            type="text" 
+                            value={newHealthCondition}
+                            onChange={e => setNewHealthCondition(e.target.value)}
+                            placeholder="Add other condition..."
+                            className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white placeholder:text-stone-400 transition-all"
+                          />
+                          {healthConditionSuggestions.length > 0 && newHealthCondition.trim() && (
+                            <div className={`absolute left-0 right-0 top-full mt-2 z-20 ${CARD} overflow-hidden`}>
+                              {healthConditionSuggestions.map(s => (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  onClick={() => {
+                                    setNewHealthCondition(s);
+                                    setHealthConditionSuggestions([]);
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-stone-200 hover:bg-stone-800 transition-colors capitalize"
+                                >
+                                  {s}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         <button type="submit" className={`${PRIMARY_BUTTON} px-5 py-2.5 text-sm`}>Add</button>
                       </form>
                       <div className="flex flex-wrap gap-2">
@@ -1254,7 +1274,7 @@ export function ProfileView({
                         <form 
                           onSubmit={(e) => {
                             e.preventDefault();
-                            const el = e.currentTarget.elements.namedItem('supp');
+                            const el = e.currentTarget.elements.namedItem('supp') as HTMLInputElement;
                             const val = el.value.trim();
                             if (!val) return;
                             const current = person.trackedSupplements || [];

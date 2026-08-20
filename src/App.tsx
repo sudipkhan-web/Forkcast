@@ -76,6 +76,7 @@ function MainApp() {
     dislikedMealIds,
     setDislikedMealIds,
     customIngredientRules,
+    updateCustomIngredientRule,
     queuedSuggestions
   } = useAppContext();
 
@@ -407,7 +408,7 @@ function MainApp() {
             const location = data.location || 'pantry';
             const category = data.category || 'Other';
             resolvedRules[normalizedName] = { location, category };
-            updateCustomIngredientRule(normalizedName, location, category);
+            updateCustomIngredientRule(normalizedName, { location, category });
           } else {
             resolvedRules[normalizedName] = { location: 'pantry', category: 'Other' };
           }
