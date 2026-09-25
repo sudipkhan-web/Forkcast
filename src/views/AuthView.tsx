@@ -6,15 +6,43 @@ import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, si
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ALL_MEALS } from '../data/recipes';
 
+function getAuthErrorMessage(code: string): string {
+  switch (code) {
+    case 'auth/operation-not-allowed':
+      return "This sign-in method isn't available right now. Please try the other option or contact support.";
+    case 'auth/email-already-in-use':
+      return "An account with this email already exists. Try signing in instead.";
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return "Email or password is incorrect.";
+    case 'auth/weak-password':
+      return "Password must be at least 6 characters.";
+    case 'auth/invalid-email':
+      return "Please enter a valid email address.";
+    case 'auth/too-many-requests':
+      return "Too many attempts. Please wait a few minutes and try again.";
+    case 'auth/popup-blocked':
+    case 'auth/popup-closed-by-user':
+      return 'Popup was blocked. Please allow popups for this site and try again.';
+    case 'auth/network-request-failed':
+      return 'Network error. Please check your connection and try again.';
+    default:
+      return "Sign in failed. Please try again.";
+  }
+}
+
 export function AuthView() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [authErrorCode, setAuthErrorCode] = useState('');
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
+    setAuthErrorCode('');
     try {
       if (isSignUp) {
         const userCredential = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
@@ -39,12 +67,15 @@ export function AuthView() {
         await signInWithEmailAndPassword(auth, authEmail, authPassword);
       }
     } catch (err: any) {
-      setAuthError(err.message || 'Authentication failed');
+      console.error('[Auth]', err.code, err.message, 'project:', auth.app.options.projectId);
+      setAuthError(getAuthErrorMessage(err.code));
+      setAuthErrorCode(err.code || '');
     }
   };
 
   const handleGoogleSignIn = async () => {
     setAuthError('');
+    setAuthErrorCode('');
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -69,14 +100,10 @@ export function AuthView() {
           }))
         }, { merge: true });
       }
-    } catch (error: any) {
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-        setAuthError('Popup was blocked. Please allow popups for this site and try again.');
-      } else if (error.code === 'auth/network-request-failed') {
-        setAuthError('Network error. Please check your connection and try again.');
-      } else {
-        setAuthError(error.message || 'Sign in failed. Please try again.');
-      }
+    } catch (err: any) {
+      console.error('[Auth]', err.code, err.message, 'project:', auth.app.options.projectId);
+      setAuthError(getAuthErrorMessage(err.code));
+      setAuthErrorCode(err.code || '');
     }
   };
 
@@ -140,6 +167,7 @@ export function AuthView() {
             onClick={() => {
               setIsSignUp(!isSignUp);
               setAuthError('');
+              setAuthErrorCode('');
             }}
             className="text-stone-500 text-sm hover:text-white mt-2 font-medium transition-colors"
           >
@@ -147,8 +175,13 @@ export function AuthView() {
           </button>
 
           {authError && (
-            <div className="bg-red-50 text-red-600 px-4 py-2.5 rounded-full text-sm font-medium mt-2 border border-red-100">
-              {authError}
+            <div className="mt-2 text-center">
+              <div className="bg-red-50 text-red-600 px-4 py-2.5 rounded-full text-sm font-medium border border-red-100">
+                {authError}
+              </div>
+              {authErrorCode && (
+                <p className="text-xs text-stone-400 mt-1.5">Code: {authErrorCode}</p>
+              )}
             </div>
           )}
         </form>
