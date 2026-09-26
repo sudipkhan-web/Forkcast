@@ -14,6 +14,7 @@ import { initNotifications } from '../services/notificationService';
 import { suggestFreeTextOptions } from '../services/mealPhotoAnalyzer';
 import { getOrGenerateRecipeImage } from '../services/imageGenerator';
 import { apiFetch } from '../utils/apiFetch';
+import { BRAND } from '../brand';
 
 interface ProfileViewProps {
   userId: string | null;
@@ -514,18 +515,18 @@ export function ProfileView({
                   <div className="pt-4 mt-2 border-t border-stone-100">
                     <button
                       onClick={async () => {
-                        const msg = "This is a test notification from Forkcast! Your notifications are now properly configured.";
+                        const msg = `This is a test notification from ${BRAND.name}! Your notifications are now properly configured.`;
                         
                         // 1. Browser push
                         try {
                           const hasNotification = typeof window !== 'undefined' && 'Notification' in window;
                           if (hasNotification) {
                             if (Notification.permission === 'granted') {
-                              new Notification("Forkcast Test", { body: msg });
+                              new Notification(`${BRAND.name} Test`, { body: msg });
                             } else {
                               const perm = await Notification.requestPermission();
                               if (perm === 'granted') {
-                                new Notification("Forkcast Test", { body: msg });
+                                new Notification(`${BRAND.name} Test`, { body: msg });
                               }
                             }
                           } else {
@@ -1668,9 +1669,9 @@ export function ProfileView({
               <div className="bg-stone-950/70 border border-stone-800 rounded-xl p-4 mb-4">
                 <p className="text-xs text-stone-300 leading-relaxed">
                   {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream ? (
-                    "Notifications for installed apps are managed in Settings, not the browser. Go to: Settings app → Notifications → Forkcast → Allow Notifications. (If Forkcast isn't listed, open the app once first, then check again.)"
+                    `Notifications for installed apps are managed in Settings, not the browser. Go to: Settings app → Notifications → ${BRAND.name} → Allow Notifications. (If ${BRAND.name} isn't listed, open the app once first, then check again.)`
                   ) : typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent) ? (
-                    "Tap the lock/info icon next to the address bar → Permissions → Notifications → Allow. Or: Chrome menu (⋮) → Settings → Site settings → Notifications → find Forkcast → Allow."
+                    `Tap the lock/info icon next to the address bar → Permissions → Notifications → Allow. Or: Chrome menu (⋮) → Settings → Site settings → Notifications → find ${BRAND.name} → Allow.`
                   ) : (
                     "Click the lock/info icon in the address bar → Notifications → Allow, then refresh the page."
                   )}

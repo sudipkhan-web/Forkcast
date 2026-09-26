@@ -1,6 +1,7 @@
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { InventoryItem } from '../types';
+import { BRAND } from '../brand';
 
 // Helper to display a notification locally
 function showLocalNotification(title: string, body: string) {
@@ -114,7 +115,7 @@ export async function runNotificationTriggers(userId: string, inventory: Invento
               localStorage.setItem('lastEveningPrompt', todayStr);
               showLocalNotification(
                 "What's for dinner tonight? 🍽️",
-                "Forkcast has suggestions ready based on what's in your kitchen."
+                `${BRAND.name} has suggestions ready based on what's in your kitchen.`
               );
             }, ms);
           }

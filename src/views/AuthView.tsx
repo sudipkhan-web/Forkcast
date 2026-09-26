@@ -5,6 +5,7 @@ import { auth, db } from '../firebase';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ALL_MEALS } from '../data/recipes';
+import { BRAND } from '../brand';
 
 function getAuthErrorMessage(code: string): string {
   switch (code) {
@@ -115,8 +116,8 @@ export function AuthView() {
             <ChefHat className="w-8 h-8" />
           </div>
         </div>
-        <h1 className="text-3xl font-display font-bold text-white mb-2">Forkcast</h1>
-        <p className="text-stone-500 text-sm mb-8">Less waste. Less thinking. Better meals.</p>
+        <h1 className="text-3xl font-display font-bold text-white mb-2">{BRAND.name}</h1>
+        <p className="text-stone-500 text-sm mb-8">{BRAND.tagline}</p>
         
         <button
           onClick={handleGoogleSignIn}

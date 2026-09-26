@@ -18,6 +18,7 @@ import { CARD, ICON_BUTTON, PRIMARY_BUTTON, STEPPER } from '../styles/designToke
 import { TRAINING_DAY_OPTIONS } from '../constants';
 import { auth, db } from '../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { BRAND } from '../brand';
 
 interface HomeViewProps {
   favorites: Meal[];
@@ -254,7 +255,7 @@ export function HomeView({
       className="absolute inset-0 overflow-y-auto flex flex-col gap-4 pb-8"
     >
       <header className="px-6 py-4 flex items-center justify-between bg-[#17181C]/80 backdrop-blur-xl border-b border-stone-800 shrink-0 z-20 sticky top-0">
-        <h1 className="text-2xl font-display font-bold text-white tracking-tight">Forkcast</h1>
+        <h1 className="text-2xl font-display font-bold text-white tracking-tight">{BRAND.name}</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSuggestions([])}

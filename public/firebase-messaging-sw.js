@@ -15,7 +15,7 @@ const messaging = firebase.messaging();
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'Forkcast Alert';
+  const notificationTitle = payload.notification?.title || payload.data?.title || '__BRAND_NAME__ Alert';
   const notificationOptions = {
     body: payload.notification?.body || payload.data?.body || 'You have a new update.',
     icon: '/icon-192.png',

@@ -5,6 +5,7 @@ import { PersonProfile, InventoryItem } from '../types';
 import { AppContext } from '../context/AppContext';
 import { estimateExpirationDate } from '../utils/expiration';
 import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../constants';
+import { BRAND } from '../brand';
 
 interface OnboardingViewProps {
   household: PersonProfile[];
@@ -64,7 +65,7 @@ export function OnboardingView({
               <div className="w-16 h-16 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-4">
                 <ChefHat className="w-8 h-8" />
               </div>
-              <h1 className="text-3xl font-display font-bold text-white mb-3">Welcome to Forkcast</h1>
+              <h1 className="text-3xl font-display font-bold text-white mb-3">Welcome to {BRAND.name}</h1>
               <p className="text-stone-500 text-base leading-relaxed max-w-[280px] mx-auto">
                 Your personal food decision assistant — less waste, less thinking, better meals.
               </p>
