@@ -1,6 +1,7 @@
+import { apiFetch } from '../utils/apiFetch';
 export async function analyzeMealPhoto(base64Image: string, mimeType: string): Promise<any> {
   try {
-    const res = await fetch("/api/meals/analyze-photo", {
+    const res = await apiFetch("/api/meals/analyze-photo", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -23,7 +24,7 @@ export async function analyzeMealPhoto(base64Image: string, mimeType: string): P
 
 export async function estimateMealFromName(name: string): Promise<any> {
   try {
-    const res = await fetch("/api/meals/estimate-from-name", {
+    const res = await apiFetch("/api/meals/estimate-from-name", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -105,7 +106,7 @@ export async function captureMealPhoto(file: File): Promise<{ name: string, calo
 
 export async function suggestFreeTextOptions(category: 'cuisine' | 'dietary' | 'medical' | 'ingredient' | 'mealName', partialText: string): Promise<string[]> {
   try {
-    const res = await fetch("/api/suggestions/freetext", {
+    const res = await apiFetch("/api/suggestions/freetext", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ category, partialText })

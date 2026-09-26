@@ -39,6 +39,7 @@ import { Type } from '@google/genai/web';
 import { DIETARY_OPTIONS, CUISINE_OPTIONS, SKILL_OPTIONS } from './constants';
 import { estimateExpirationDate } from './utils/expiration';
 import { checkNotifications } from './services/notificationService';
+import { apiFetch } from './utils/apiFetch';
 
 const preloadedImageUrls = new Set<string>();
 window.isGeneratingBg = false;
@@ -398,7 +399,7 @@ function MainApp() {
       } else {
         // Classify via API before falling back
         try {
-          const res = await fetch("/api/inventory/classify-ingredient", {
+          const res = await apiFetch("/api/inventory/classify-ingredient", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: item.name })

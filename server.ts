@@ -10,8 +10,10 @@ import {
   serverEstimateMealFromName,
   getCuratedFallbackRecipes, serverClassifyMealType,
   serverClassifyIngredient,
-  serverSuggestFreeTextOptions
+  serverSuggestFreeTextOptions,
+  serverCreateLiveToken
 } from "./src/services/geminiServer";
+import { requireFirebaseUser } from "./src/services/authMiddleware";
 
 async function startServer() {
   const app = express();
@@ -19,6 +21,21 @@ async function startServer() {
 
   app.use(express.json({ limit: "50mb" })); // Support large base64 image loads
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Every /api route requires a signed-in Firebase user (see authMiddleware.ts)
+  app.use("/api", requireFirebaseUser);
+
+  // Short-lived, single-use token for the voice assistant (Gemini Live).
+  // The real GEMINI_API_KEY never leaves the server.
+  app.post("/api/live/token", async (req, res) => {
+    try {
+      const token = await serverCreateLiveToken();
+      res.json({ token });
+    } catch (error: any) {
+      console.error("[SERVER] Error creating live token:", error);
+      res.status(500).json({ error: "Voice assistant is unavailable right now." });
+    }
+  });
 
   // API Routes for Gemini Services (Fully Server-Side)
 

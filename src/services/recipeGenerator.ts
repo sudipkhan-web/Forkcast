@@ -2,6 +2,7 @@ import { Meal } from "../data/recipes";
 import { db, auth } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { getOrGenerateRecipeImage } from "./imageGenerator";
+import { apiFetch } from '../utils/apiFetch';
 
 export const generateSmartStaples = async (
   inventoryItems: string[],
@@ -9,7 +10,7 @@ export const generateSmartStaples = async (
   likedTags: string[]
 ): Promise<string[]> => {
   try {
-    const res = await fetch("/api/recipes/generate-staples", {
+    const res = await apiFetch("/api/recipes/generate-staples", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -56,7 +57,7 @@ export const generateRecipes = async (
   const favoriteMealNamesStr = favoriteMeals.map(m => m.name).join(", ");
 
   try {
-    const res = await fetch("/api/recipes/generate-recipes", {
+    const res = await apiFetch("/api/recipes/generate-recipes", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

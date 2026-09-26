@@ -1,4 +1,5 @@
 import { set, get } from "idb-keyval";
+import { apiFetch } from '../utils/apiFetch';
 
 /**
  * Generates an image using Imagen 3 via the backend server-side API, and caches it in IndexedDB
@@ -13,7 +14,7 @@ export const getOrGenerateRecipeImage = async (recipeId: string, recipeName: str
       return cachedImage;
     }
 
-    const res = await fetch("/api/recipes/generate-image", {
+    const res = await apiFetch("/api/recipes/generate-image", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

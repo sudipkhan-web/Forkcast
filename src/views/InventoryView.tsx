@@ -12,6 +12,7 @@ import { AppContext } from '../context/AppContext';
 import { estimateExpirationDate } from '../utils/expiration';
 import { db } from '../firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { apiFetch } from '../utils/apiFetch';
 
 interface InventoryViewProps {
   inventory: InventoryItem[];
@@ -67,7 +68,7 @@ export function InventoryView({ inventory, setInventory, pantryLogs, favorites, 
     debounceRef.current = setTimeout(async () => {
       setIsClassifying(true);
       try {
-        const res = await fetch("/api/inventory/classify-ingredient", {
+        const res = await apiFetch("/api/inventory/classify-ingredient", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name })

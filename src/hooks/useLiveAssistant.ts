@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, FunctionDeclaration, Type } from '@google/genai/web';
+import { apiFetch } from '../utils/apiFetch';
 
 export interface LiveTool {
   declaration: FunctionDeclaration;
@@ -26,8 +27,13 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
   
   const connect = useCallback(async () => {
     try {
-      const apiKey = process.env.GEMINI_API_KEY || '';
-      const ai = new GoogleGenAI({ apiKey });
+      // Get a short-lived voice token from our server (the real API key stays server-side)
+      const tokenRes = await apiFetch('/api/live/token', { method: 'POST' });
+      if (!tokenRes.ok) {
+        throw new Error(`Could not start voice session (status ${tokenRes.status})`);
+      }
+      const { token } = await tokenRes.json();
+      const ai = new GoogleGenAI({ apiKey: token, httpOptions: { apiVersion: 'v1alpha' } });
       
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { channelCount: 1, sampleRate: 16000 } 

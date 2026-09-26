@@ -1,6 +1,7 @@
+import { apiFetch } from '../utils/apiFetch';
 export async function analyzePantryImage(base64Image: string, mimeType: string): Promise<Array<{ name: string; quantity: number, location: 'fridge' | 'pantry', category: string }>> {
   try {
-    const res = await fetch("/api/inventory/scan", {
+    const res = await apiFetch("/api/inventory/scan", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

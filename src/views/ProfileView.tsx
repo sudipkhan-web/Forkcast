@@ -13,6 +13,7 @@ import { NotificationBell } from '../components/NotificationBell';
 import { initNotifications } from '../services/notificationService';
 import { suggestFreeTextOptions } from '../services/mealPhotoAnalyzer';
 import { getOrGenerateRecipeImage } from '../services/imageGenerator';
+import { apiFetch } from '../utils/apiFetch';
 
 interface ProfileViewProps {
   userId: string | null;
@@ -491,7 +492,7 @@ export function ProfileView({
                             setDoc(doc(db, 'users', auth.currentUser.uid), { notifications: newNotifications }, { merge: true });
                             
                             try {
-                              await fetch('/api/settings/notifications', {
+                              await apiFetch('/api/settings/notifications', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({

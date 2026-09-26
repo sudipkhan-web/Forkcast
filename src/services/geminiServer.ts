@@ -21,6 +21,32 @@ function getGeminiClient(): GoogleGenAI {
   return aiClient;
 }
 
+/**
+ * Creates a single-use ephemeral token for a Gemini Live (voice) session,
+ * so the browser never sees the real API key.
+ * The session must start within 1 minute and ends after 30 minutes at most.
+ */
+export async function serverCreateLiveToken(): Promise<string> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error("GEMINI_API_KEY environment variable is required.");
+  }
+  const tokenClient = new GoogleGenAI({ apiKey: key, httpOptions: { apiVersion: 'v1alpha' } });
+  const now = Date.now();
+  const token = await tokenClient.authTokens.create({
+    config: {
+      uses: 1,
+      expireTime: new Date(now + 30 * 60 * 1000).toISOString(),
+      newSessionExpireTime: new Date(now + 60 * 1000).toISOString(),
+      httpOptions: { apiVersion: 'v1alpha' },
+    },
+  });
+  if (!token.name) {
+    throw new Error("Gemini did not return a live token.");
+  }
+  return token.name;
+}
+
 export function getCuratedFallbackRecipes(
   count: number,
   dietary: string[] = [],
