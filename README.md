@@ -1,4 +1,4 @@
-# Forkcast - Smart Meal Planner & AI Nutrition Assistant
+# Kondivore - Smart Meal Planner & AI Nutrition Assistant
 
 A comprehensive full-stack React and Express application designed to help households manage their kitchen inventory, discover personalized recipes, track nutrition, and generate dynamic AI-powered meal recommendations. The app actively works to reduce food waste, align with daily macro targets (protein/fat/carbs), and adapt meals based on the user's daily training/activity schedule.
 
