@@ -1320,8 +1320,13 @@ function MainApp() {
         // Age (18+) and health-data consent come first — before onboarding collects any health info.
         <TermsGateView onAccept={async () => {
           if (userId) {
-            await setDoc(doc(db, 'users', userId), consentFields(), { merge: true })
-              .catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${userId}`, showToast));
+            // Include uid/email so the profile passes the Firestore rules even on older accounts
+            // that were created without them. Errors propagate so the gate can show them.
+            await setDoc(doc(db, 'users', userId), {
+              uid: userId,
+              ...(auth.currentUser?.email ? { email: auth.currentUser.email } : {}),
+              ...consentFields(),
+            }, { merge: true });
           }
         }} />
       ) : !profile.hasCompletedOnboarding ? (

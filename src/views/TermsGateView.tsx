@@ -33,6 +33,10 @@ export function TermsGateView({ onAccept }: TermsGateViewProps) {
     setSaving(true);
     try {
       await onAccept();
+    } catch (e: any) {
+      // Show the real reason (e.g. permission-denied) so a failed save is visible.
+      console.error('[Consent] Could not save consent:', e);
+      setError(`Couldn't save your confirmation (${e?.code || e?.message || 'unknown error'}). Please try again.`);
     } finally {
       setSaving(false);
     }
