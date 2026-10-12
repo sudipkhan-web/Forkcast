@@ -1,43 +1,118 @@
 import React, { useState } from 'react';
-import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../constants';
-import { FileText } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import { deleteUser, signOut } from 'firebase/auth';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { CARD, PRIMARY_BUTTON } from '../styles/designTokens';
+import { BRAND } from '../brand';
+import { ConsentCheckboxes, CONSENT_TEXT } from '../components/ConsentCheckboxes';
 
 interface TermsGateViewProps {
-  onAccept: () => void;
+  onAccept: () => void | Promise<void>;
 }
 
+/**
+ * Shown after sign-in to anyone who hasn't yet confirmed they're 18+ and given
+ * health-data consent: existing accounts, and new Google sign-ups (Google creates
+ * the account before we can show checkboxes). Nothing else in the app is
+ * reachable until both are ticked.
+ */
 export function TermsGateView({ onAccept }: TermsGateViewProps) {
-  const [agreed, setAgreed] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [healthConsent, setHealthConsent] = useState(false);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [showUnder18, setShowUnder18] = useState(false);
+
+  const canContinue = ageConfirmed && healthConsent && !saving;
+
+  const handleContinue = async () => {
+    if (!ageConfirmed) return setError(CONSENT_TEXT.ageRequiredError);
+    if (!healthConsent) return setError(CONSENT_TEXT.healthRequiredError);
+    setError('');
+    setSaving(true);
+    try {
+      await onAccept();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Under-18: remove the account and its profile, then sign out.
+  const handleUnder18 = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid)).catch(() => {});
+      await deleteUser(user);
+    } catch (e) {
+      // deleteUser can require a recent sign-in; at minimum, sign out.
+      console.warn('[Consent] Could not delete under-18 account automatically:', e);
+      await signOut(auth);
+    }
+  };
+
+  if (showUnder18) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#17181C] p-4 font-sans">
+        <div className={`${CARD} w-full max-w-md p-8 sm:p-10 text-center`}>
+          <h1 className="text-2xl font-display font-bold text-white mb-4">Sorry, {BRAND.name} is for adults</h1>
+          <p className="text-stone-400 text-sm mb-8">
+            You need to be 18 or older to use {BRAND.name}. We'll remove this account and won't keep any of its data.
+          </p>
+          <button onClick={handleUnder18} className={`${PRIMARY_BUTTON} w-full py-3 text-sm`}>
+            Remove account and sign out
+          </button>
+          <button
+            onClick={() => setShowUnder18(false)}
+            className="text-stone-500 text-sm hover:text-white mt-4 font-medium transition-colors"
+          >
+            Go back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#17181C] p-4 font-sans">
-      <div className={`${CARD} w-full max-w-md p-8 sm:p-10 text-center flex flex-col items-center justify-center`}>
+      <div className={`${CARD} w-full max-w-md p-8 sm:p-10 text-center flex flex-col items-center`}>
         <div className="w-20 h-20 bg-[#FC5200]/15 text-[#FC5200] rounded-full flex items-center justify-center mx-auto mb-6">
-          <FileText className="w-10 h-10" />
+          <ShieldCheck className="w-10 h-10" />
         </div>
-        <h1 className="text-3xl font-display font-bold text-white mb-4">We've updated our terms</h1>
-        <p className="text-stone-500 text-base max-w-[280px] mx-auto mb-8">
-          Please review our <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer" className="text-[#FC5200] underline">Privacy Policy</a> and <a href={TERMS_OF_SERVICE_URL} target="_blank" rel="noopener noreferrer" className="text-[#FC5200] underline">Terms of Service</a> before continuing.
-        </p>
-        <label className="flex items-center gap-3 text-stone-300 text-sm text-left max-w-[280px] mx-auto cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={agreed} 
-            onChange={(e) => setAgreed(e.target.checked)}
-            className="w-5 h-5 rounded border-stone-700 bg-stone-900 text-[#FC5200] focus:ring-[#FC5200] focus:ring-offset-stone-900 shrink-0"
-          />
-          <span>I have read and agree to the Privacy Policy and Terms of Service</span>
-        </label>
-        <div className="mt-8 w-full">
+        <h1 className="text-2xl font-display font-bold text-white mb-3">Before you start</h1>
+        <p className="text-stone-500 text-sm mb-6">Please confirm the following to use {BRAND.name}.</p>
+
+        <ConsentCheckboxes
+          ageConfirmed={ageConfirmed}
+          healthConsent={healthConsent}
+          onAgeChange={(v) => { setAgeConfirmed(v); setError(''); }}
+          onHealthChange={(v) => { setHealthConsent(v); setError(''); }}
+        />
+
+        <p className="text-stone-500 text-xs text-left mt-5">{CONSENT_TEXT.healthNote}</p>
+
+        {error && (
+          <div className="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-sm font-medium mt-4 border border-red-100 w-full">
+            {error}
+          </div>
+        )}
+
+        <div className="mt-6 w-full">
+          <button
+            onClick={handleContinue}
+            disabled={!canContinue}
+            className={`w-full py-3 text-sm flex items-center justify-center gap-2 ${canContinue ? PRIMARY_BUTTON : 'bg-stone-800 text-stone-500 cursor-not-allowed rounded-xl'}`}
+          >
+            Continue
+          </button>
+        </div>
         <button
-          onClick={onAccept}
-          disabled={!agreed}
-          className={`w-full py-4 text-lg flex items-center justify-center gap-2 ${agreed ? PRIMARY_BUTTON : "bg-stone-800 text-stone-500 cursor-not-allowed rounded-xl"}`}
+          onClick={() => setShowUnder18(true)}
+          className="text-stone-500 text-sm hover:text-white mt-4 font-medium transition-colors"
         >
-          Continue
+          I'm under 18
         </button>
-      </div>
       </div>
     </div>
   );

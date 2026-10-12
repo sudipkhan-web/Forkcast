@@ -67,6 +67,10 @@ export type UserProfile = {
   selectedGroupId?: string;
   hasAcceptedTerms?: boolean;
   termsAcceptedAt?: string;
+  /** When the user confirmed they're 18+ (no date of birth is stored). */
+  ageConfirmedAt?: string;
+  /** When the user consented to use of training/eating data (GDPR Art. 9). */
+  healthConsentAt?: string;
   notifications?: {
     enabled: boolean;
     mealPlanningTime?: string; // HH:mm format

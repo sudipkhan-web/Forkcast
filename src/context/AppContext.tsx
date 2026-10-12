@@ -132,6 +132,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             healthConditions: data.healthConditions || [],
             hasCompletedOnboarding: data.hasCompletedOnboarding || false,
             hasAcceptedTerms: data.hasAcceptedTerms || false,
+            ageConfirmedAt: data.ageConfirmedAt,
+            healthConsentAt: data.healthConsentAt,
             selectedGroupId: data.selectedGroupId,
             notifications: data.notifications,
           };

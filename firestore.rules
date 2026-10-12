@@ -173,6 +173,8 @@ service cloud.firestore {
              (!('selectedGroupId' in request.resource.data) || request.resource.data.selectedGroupId is string) &&
              (!('hasAcceptedTerms' in request.resource.data) || request.resource.data.hasAcceptedTerms is bool) &&
              (!('termsAcceptedAt' in request.resource.data) || request.resource.data.termsAcceptedAt is string) &&
+             (!('ageConfirmedAt' in request.resource.data) || request.resource.data.ageConfirmedAt is string) &&
+             (!('healthConsentAt' in request.resource.data) || request.resource.data.healthConsentAt is string) &&
              (!('notifications' in request.resource.data) || request.resource.data.notifications is map);
     }
 

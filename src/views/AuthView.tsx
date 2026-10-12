@@ -6,6 +6,7 @@ import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, si
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ALL_MEALS } from '../data/recipes';
 import { BRAND } from '../brand';
+import { ConsentCheckboxes, CONSENT_TEXT, consentFields } from '../components/ConsentCheckboxes';
 
 function getAuthErrorMessage(code: string): string {
   switch (code) {
@@ -39,6 +40,8 @@ export function AuthView() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authErrorCode, setAuthErrorCode] = useState('');
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [healthConsent, setHealthConsent] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +49,9 @@ export function AuthView() {
     setAuthErrorCode('');
     try {
       if (isSignUp) {
+        // Both consents are required before the account is created (18+ and health data).
+        if (!ageConfirmed) { setAuthError(CONSENT_TEXT.ageRequiredError); return; }
+        if (!healthConsent) { setAuthError(CONSENT_TEXT.healthRequiredError); return; }
         const userCredential = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
         const user = userCredential.user;
         await setDoc(doc(db, `users/${user.uid}`), {
@@ -57,6 +63,7 @@ export function AuthView() {
           likedTags: {},
           dislikedTags: {},
           hasCompletedOnboarding: false,
+          ...consentFields(),
           createdAt: new Date().toISOString(),
           queuedSuggestions: [...ALL_MEALS].sort(() => Math.random() - 0.5).slice(0, 50).map(m => ({
             ...m,
@@ -155,7 +162,19 @@ export function AuthView() {
             className="w-full px-4 py-3.5 rounded-xl border border-stone-800 bg-stone-900 focus:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] transition-all text-white placeholder:text-stone-400"
             required
           />
-          
+
+          {isSignUp && (
+            <>
+              <ConsentCheckboxes
+                ageConfirmed={ageConfirmed}
+                healthConsent={healthConsent}
+                onAgeChange={(v) => { setAgeConfirmed(v); setAuthError(''); }}
+                onHealthChange={(v) => { setHealthConsent(v); setAuthError(''); }}
+              />
+              <p className="text-stone-500 text-xs text-left">{CONSENT_TEXT.healthNote}</p>
+            </>
+          )}
+
           <button
             type="submit"
             className={`${PRIMARY_BUTTON} w-full px-4 py-3.5 mt-2`}
