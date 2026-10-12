@@ -175,6 +175,7 @@ service cloud.firestore {
              (!('termsAcceptedAt' in request.resource.data) || request.resource.data.termsAcceptedAt is string) &&
              (!('ageConfirmedAt' in request.resource.data) || request.resource.data.ageConfirmedAt is string) &&
              (!('healthConsentAt' in request.resource.data) || request.resource.data.healthConsentAt is string) &&
+             (!('waitlistJoinedAt' in request.resource.data) || request.resource.data.waitlistJoinedAt is string) &&
              (!('notifications' in request.resource.data) || request.resource.data.notifications is map);
     }
 

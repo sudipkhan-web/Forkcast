@@ -24,6 +24,8 @@ import { HomeView } from './views/HomeView';
 import { AuthView } from './views/AuthView';
 import { OnboardingView } from './views/OnboardingView';
 import { TermsGateView } from './views/TermsGateView';
+import { FreeLimitView } from './views/FreeLimitView';
+import { useFreeTierStatus } from './hooks/useFreeTierStatus';
 import { consentFields } from './components/ConsentCheckboxes';
 import { FavoritesView } from './views/FavoritesView';
 import { ProgressView } from './views/ProgressView';
@@ -82,6 +84,7 @@ function MainApp() {
     updateCustomIngredientRule,
     queuedSuggestions
   } = useAppContext();
+  const freeTier = useFreeTierStatus(userId);
 
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState<'home' | 'inventory' | 'shopping' | 'learning' | 'profile' | 'plan' | 'favorites' | 'progress' | 'refine'>('home');
@@ -1343,6 +1346,9 @@ function MainApp() {
             }
           }}
         />
+      ) : freeTier.locked && userId ? (
+        // Free AI allowance used up for this month (server returns 402) — lock until it resets.
+        <FreeLimitView userId={userId} resetsOn={freeTier.resetsOn} alreadyOnWaitlist={!!profile.waitlistJoinedAt} />
       ) : (
         <>
           {/* Main Content Area */}

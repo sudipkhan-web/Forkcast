@@ -13,7 +13,9 @@ import {
   serverSuggestFreeTextOptions,
   serverCreateLiveToken
 } from "./src/services/geminiServer";
-import { requireFirebaseUser } from "./src/services/authMiddleware";
+import { requireFirebaseUser, type AuthedRequest } from "./src/services/authMiddleware";
+import { enforceFreeTierCap, getUsageStatus, addRequestCostEur } from "./src/services/aiUsage";
+import { VOICE_SESSION_ESTIMATE_EUR } from "./src/services/aiCostConfig";
 
 async function startServer() {
   const app = express();
@@ -24,12 +26,20 @@ async function startServer() {
 
   // Every /api route requires a signed-in Firebase user (see authMiddleware.ts)
   app.use("/api", requireFirebaseUser);
+  // Free-tier AI cap: free users over this month's allowance get 402 (see aiCostConfig.ts)
+  app.use("/api", enforceFreeTierCap);
+
+  // Current user's AI allowance for this month (not metered itself)
+  app.get("/api/usage", async (req: AuthedRequest, res) => {
+    res.json(await getUsageStatus(req.uid!, req.email));
+  });
 
   // Short-lived, single-use token for the voice assistant (Gemini Live).
   // The real GEMINI_API_KEY never leaves the server.
   app.post("/api/live/token", async (req, res) => {
     try {
       const token = await serverCreateLiveToken();
+      addRequestCostEur(VOICE_SESSION_ESTIMATE_EUR);
       res.json({ token });
     } catch (error: any) {
       console.error("[SERVER] Error creating live token:", error);

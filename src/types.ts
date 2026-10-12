@@ -71,6 +71,8 @@ export type UserProfile = {
   ageConfirmedAt?: string;
   /** When the user consented to use of training/eating data (GDPR Art. 9). */
   healthConsentAt?: string;
+  /** When the user joined the subscription waitlist (from the free-limit screen). */
+  waitlistJoinedAt?: string;
   notifications?: {
     enabled: boolean;
     mealPlanningTime?: string; // HH:mm format

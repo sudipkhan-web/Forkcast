@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ALL_MEALS, Meal } from "../data/recipes";
+import { recordGeminiUsage } from "./aiUsage";
 
 let aiClient: GoogleGenAI | null = null;
 
@@ -17,6 +18,14 @@ function getGeminiClient(): GoogleGenAI {
         }
       }
     });
+    // Meter every call for the free-tier cap (see aiUsage.ts / aiCostConfig.ts).
+    const models = aiClient.models as any;
+    const originalGenerateContent = models.generateContent.bind(models);
+    models.generateContent = async (params: any) => {
+      const response = await originalGenerateContent(params);
+      recordGeminiUsage(params?.model, response?.usageMetadata);
+      return response;
+    };
   }
   return aiClient;
 }
