@@ -10,6 +10,9 @@ export interface LiveTool {
 export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  /** Last reason the voice session failed or closed unexpectedly (shown next to the mic button). */
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const userClosedRef = useRef(false);
 
   const sessionRef = useRef<any>(null);
   const toolsRef = useRef(tools);
@@ -26,11 +29,14 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
   const nextPlayTimeRef = useRef<number>(0);
   
   const connect = useCallback(async () => {
+    setVoiceError(null);
+    userClosedRef.current = false;
     try {
       // Get a short-lived voice token from our server (the real API key stays server-side)
       const tokenRes = await apiFetch('/api/live/token', { method: 'POST' });
       if (!tokenRes.ok) {
-        throw new Error(`Could not start voice session (status ${tokenRes.status})`);
+        const body = await tokenRes.json().catch(() => ({}));
+        throw new Error(`Voice token failed (${tokenRes.status})${body?.detail ? `: ${body.detail}` : body?.error ? `: ${body.error}` : ''}`);
       }
       const { token } = await tokenRes.json();
       const ai = new GoogleGenAI({ apiKey: token, httpOptions: { apiVersion: 'v1alpha' } });
@@ -169,16 +175,31 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
               }
             }
           },
-          onclose: () => {
+          onclose: (e: any) => {
+            if (!userClosedRef.current) {
+              const code = e?.code ? ` (code ${e.code})` : '';
+              const msg = `Voice session closed${code}${e?.reason ? `: ${e.reason}` : ''}`;
+              setVoiceError(prev => prev ?? msg);
+              console.error('[Voice] Session closed', e?.code, e?.reason);
+            }
             disconnect();
+          },
+          onerror: (e: any) => {
+            console.error('[Voice] Session error', e);
+            setVoiceError(`Voice connection error${e?.message ? `: ${e.message}` : ''}`);
           },
         }
       });
-      sessionPromise.catch(e => { console.error("Session promise rejected:", e); disconnect(); });
+      sessionPromise.catch(e => {
+        console.error("Session promise rejected:", e);
+        setVoiceError(prev => prev ?? `Could not connect: ${e?.message || e}`);
+        disconnect();
+      });
       sessionRef.current = sessionPromise;
 
     } catch (e) {
       console.error("Error connecting to Live API", e.message, e.stack, e.name);
+      setVoiceError(e?.message || String(e));
       disconnect();
     }
   }, [systemInstruction]);
@@ -218,5 +239,11 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
     return () => disconnect();
   }, [disconnect]);
 
-  return { connect, disconnect, isConnected, isSpeaking };
+  // Closing from the UI (mic button, mute tool) is intentional — don't report it as an error.
+  const stopByUser = useCallback(() => {
+    userClosedRef.current = true;
+    disconnect();
+  }, [disconnect]);
+
+  return { connect, disconnect: stopByUser, isConnected, isSpeaking, voiceError, clearVoiceError: () => setVoiceError(null) };
 }

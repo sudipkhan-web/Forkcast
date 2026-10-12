@@ -43,7 +43,10 @@ async function startServer() {
       res.json({ token });
     } catch (error: any) {
       console.error("[SERVER] Error creating live token:", error);
-      res.status(500).json({ error: "Voice assistant is unavailable right now." });
+      res.status(500).json({
+        error: "Voice assistant is unavailable right now.",
+        detail: String(error?.message || error).slice(0, 300),
+      });
     }
   });
 

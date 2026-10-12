@@ -9,7 +9,14 @@ interface VoiceAssistantUIProps {
 }
 
 export function VoiceAssistantUI({ tools, systemInstruction }: VoiceAssistantUIProps) {
-  const { connect, disconnect, isConnected, isSpeaking } = useLiveAssistant(tools, systemInstruction);
+  const { connect, disconnect, isConnected, isSpeaking, voiceError, clearVoiceError } = useLiveAssistant(tools, systemInstruction);
+
+  // Hide a voice error after 12 seconds.
+  React.useEffect(() => {
+    if (!voiceError) return;
+    const t = setTimeout(clearVoiceError, 12000);
+    return () => clearTimeout(t);
+  }, [voiceError]);
 
   React.useEffect(() => {
     const handleDisconnect = () => disconnect();
@@ -19,6 +26,15 @@ export function VoiceAssistantUI({ tools, systemInstruction }: VoiceAssistantUIP
 
   return (
     <div className="fixed bottom-24 right-6 z-50">
+      {voiceError && !isConnected && (
+        <div
+          role="alert"
+          onClick={clearVoiceError}
+          className="absolute bottom-16 right-0 w-64 bg-stone-900 border border-red-500/40 text-red-300 text-xs rounded-xl px-3 py-2 shadow-xl cursor-pointer"
+        >
+          {voiceError}
+        </div>
+      )}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
