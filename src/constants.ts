@@ -27,8 +27,10 @@ export const PROTEIN_TARGET_GRAMS_PER_KG: [number, number] = [1.4, 1.8];
 export const FAT_TARGET_GRAMS_PER_KG: [number, number] = [0.8, 1.2];
 export const PROTEIN_TARGET_BAND_FLAT: [number, number] = [90, 130];
 export const FAT_TARGET_BAND_FLAT: [number, number] = [60, 90];
-export const PRIVACY_POLICY_URL = "https://drive.google.com/file/d/1yaUhC29Qbb-tsaUe8DOB-N48mw9gQiWu/view?usp=drivesdk";
-export const TERMS_OF_SERVICE_URL = "https://drive.google.com/file/d/1SdpGPuAr_yABahgN07deE4GofKH849qk/view?usp=drivesdk";
+// Kondivore Privacy Policy, 12 Oct 2026 (18+, health-data consent). Public PDF in Drive.
+export const PRIVACY_POLICY_URL = "https://drive.google.com/file/d/1eZ11aU7uQqaGllmirjRWP_jHR27_fANs/view?usp=drivesdk";
+// Kondivore Terms of Service, 12 Oct 2026 (18+, health disclaimer). Public PDF in Drive.
+export const TERMS_OF_SERVICE_URL = "https://drive.google.com/file/d/1EPxnonFZpLTQPdoWqTuVM5S4_gSHECyS/view?usp=drivesdk";
 
 export const COMMON_INGREDIENTS = [
   // Produce
