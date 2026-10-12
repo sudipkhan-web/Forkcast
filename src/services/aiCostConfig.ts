@@ -9,7 +9,15 @@
  * in lowercase) are exempt.
  */
 
-/** Monthly AI allowance per free user, in euros. */
+/**
+ * Master switch for the cap. While false (pilot phase, until charging goes live),
+ * every user is treated as a pilot tester: usage is still metered and recorded in
+ * Firestore aiUsage/{uid}, but nobody is locked out. Set to true when the
+ * subscription/payment flow is activated.
+ */
+export const CAP_ENFORCED = false;
+
+/** Monthly AI allowance per free user, in euros (applies only when CAP_ENFORCED is true). */
 export const FREE_TIER_MONTHLY_CAP_EUR = 0.5;
 
 /** Approximate USD→EUR rate used to convert Google's USD prices. Update occasionally. */

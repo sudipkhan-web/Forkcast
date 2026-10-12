@@ -4,7 +4,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import type { AuthedRequest } from './authMiddleware';
-import { FREE_TIER_MONTHLY_CAP_EUR, geminiCallCostEur } from './aiCostConfig';
+import { CAP_ENFORCED, FREE_TIER_MONTHLY_CAP_EUR, geminiCallCostEur } from './aiCostConfig';
 
 /**
  * Server-side metering for the free-tier AI cap (see aiCostConfig.ts).
@@ -77,7 +77,8 @@ export async function getUsageStatus(uid: string, email?: string): Promise<Usage
       email ? firestore().collection('pilotTesters').doc(email.toLowerCase()).get() : Promise.resolve(null),
       firestore().collection('aiUsage').doc(uid).get(),
     ]);
-    const exempt = !!pilotSnap?.exists;
+    // During the pilot (CAP_ENFORCED = false) everyone is exempt; usage is still recorded.
+    const exempt = !CAP_ENFORCED || !!pilotSnap?.exists;
     const data = usageSnap.exists ? usageSnap.data()! : null;
     const spentEur = data && data.month === month ? Number(data.costEur) || 0 : 0;
     return { ...base, spentEur, exempt, locked: !exempt && spentEur >= FREE_TIER_MONTHLY_CAP_EUR };
