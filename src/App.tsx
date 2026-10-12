@@ -54,6 +54,7 @@ function MainApp() {
   const {
     userId,
     isAuthReady,
+    isProfileLoaded,
     profile,
     setProfile,
     selectedGroupId,
@@ -572,18 +573,11 @@ function MainApp() {
 
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
-  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [editingPersonId, setEditingPersonId] = useState<string | null>(null);
   const [newDislikedIngredient, setNewDislikedIngredient] = useState('');
 
-  // We need to keep isProfileLoaded to avoid flashing the onboarding screen
-  // We can derive it from profile.hasCompletedOnboarding being defined, or just set it to true when profile is loaded.
-  // Actually, AppContext loads the profile. We can assume it's loaded if userId is present and profile is populated.
-  useEffect(() => {
-    if (userId && profile) {
-      setIsProfileLoaded(true);
-    }
-  }, [userId, profile]);
+  // isProfileLoaded comes from AppContext: true only once the real profile has arrived,
+  // so the consent and onboarding screens don't flash for users who've completed them.
 
   React.useEffect(() => {
     const timer = setTimeout(() => {

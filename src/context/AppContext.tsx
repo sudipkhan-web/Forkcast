@@ -12,6 +12,8 @@ import { InventoryItem, ShoppingItem, PlannedMeal, UserProfile, Group, PersonPro
 interface AppContextType {
   userId: string | null;
   isAuthReady: boolean;
+  /** True once the signed-in user's profile has actually arrived from Firestore. */
+  isProfileLoaded: boolean;
   profile: UserProfile;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile>>;
   selectedGroupId: string;
@@ -59,6 +61,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { showToast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  // Which user's profile has been received from Firestore (null = not yet).
+  const [profileLoadedFor, setProfileLoadedFor] = useState<string | null>(null);
   
   const [queuedSuggestions, setQueuedSuggestions] = useState<any[] | null>(null);
   const [profile, setProfile] = useState<UserProfile>({
@@ -140,6 +144,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           };
           return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
         });
+        setProfileLoadedFor(userId);
 
         // Auto-save email if it's missing in DB but present in auth
         if (!data.email && auth.currentUser?.email) {
@@ -166,7 +171,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           dislikedMealIds: []
         });
       }
-    }, (e) => handleFirestoreError(e, OperationType.GET, `users/${userId}`, showToast));
+    }, (e) => {
+      // Don't leave the app stuck on the loading screen if the profile can't be read.
+      setProfileLoadedFor(userId);
+      handleFirestoreError(e, OperationType.GET, `users/${userId}`, showToast);
+    });
 
     const unsubInventory = onSnapshot(collection(db, `users/${userId}/inventory`), (snapshot) => {
       setInventory(snapshot.docs.map(d => d.data() as InventoryItem));
@@ -312,6 +321,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     <AppContext.Provider value={{
       userId,
       isAuthReady,
+      isProfileLoaded: !!userId && profileLoadedFor === userId,
       queuedSuggestions,
       setQueuedSuggestions,
       profile,
