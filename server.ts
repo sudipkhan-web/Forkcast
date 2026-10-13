@@ -14,6 +14,7 @@ import {
   serverCreateLiveToken
 } from "./src/services/geminiServer";
 import { requireFirebaseUser, type AuthedRequest } from "./src/services/authMiddleware";
+import { ICON_192, ICON_512, APPLE_TOUCH_ICON, FAVICON_32 } from "./src/services/iconData";
 import { allowFeedback, validateFeedback, sendFeedbackEmail } from "./src/services/feedbackServer";
 import { enforceFreeTierCap, getUsageStatus, addRequestCostEur } from "./src/services/aiUsage";
 import { VOICE_SESSION_ESTIMATE_EUR } from "./src/services/aiCostConfig";
@@ -24,6 +25,21 @@ async function startServer() {
 
   app.use(express.json({ limit: "50mb" })); // Support large base64 image loads
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // App icons: served from embedded text so a sync that mangles binary files can't break "Install app".
+  const iconRoutes: Record<string, string> = {
+    "/icon-192.png": ICON_192,
+    "/icon-512.png": ICON_512,
+    "/apple-touch-icon.png": APPLE_TOUCH_ICON,
+    "/favicon-32.png": FAVICON_32,
+  };
+  Object.entries(iconRoutes).forEach(([route, b64]) => {
+    const png = Buffer.from(b64, "base64");
+    app.get(route, (_req, res) => {
+      res.set({ "Content-Type": "image/png", "Cache-Control": "public, max-age=3600" });
+      res.send(png);
+    });
+  });
 
   // Every /api route requires a signed-in Firebase user (see authMiddleware.ts)
   app.use("/api", requireFirebaseUser);
