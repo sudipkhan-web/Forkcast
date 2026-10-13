@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ALL_MEALS, Meal } from "../data/recipes";
 import { recordGeminiUsage } from "./aiUsage";
+import { notifyIfGeminiBillingError } from "./geminiAlert";
 
 let aiClient: GoogleGenAI | null = null;
 
@@ -22,9 +23,14 @@ function getGeminiClient(): GoogleGenAI {
     const models = aiClient.models as any;
     const originalGenerateContent = models.generateContent.bind(models);
     models.generateContent = async (params: any) => {
-      const response = await originalGenerateContent(params);
-      recordGeminiUsage(params?.model, response?.usageMetadata);
-      return response;
+      try {
+        const response = await originalGenerateContent(params);
+        recordGeminiUsage(params?.model, response?.usageMetadata);
+        return response;
+      } catch (err) {
+        notifyIfGeminiBillingError(err); // emails the founder if credits / spend cap ran out
+        throw err;
+      }
     };
   }
   return aiClient;
@@ -42,14 +48,20 @@ export async function serverCreateLiveToken(): Promise<string> {
   }
   const tokenClient = new GoogleGenAI({ apiKey: key, httpOptions: { apiVersion: 'v1alpha' } });
   const now = Date.now();
-  const token = await tokenClient.authTokens.create({
-    config: {
-      uses: 1,
-      expireTime: new Date(now + 30 * 60 * 1000).toISOString(),
-      newSessionExpireTime: new Date(now + 60 * 1000).toISOString(),
-      httpOptions: { apiVersion: 'v1alpha' },
-    },
-  });
+  let token;
+  try {
+    token = await tokenClient.authTokens.create({
+      config: {
+        uses: 1,
+        expireTime: new Date(now + 30 * 60 * 1000).toISOString(),
+        newSessionExpireTime: new Date(now + 60 * 1000).toISOString(),
+        httpOptions: { apiVersion: 'v1alpha' },
+      },
+    });
+  } catch (err) {
+    notifyIfGeminiBillingError(err);
+    throw err;
+  }
   if (!token.name) {
     throw new Error("Gemini did not return a live token.");
   }

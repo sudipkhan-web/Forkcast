@@ -118,3 +118,25 @@ export async function sendFeedbackEmail(opts: {
     return false;
   }
 }
+
+/** Generic notification email to the same inbox (used for operational alerts). Never throws. */
+export async function sendAlertEmail(subject: string, text: string): Promise<boolean> {
+  const { user, pass, to } = smtpConfig();
+  if (!pass) {
+    console.warn('[ALERT] No SMTP password configured (App_Password); alert email not sent.');
+    return false;
+  }
+  try {
+    const transport = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+    });
+    await transport.sendMail({ from: `Kondivore alerts <${user}>`, to, subject, text });
+    return true;
+  } catch (err: any) {
+    console.error('[ALERT] Email failed:', err?.message || err);
+    return false;
+  }
+}
