@@ -14,7 +14,9 @@ export const BRAND = {
   /** Shown on every screen, in notifications, the browser tab and the home-screen icon label. */
   name: 'Kondivore',
   /** Short line under the name on the sign-in screen. */
-  tagline: 'Less waste. Less thinking. Better meals.',
+  tagline: 'Fuel for your training.',
+  /** Second line under the tagline on the sign-in screen. */
+  audience: 'Built for runners and triathletes.',
   /** Used by the installable-app (PWA) manifest. */
   description: 'Fuel your training. Know what to eat, when.',
 } as const;

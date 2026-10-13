@@ -124,7 +124,8 @@ export function AuthView() {
           </div>
         </div>
         <h1 className="text-3xl font-display font-bold text-white mb-2">{BRAND.name}</h1>
-        <p className="text-stone-500 text-sm mb-8">{BRAND.tagline}</p>
+        <p className="text-stone-300 text-base font-medium">{BRAND.tagline}</p>
+        <p className="text-stone-500 text-sm mb-8">{BRAND.audience}</p>
         
         <button
           onClick={handleGoogleSignIn}
