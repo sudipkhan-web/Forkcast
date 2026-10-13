@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CARD, ICON_BUTTON, PRIMARY_BUTTON, PILL, STEPPER } from '../styles/designTokens';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp, Settings, Info , ChevronRight, Pill , Zap, ThumbsDown } from 'lucide-react';
+import { Heart, Star, Share, User, Leaf, Ban, X, Target, Users, Plus, ChefHat, Clock, LogOut, Activity, Bell, Calendar, ShoppingCart, Archive, Mail, Sparkles, Check, ChevronDown, ChevronUp, Settings, Info , ChevronRight, Pill , Zap, ThumbsDown, MessageSquare } from 'lucide-react';
 import { PersonProfile, Group, UserProfile, AppNotification } from '../types';
 import { Meal, ALL_MEALS } from '../data/recipes';
 import { DIETARY_OPTIONS, CUISINE_OPTIONS, HEALTH_CONDITIONS, SKILL_OPTIONS, TIME_OPTIONS, COMMON_DISLIKED_INGREDIENTS, COMMON_INGREDIENTS, BIOLOGICAL_SEX_OPTIONS, RACE_TYPE_OPTIONS } from '../constants';
@@ -21,6 +21,7 @@ interface ProfileViewProps {
   favorites: Meal[];
   setActiveTab: (tab: any) => void;
   setIsShareModalOpen: (open: boolean) => void;
+  onOpenFeedback?: () => void;
   household: PersonProfile[];
   updateHouseholdMember: (person: PersonProfile) => void;
   deleteHouseholdMember: (id: string) => void;
@@ -39,6 +40,7 @@ export function ProfileView({
   favorites,
   setActiveTab,
   setIsShareModalOpen,
+  onOpenFeedback,
   household,
   updateHouseholdMember,
   deleteHouseholdMember,
@@ -358,6 +360,15 @@ export function ProfileView({
                   className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FC5200]/20 focus:border-[#FC5200] text-white transition-all"
                 />
               </div>
+              {onOpenFeedback && (
+                <button
+                  onClick={onOpenFeedback}
+                  className="w-full py-3.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] bg-stone-800 text-stone-200 hover:bg-stone-700 hover:text-white flex items-center justify-center gap-2 mt-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Send feedback
+                </button>
+              )}
               <button
                 onClick={handleSignOut}
                 className="w-full py-3.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] bg-stone-800 text-stone-400 hover:bg-stone-700 hover:text-white flex items-center justify-center gap-2 mt-2"

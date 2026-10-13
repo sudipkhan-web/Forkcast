@@ -11,7 +11,7 @@ if (!getApps().length) {
 
 export interface AuthedRequest extends Request {
   uid?: string;
-  email?: string;
+  email?: string | null;
 }
 
 /**
@@ -28,6 +28,7 @@ export async function requireFirebaseUser(req: AuthedRequest, res: Response, nex
   try {
     const decoded = await getAuth().verifyIdToken(match[1]);
     req.uid = decoded.uid;
+    req.email = decoded.email || null;
     req.email = decoded.email;
     next();
   } catch (err: any) {

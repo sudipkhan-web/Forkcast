@@ -2,7 +2,7 @@ import { Toaster } from 'react-hot-toast';
 import { useToast } from './components/Toast';
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } from 'motion/react';
-import { TrendingUp, Clock, Heart, RefreshCw, ChevronLeft, Check, ShoppingCart, Package, Plus, Minus, Trash2, Brain, User, X, Camera, Receipt, Scan, Sparkles, Compass, Home, Utensils, Archive, ClipboardList, ChefHat, Carrot, Refrigerator, ListTodo, Users, Leaf, Ban, Flame, UsersRound, Calendar, CalendarDays, PlusCircle, Store, Share, Copy, Link, Mail, LogIn, BookOpen, Target } from 'lucide-react';
+import { TrendingUp, Clock, Heart, RefreshCw, ChevronLeft, Check, ShoppingCart, Package, Plus, Minus, Trash2, Brain, User, X, Camera, Receipt, Scan, Sparkles, Compass, Home, Utensils, Archive, ClipboardList, ChefHat, Carrot, Refrigerator, ListTodo, Users, Leaf, Ban, Flame, UsersRound, Calendar, CalendarDays, PlusCircle, Store, Share, Copy, Link, Mail, LogIn, BookOpen, Target, MessageSquare } from 'lucide-react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { collection, doc, onSnapshot, setDoc, deleteDoc, getDoc, getDocs, getDocFromServer, arrayUnion } from 'firebase/firestore';
@@ -32,6 +32,7 @@ import { ProgressView } from './views/ProgressView';
 import { MealDetailsView } from './views/MealDetailsView';
 import { OrderModal } from './components/OrderModal';
 import { ShareModal } from './components/ShareModal';
+import { FeedbackModal } from './components/FeedbackModal';
 import { PlanModal } from './components/PlanModal';
 import { trackBehavior, TrackingAction } from './services/behaviorTracking';
 import { InventoryItem, ShoppingItem, PersonProfile, Group, PlannedMeal, UserProfile, PantryLog, AppNotification } from './types';
@@ -116,6 +117,7 @@ function MainApp() {
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [orderStep, setOrderStep] = useState<'provider' | 'checkout' | 'success'>('provider');
   const [selectedProvider, setSelectedProvider] = useState<{ id: string, name: string, logo: React.ReactNode, bgClass?: string, textClass?: string, fee: number, time: string } | null>(null);
   const [planningDate, setPlanningDate] = useState<string>(() => {
@@ -1392,6 +1394,7 @@ function MainApp() {
             favorites={favorites}
             setActiveTab={setActiveTab}
             setIsShareModalOpen={setIsShareModalOpen}
+            onOpenFeedback={() => setIsFeedbackOpen(true)}
             household={household}
             updateHouseholdMember={updateHouseholdMember}
             deleteHouseholdMember={deleteHouseholdMember}
@@ -1604,6 +1607,23 @@ function MainApp() {
         favorites={favorites}
         checkIngredient={checkIngredient}
         setNewMealIngredients={setNewMealIngredients}
+      />
+
+      {/* In-app feedback: button (signed in, past the gates) + sheet */}
+      {userId && profile.hasAcceptedTerms && (
+        <button
+          onClick={() => setIsFeedbackOpen(true)}
+          className="fixed bottom-24 left-4 z-40 flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#1c1d22]/95 border border-[#2c2d33] text-stone-300 text-xs font-medium shadow-lg hover:text-white active:scale-95 transition-all"
+          aria-label="Send feedback"
+        >
+          <MessageSquare className="w-3.5 h-3.5 text-[#FC5200]" />
+          Feedback
+        </button>
+      )}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        route={activeTab}
       />
 
       {/* Share Profile Modal */}

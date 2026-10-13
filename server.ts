@@ -14,6 +14,7 @@ import {
   serverCreateLiveToken
 } from "./src/services/geminiServer";
 import { requireFirebaseUser, type AuthedRequest } from "./src/services/authMiddleware";
+import { allowFeedback, validateFeedback, sendFeedbackEmail } from "./src/services/feedbackServer";
 import { enforceFreeTierCap, getUsageStatus, addRequestCostEur } from "./src/services/aiUsage";
 import { VOICE_SESSION_ESTIMATE_EUR } from "./src/services/aiCostConfig";
 
@@ -48,6 +49,26 @@ async function startServer() {
         detail: String(error?.message || error).slice(0, 300),
       });
     }
+  });
+
+  // In-app feedback: validates, rate-limits (5/hour/user) and emails the feedback inbox.
+  // The Firestore record is written by the client afterwards (see FeedbackModal + firestore.rules).
+  app.post("/api/feedback", async (req: AuthedRequest, res) => {
+    const parsed = validateFeedback(req.body);
+    if (parsed.ok === false) {
+      return res.status(400).json({ error: parsed.error });
+    }
+    if (!allowFeedback(req.uid as string)) {
+      return res.status(429).json({ error: "You've sent a lot of feedback in the last hour. Please try again later." });
+    }
+    const emailed = await sendFeedbackEmail({
+      feedback: parsed.value,
+      uid: req.uid as string,
+      email: req.email ?? null,
+      userAgent: String(req.headers["user-agent"] || "").slice(0, 300),
+    });
+    // The Firestore write is the record, so success does not depend on the email.
+    res.json({ ok: true, emailed });
   });
 
   // API Routes for Gemini Services (Fully Server-Side)
