@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ALL_MEALS, Meal } from "../data/recipes";
-import { recordGeminiUsage } from "./aiUsage";
+import { recordGeminiUsage, addRequestCostEur } from "./aiUsage";
+import { IMAGE_GENERATION_ESTIMATE_EUR } from "./aiCostConfig";
 import { notifyIfGeminiBillingError } from "./geminiAlert";
 
 let aiClient: GoogleGenAI | null = null;
@@ -406,13 +407,17 @@ export async function serverGenerateRecipeImage(recipeName: string, cuisine: str
       if (step.type === 'model_output') {
         const imageContent = step.content?.find((c) => c.type === 'image');
         if (imageContent && imageContent.data) {
+          // The interactions API does not report tokens the way generateContent does, so charge a flat estimate.
+          addRequestCostEur(IMAGE_GENERATION_ESTIMATE_EUR);
           return imageContent.data;
         }
       }
     }
     return null;
-  } catch (error) {
-    console.info("[SERVER] Using fallback image generator for recipe:", recipeName);
+  } catch (error: any) {
+    // Log the real reason (visible in Cloud Run logs) and alert the founder if it is a billing/quota error.
+    console.warn("[SERVER] Image generation failed, using fallback for:", recipeName, "-", String(error?.message || error).slice(0, 300));
+    notifyIfGeminiBillingError(error);
     return null;
   }
 }

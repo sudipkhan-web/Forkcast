@@ -29,6 +29,9 @@ export const USD_TO_EUR = 0.92;
  */
 export const VOICE_SESSION_ESTIMATE_EUR = 0.03;
 
+/** One generated recipe image, charged as a flat estimate (about 1,300 image tokens). */
+export const IMAGE_GENERATION_ESTIMATE_EUR = 0.07;
+
 type Price = { inputPerMillionUsd: number; outputPerMillionUsd: number };
 
 /**

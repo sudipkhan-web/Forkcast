@@ -16,6 +16,7 @@ import {
 import { requireFirebaseUser, type AuthedRequest } from "./src/services/authMiddleware";
 import { ICON_192, ICON_512, APPLE_TOUCH_ICON, FAVICON_32 } from "./src/services/iconData";
 import { allowFeedback, validateFeedback, sendFeedbackEmail } from "./src/services/feedbackServer";
+import { apiRateLimit } from "./src/services/rateLimit";
 import { enforceFreeTierCap, getUsageStatus, addRequestCostEur } from "./src/services/aiUsage";
 import { VOICE_SESSION_ESTIMATE_EUR } from "./src/services/aiCostConfig";
 
@@ -23,8 +24,14 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json({ limit: "50mb" })); // Support large base64 image loads
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Basic hardening headers. (No X-Frame-Options: the AI Studio preview embeds the app in a frame.)
+  app.use((_req, res, next) => {
+    res.set({ "X-Content-Type-Options": "nosniff", "Referrer-Policy": "strict-origin-when-cross-origin" });
+    next();
+  });
+  // Photos are resized in the browser before upload, so 15 MB is plenty for a base64 image.
+  app.use(express.json({ limit: "15mb" }));
+  app.use(express.urlencoded({ limit: "15mb", extended: true }));
 
   // App icons: served from embedded text so a sync that mangles binary files can't break "Install app".
   const iconRoutes: Record<string, string> = {
@@ -43,6 +50,8 @@ async function startServer() {
 
   // Every /api route requires a signed-in Firebase user (see authMiddleware.ts)
   app.use("/api", requireFirebaseUser);
+  // Per-user request limit (protects the Gemini bill while the monthly cap is off)
+  app.use("/api", apiRateLimit);
   // Free-tier AI cap: free users over this month's allowance get 402 (see aiCostConfig.ts)
   app.use("/api", enforceFreeTierCap);
 
@@ -266,9 +275,10 @@ async function startServer() {
     }
   });
 
-  app.post("/api/settings/notifications", (req, res) => {
-    const { emailNotificationEnabled, userId } = req.body;
-    console.log(`[SERVER] User ${userId} toggled email notifications to: ${emailNotificationEnabled}`);
+  app.post("/api/settings/notifications", (req: AuthedRequest, res) => {
+    // Use the verified uid from the sign-in token, never an id sent in the request body.
+    const { emailNotificationEnabled } = req.body;
+    console.log(`[SERVER] User ${req.uid} toggled email notifications to: ${emailNotificationEnabled}`);
     res.json({ success: true, emailNotificationEnabled });
   });
 

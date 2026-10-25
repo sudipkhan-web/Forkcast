@@ -153,11 +153,6 @@ service cloud.firestore {
       return request.resource.data.keys().hasAll(fields);
     }
 
-    function isAdmin() {
-      return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        (request.auth.token.email == "sudip.khan@gmail.com" && request.auth.token.email_verified == true));
-    }
 
     // ===============================================================
     // Domain Validators
@@ -176,7 +171,9 @@ service cloud.firestore {
              (!('ageConfirmedAt' in request.resource.data) || request.resource.data.ageConfirmedAt is string) &&
              (!('healthConsentAt' in request.resource.data) || request.resource.data.healthConsentAt is string) &&
              (!('waitlistJoinedAt' in request.resource.data) || request.resource.data.waitlistJoinedAt is string) &&
-             (!('notifications' in request.resource.data) || request.resource.data.notifications is map);
+             (!('notifications' in request.resource.data) || request.resource.data.notifications is map) &&
+             // Never let a user write privilege-style fields onto their own profile.
+             !('role' in request.resource.data) && !('isAdmin' in request.resource.data) && !('admin' in request.resource.data);
     }
 
     function isValidInventoryItem() {
@@ -333,8 +330,11 @@ service cloud.firestore {
     match /recipes/{recipeId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidRecipe();
-      // Allow updates only to add the image field if it was missing or a URL update
-      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['image']);
+      // Updates may only touch the image field, and only by the recipe's owner or to fill in a missing image,
+      // so one user cannot overwrite the picture on a recipe another user created.
+      allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['image']) &&
+        (resource.data.uid == request.auth.uid || !('image' in resource.data) || resource.data.image == '');
       allow delete: if false;
     }
 

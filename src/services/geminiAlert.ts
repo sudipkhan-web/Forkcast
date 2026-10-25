@@ -8,7 +8,7 @@ import { sendAlertEmail } from './feedbackServer';
  * Only billing/quota-type errors count. A plain per-minute rate limit (HTTP 429)
  * is NOT an alert.
  */
-const BILLING_ERROR = /prepay|credits? (are |is )?(depleted|exhausted)|depleted|spend cap|spending cap|billing|exceeded your current quota|quota exceeded/i;
+const BILLING_ERROR = /prepay|credits? (are |is )?(depleted|exhausted)|depleted|spend cap|spending cap|billing|exceeded your current quota|quota exceeded|free.?tier/i;
 const DAY_MS = 24 * 60 * 60 * 1000;
 let lastAlertAt = 0;
 
