@@ -15,6 +15,8 @@ function getGeminiClient(): GoogleGenAI {
     aiClient = new GoogleGenAI({
       apiKey: key,
       httpOptions: {
+        // Stop a stalled Gemini call from hanging the request forever; existing fallbacks take over.
+        timeout: 60_000,
         headers: {
           'User-Agent': 'aistudio-build',
         }

@@ -10,6 +10,9 @@ export const FREE_LIMIT_EVENT = 'free-limit-reached';
  * If the server answers 402 (free allowance used up), FREE_LIMIT_EVENT is
  * dispatched so the app can show the lock screen.
  */
+/** Give up on our own API after this long so the UI never shows an endless spinner. */
+export const API_TIMEOUT_MS = 120_000;
+
 export async function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
   const user = auth.currentUser;
@@ -17,7 +20,9 @@ export async function apiFetch(url: string, init: RequestInit = {}): Promise<Res
     const token = await user.getIdToken();
     headers.set('Authorization', `Bearer ${token}`);
   }
-  const res = await fetch(url, { ...init, headers });
+  const timeout = AbortSignal.timeout(API_TIMEOUT_MS);
+  const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
+  const res = await fetch(url, { ...init, headers, signal });
   if (res.status === 402) {
     const body = await res.clone().json().catch(() => ({}));
     if (body?.code === 'free_limit_reached') {
