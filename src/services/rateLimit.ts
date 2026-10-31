@@ -6,6 +6,9 @@ import type { AuthedRequest } from './authMiddleware';
  * It protects the Gemini bill from one account hammering the AI routes while the
  * monthly free-tier cap is switched off (pilot mode). Per server instance only.
  */
+/** Pilot mode: limiter is wired in but switched off. Set to true to enforce API_REQUESTS_PER_MINUTE. */
+export const RATE_LIMIT_ENFORCED = false;
+
 const WINDOW_MS = 60_000;
 export const API_REQUESTS_PER_MINUTE = 60;
 
@@ -33,7 +36,7 @@ setInterval(() => {
 
 /** Express middleware: place after requireFirebaseUser. */
 export function apiRateLimit(req: AuthedRequest, res: Response, next: NextFunction) {
-  if (!req.uid || allowApiCall(req.uid)) return next();
+  if (!RATE_LIMIT_ENFORCED || !req.uid || allowApiCall(req.uid)) return next();
   res.set('Retry-After', '60');
   return res.status(429).json({ error: 'Too many requests. Please wait a minute and try again.' });
 }
