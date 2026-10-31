@@ -12,6 +12,8 @@ if (!getApps().length) {
 export interface AuthedRequest extends Request {
   uid?: string;
   email?: string | null;
+  /** True only if Firebase has verified the email address (Google sign-in does; email sign-up does not yet). */
+  emailVerified?: boolean;
 }
 
 /**
@@ -29,7 +31,7 @@ export async function requireFirebaseUser(req: AuthedRequest, res: Response, nex
     const decoded = await getAuth().verifyIdToken(match[1]);
     req.uid = decoded.uid;
     req.email = decoded.email || null;
-    req.email = decoded.email;
+    req.emailVerified = decoded.email_verified === true;
     next();
   } catch (err: any) {
     console.warn('[AUTH] Rejected API request:', err?.code || err?.message);

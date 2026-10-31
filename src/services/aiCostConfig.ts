@@ -17,6 +17,14 @@
  */
 export const CAP_ENFORCED = false;
 
+/**
+ * Server-wide daily ceiling on AI spend, across all users (guards the prepaid credits
+ * against many throwaway accounts). Pilot phase: wired in but switched off. Set
+ * DAILY_CEILING_ENFORCED to true when real users arrive; the day resets at 00:00 UTC.
+ */
+export const DAILY_CEILING_ENFORCED = false;
+export const DAILY_CEILING_EUR = 2;
+
 /** Monthly AI allowance per free user, in euros (applies only when CAP_ENFORCED is true). */
 export const FREE_TIER_MONTHLY_CAP_EUR = 0.5;
 

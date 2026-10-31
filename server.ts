@@ -64,7 +64,7 @@ async function startServer() {
 
   // Current user's AI allowance for this month (not metered itself)
   app.get("/api/usage", async (req: AuthedRequest, res) => {
-    res.json(await getUsageStatus(req.uid!, req.email));
+    res.json(await getUsageStatus(req.uid!, req.email, req.emailVerified));
   });
 
   // Short-lived, single-use token for the voice assistant (Gemini Live).
