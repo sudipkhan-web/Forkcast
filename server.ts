@@ -17,6 +17,7 @@ import { requireFirebaseUser, type AuthedRequest } from "./src/services/authMidd
 import { ICON_192, ICON_512, APPLE_TOUCH_ICON, FAVICON_32 } from "./src/services/iconData";
 import { allowFeedback, validateFeedback, sendFeedbackEmail } from "./src/services/feedbackServer";
 import { apiRateLimit } from "./src/services/rateLimit";
+import { reportError, reportClientError } from "./src/services/errorAlert";
 import { enforceFreeTierCap, getUsageStatus, addRequestCostEur } from "./src/services/aiUsage";
 import { VOICE_SESSION_ESTIMATE_EUR } from "./src/services/aiCostConfig";
 
@@ -54,6 +55,12 @@ async function startServer() {
   app.use("/api", apiRateLimit);
   // Free-tier AI cap: free users over this month's allowance get 402 (see aiCostConfig.ts)
   app.use("/api", enforceFreeTierCap);
+
+  // Crash reports from the browser (signed-in users only; limited per user in errorAlert.ts)
+  app.post("/api/client-error", (req: AuthedRequest, res) => {
+    reportClientError(req.uid!, req.body);
+    res.status(204).end();
+  });
 
   // Current user's AI allowance for this month (not metered itself)
   app.get("/api/usage", async (req: AuthedRequest, res) => {
@@ -312,6 +319,14 @@ app.post('/api/recipes/classify-mealtype', async (req, res) => {
     res.status(500).json({ error: 'Failed to classify meal type', details: error.message });
   }
 });
+
+  // Last-resort handler for errors thrown outside a route's own try/catch
+  app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    reportError("SERVER-ERROR", String(err?.stack || err?.message || err).slice(0, 500));
+    if (!res.headersSent) res.status(500).json({ error: "Something went wrong. Please try again." });
+  });
+  process.on("uncaughtException", (err) => reportError("SERVER-ERROR", `uncaughtException: ${String(err?.stack || err).slice(0, 500)}`));
+  process.on("unhandledRejection", (err: any) => reportError("SERVER-ERROR", `unhandledRejection: ${String(err?.stack || err).slice(0, 500)}`));
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);

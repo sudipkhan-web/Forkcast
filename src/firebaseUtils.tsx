@@ -1,3 +1,4 @@
+import { reportClientError } from './utils/reportClientError';
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { auth } from './firebase';
 
@@ -76,6 +77,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    reportClientError(error);
   }
 
   public render() {

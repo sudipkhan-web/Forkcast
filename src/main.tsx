@@ -5,6 +5,10 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { ErrorBoundary } from './firebaseUtils';
+import { reportClientError } from './utils/reportClientError';
+
+window.addEventListener('error', (e) => reportClientError(e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => reportClientError(e.reason));
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
