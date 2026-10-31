@@ -7,12 +7,18 @@ export interface LiveTool {
   execute: (args: any) => Promise<any> | any;
 }
 
+/** Auto-disconnect so a forgotten open mic cannot run (and cost) for long. */
+export const VOICE_IDLE_LIMIT_MS = 3 * 60 * 1000;
+export const VOICE_MAX_SESSION_MS = 10 * 60 * 1000;
+
 export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   /** Last reason the voice session failed or closed unexpectedly (shown next to the mic button). */
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const userClosedRef = useRef(false);
+  const startedAtRef = useRef(0);
+  const lastActivityRef = useRef(0);
 
   const sessionRef = useRef<any>(null);
   const toolsRef = useRef(tools);
@@ -70,10 +76,15 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
         },
         callbacks: {
           onopen: () => {
+            startedAtRef.current = Date.now();
+            lastActivityRef.current = Date.now();
             setIsConnected(true);
             // Setup audio loop
             processor.onaudioprocess = (e) => {
               const inputData = e.inputBuffer.getChannelData(0);
+              let energy = 0;
+              for (let i = 0; i < inputData.length; i++) energy += inputData[i] * inputData[i];
+              if (Math.sqrt(energy / inputData.length) > 0.02) lastActivityRef.current = Date.now(); // user speaking
               const pcm16 = new Int16Array(inputData.length);
               for (let i = 0; i < inputData.length; i++) {
                 let s = Math.max(-1, Math.min(1, inputData[i]));
@@ -99,6 +110,7 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
           onmessage: async (message: LiveServerMessage) => {
             // Audio output
             const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            if (base64Audio) lastActivityRef.current = Date.now(); // model speaking
             if (base64Audio && outputCtxRef.current) {
               const binary = atob(base64Audio);
               const pcm16 = new Int16Array(binary.length / 2);
@@ -244,6 +256,23 @@ export function useLiveAssistant(tools: LiveTool[], systemInstruction: string) {
     userClosedRef.current = true;
     disconnect();
   }, [disconnect]);
+
+  // Watchdog: end the session after a quiet spell or a maximum length, with a short note.
+  useEffect(() => {
+    if (!isConnected) return;
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const tooLong = now - startedAtRef.current > VOICE_MAX_SESSION_MS;
+      const idle = now - lastActivityRef.current > VOICE_IDLE_LIMIT_MS;
+      if (tooLong || idle) {
+        setVoiceError(tooLong
+          ? 'Voice ended after 10 minutes. Tap the mic to start again.'
+          : 'Voice paused after 3 quiet minutes. Tap the mic to start again.');
+        stopByUser();
+      }
+    }, 10_000);
+    return () => clearInterval(timer);
+  }, [isConnected, stopByUser]);
 
   return { connect, disconnect: stopByUser, isConnected, isSpeaking, voiceError, clearVoiceError: () => setVoiceError(null) };
 }

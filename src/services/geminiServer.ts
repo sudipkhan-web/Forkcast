@@ -42,7 +42,7 @@ function getGeminiClient(): GoogleGenAI {
 /**
  * Creates a single-use ephemeral token for a Gemini Live (voice) session,
  * so the browser never sees the real API key.
- * The session must start within 1 minute and ends after 30 minutes at most.
+ * The session must start within 1 minute and ends after 12 minutes at most (the app disconnects at 10).
  */
 export async function serverCreateLiveToken(): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
@@ -56,7 +56,7 @@ export async function serverCreateLiveToken(): Promise<string> {
     token = await tokenClient.authTokens.create({
       config: {
         uses: 1,
-        expireTime: new Date(now + 30 * 60 * 1000).toISOString(),
+        expireTime: new Date(now + 12 * 60 * 1000).toISOString(),
         newSessionExpireTime: new Date(now + 60 * 1000).toISOString(),
         httpOptions: { apiVersion: 'v1alpha' },
       },
