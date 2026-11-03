@@ -96,7 +96,7 @@ function MainApp() {
     try {
       const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
       const isStandalone = Boolean((window.navigator as any).standalone) || (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches);
-      const isDismissed = localStorage.getItem('forkcast_ios_banner_dismissed') === 'true';
+      const isDismissed = localStorage.getItem('kondivore_ios_banner_dismissed') === 'true';
 
       if (isIos && !isStandalone && !isDismissed) {
         setShowIosInstallBanner(true);
@@ -109,7 +109,7 @@ function MainApp() {
   const handleDismissIosBanner = () => {
     setShowIosInstallBanner(false);
     try {
-      localStorage.setItem('forkcast_ios_banner_dismissed', 'true');
+      localStorage.setItem('kondivore_ios_banner_dismissed', 'true');
     } catch (e) {
       console.warn("Could not save banner dismissal:", e);
     }
