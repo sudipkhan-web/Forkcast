@@ -5,7 +5,18 @@ import { apiFetch } from '../utils/apiFetch';
  * Generates an image using Imagen 3 via the backend server-side API, and caches it in IndexedDB
  * to load blazing fast on subsequent views.
  */
-export const getOrGenerateRecipeImage = async (recipeId: string, recipeName: string, cuisine: string = '', details: string = ''): Promise<string> => {
+const inFlight = new Map<string, Promise<string>>();
+
+/** Callers asking for the same recipe at the same time share one request. */
+export const getOrGenerateRecipeImage = (recipeId: string, recipeName: string, cuisine: string = '', details: string = ''): Promise<string> => {
+  const existing = inFlight.get(recipeId);
+  if (existing) return existing;
+  const p = loadOrGenerateRecipeImage(recipeId, recipeName, cuisine, details).finally(() => inFlight.delete(recipeId));
+  inFlight.set(recipeId, p);
+  return p;
+};
+
+const loadOrGenerateRecipeImage = async (recipeId: string, recipeName: string, cuisine: string = '', details: string = ''): Promise<string> => {
   try {
     // Check IndexedDB cache first
     const cacheKey = `recipe_img_${recipeId}`;

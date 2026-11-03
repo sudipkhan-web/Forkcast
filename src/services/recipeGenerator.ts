@@ -35,6 +35,41 @@ export const generateSmartStaples = async (
   }
 };
 
+/** Generates images (in batches to avoid rate limits) and saves the shared recipe copies, without blocking the caller. */
+const finishRecipesInBackground = async (recipes: Meal[]): Promise<void> => {
+  try {
+    const CHUNK_SIZE = 4;
+    for (let i = 0; i < recipes.length; i += CHUNK_SIZE) {
+      const chunk = recipes.slice(i, i + CHUNK_SIZE);
+      await Promise.all(chunk.map(async (recipe) => {
+        try {
+          const imageUrl = await getOrGenerateRecipeImage(recipe.id, recipe.name, recipe.cuisine || "", recipe.details || "");
+          if (imageUrl) {
+            recipe.image = imageUrl;
+          }
+        } catch (imgError) {
+          console.error("Failed to pre-generate image for recipe:", recipe.name, imgError);
+        }
+      }));
+    }
+
+    if (auth.currentUser) {
+      for (const recipe of recipes) {
+        try {
+          await setDoc(doc(db, 'recipes', recipe.id), {
+            ...recipe,
+            uid: auth.currentUser.uid
+          });
+        } catch (e) {
+          console.error("Failed to save generated recipe to global collection", e);
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Background recipe finishing failed", e);
+  }
+};
+
 export const generateRecipes = async (
   count: number,
   likedTags: string[],
@@ -105,34 +140,10 @@ export const generateRecipes = async (
       mealType: typeof r.mealType === 'string' && ['Breakfast', 'Lunch', 'Dinner', 'Snack'].includes(r.mealType) ? r.mealType : 'Dinner'
     }));
 
-    // Pre-generate images and assign them to the recipe objects in batches to avoid rate limits
-    const CHUNK_SIZE = 4;
-    for (let i = 0; i < recipes.length; i += CHUNK_SIZE) {
-      const chunk = recipes.slice(i, i + CHUNK_SIZE);
-      await Promise.all(chunk.map(async (recipe) => {
-        try {
-          const imageUrl = await getOrGenerateRecipeImage(recipe.id, recipe.name, recipe.cuisine || "", recipe.details || "");
-          if (imageUrl) {
-            recipe.image = imageUrl;
-          }
-        } catch (imgError) {
-          console.error("Failed to pre-generate image for recipe:", recipe.name, imgError);
-        }
-      }));
-    }
-
-    if (auth.currentUser) {
-      for (const recipe of recipes) {
-        try {
-          await setDoc(doc(db, 'recipes', recipe.id), {
-            ...recipe,
-            uid: auth.currentUser.uid
-          });
-        } catch (e) {
-          console.error("Failed to save generated recipe to global collection", e);
-        }
-      }
-    }
+    // Return the recipes as soon as the text is ready. Images are generated and the shared copies saved
+    // in the background (RecipeImage shows a placeholder until its image arrives; the in-flight request
+    // is shared with imageGenerator, so nothing is generated twice).
+    void finishRecipesInBackground(recipes);
 
     return recipes;
   } catch (error) {
